@@ -30,6 +30,10 @@ class MechanismRegistry:
             raise UnknownMechanismError(effect.mechanism) from exc
         return mechanism(dict(stats), effect, state)
 
+    @property
+    def names(self) -> tuple[str, ...]:
+        return tuple(self._mechanisms)
+
 
 def _add_stat(stats: dict[str, float], effect: Effect, _state: GameState) -> dict[str, float]:
     stat = str(effect.parameters["stat"])

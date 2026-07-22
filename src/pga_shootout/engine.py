@@ -9,7 +9,9 @@ from .registry import MechanismRegistry, UnknownMechanismError, default_mechanis
 
 
 class EvaluationError(RuntimeError):
-    pass
+    def __init__(self, message: str, result: EvaluationResult | None = None) -> None:
+        super().__init__(message)
+        self.result = result
 
 
 class RuleEngine:
@@ -51,8 +53,6 @@ class RuleEngine:
                 )
             except (UnknownConditionError, UnknownMechanismError) as exc:
                 message = f"Unresolved {exc.__class__.__name__}: {exc}"
-                if mode is EvaluationMode.STRICT:
-                    raise EvaluationError(message) from exc
                 unresolved.append(message)
                 journal.append(
                     explain_entry(
@@ -63,6 +63,15 @@ class RuleEngine:
                         message=message,
                     )
                 )
+                if mode is EvaluationMode.STRICT:
+                    result = EvaluationResult(
+                        base_stats=base,
+                        final_stats=Stats.from_mapping(current),
+                        explain=tuple(journal),
+                        unresolved=tuple(unresolved),
+                        complete=False,
+                    )
+                    raise EvaluationError(message, result) from exc
 
         return EvaluationResult(
             base_stats=base,

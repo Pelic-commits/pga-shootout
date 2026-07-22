@@ -6,14 +6,20 @@ import argparse
 import json
 from collections.abc import Sequence
 
+from .bag_evaluation import evaluate_saved_bag, render_bag_evaluation
 from .data_validation import validate_official_data
 from .loader import load_raw_json, summarize_raw_json
+from .models import EvaluationMode
 from .user_data import ClubCatalogIndex, load_user_data, validate_user_data
 
 
 def _add_user_paths(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--user-dir", default="data/user")
     parser.add_argument("--catalog", default="data/normalized/clubs_official.json")
+
+
+def _level_value(value: str) -> int | str:
+    return int(value) if value.isdigit() else value
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -32,6 +38,14 @@ def build_parser() -> argparse.ArgumentParser:
         ("user-bags", "display saved user bags"),
     ):
         _add_user_paths(subparsers.add_parser(command, help=help_text))
+    evaluate_parser = subparsers.add_parser("evaluate-bag", help="evaluate a saved user bag through the rule engine")
+    evaluate_parser.add_argument("bag_id")
+    evaluate_parser.add_argument("--level", required=True, type=_level_value, help="explicit scenario level for all bag clubs")
+    evaluate_parser.add_argument("--current-club", help="stable club identifier; defaults to the first bag position")
+    _add_user_paths(evaluate_parser)
+    mode_group = evaluate_parser.add_mutually_exclusive_group(required=True)
+    mode_group.add_argument("--strict", action="store_true")
+    mode_group.add_argument("--partial", action="store_true")
     return parser
 
 
@@ -42,6 +56,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif args.command == "validate-data":
         report = validate_official_data(args.raw_path, args.normalized_path)
         print(json.dumps(report.as_dict(), indent=2, ensure_ascii=False))
+    elif args.command == "evaluate-bag":
+        mode = EvaluationMode.STRICT if args.strict else EvaluationMode.PARTIAL
+        evaluation = evaluate_saved_bag(
+            args.bag_id,
+            level=args.level,
+            mode=mode,
+            user_dir=args.user_dir,
+            catalog_path=args.catalog,
+            current_club_id=args.current_club,
+        )
+        print(render_bag_evaluation(evaluation))
+        return 1 if evaluation.strict_failed else 0
     elif args.command.startswith("user-"):
         bundle = load_user_data(args.user_dir)
         report = validate_user_data(bundle, ClubCatalogIndex.load(args.catalog))

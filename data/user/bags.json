@@ -4,7 +4,7 @@
   "source": "user_report_from_meteor_conversation",
   "bags": [
     {
-      "id": "reference_par3_divebomb",
+      "id": "par3_divebomb",
       "name": "Sac de référence / par-3 Divebomb",
       "status": "user_observed",
       "club_ids": ["divebomb","jumpstart","steadfast","ember","sunstorm"],

@@ -67,7 +67,7 @@ class Club:
 @dataclass(frozen=True)
 class BagEntry:
     club: Club
-    level: int
+    level: int | str | None
 
 
 @dataclass(frozen=True)

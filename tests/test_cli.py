@@ -40,7 +40,7 @@ class CliTests(unittest.TestCase):
             "user-account": '"player_name": "Pierre"',
             "user-inventory": '"club_id": "homestead"',
             "user-upgrades": '"club_id": "groundskeep"',
-            "user-bags": '"reference_par3_divebomb"',
+            "user-bags": '"par3_divebomb"',
         }
         for command, marker in expected.items():
             with self.subTest(command=command):
@@ -49,6 +49,27 @@ class CliTests(unittest.TestCase):
                     result = main([command, *common])
                 self.assertEqual(result, 0)
                 self.assertIn(marker, output.getvalue())
+
+    def test_evaluate_bag_cli_partial_and_strict(self):
+        root = Path(__file__).resolve().parents[1]
+        common = [
+            "evaluate-bag", "par3_divebomb", "--level", "12",
+            "--user-dir", str(root / "data" / "user"),
+            "--catalog", str(root / "data" / "normalized" / "clubs_official.json"),
+        ]
+        partial_output = io.StringIO()
+        with contextlib.redirect_stdout(partial_output):
+            partial_result = main([*common, "--partial"])
+        self.assertEqual(partial_result, 0)
+        self.assertIn("Divebomb", partial_output.getvalue())
+        self.assertIn("Partial mode: SUCCESS", partial_output.getvalue())
+        self.assertIn("UNSUPPORTED", partial_output.getvalue())
+
+        strict_output = io.StringIO()
+        with contextlib.redirect_stdout(strict_output):
+            strict_result = main([*common, "--strict"])
+        self.assertEqual(strict_result, 1)
+        self.assertIn("Strict mode: FAILED", strict_output.getvalue())
 
 
 if __name__ == "__main__":

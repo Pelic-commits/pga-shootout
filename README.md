@@ -29,7 +29,11 @@ pga-shootout validate-data data/raw/pga_club_stats_extract_v2_2026-07-21.json da
 
 ```powershell
 pga-shootout inspect data/raw/pga_club_stats_extract_v2_2026-07-21.json
+pga-shootout evaluate-bag par3_divebomb --level 12 --partial
+pga-shootout evaluate-bag par3_divebomb --level 12 --strict
 ```
+
+Le niveau est un niveau de scénario explicite, jamais déduit de l'inventaire utilisateur tant que les niveaux réels sont inconnus.
 
 Le mode `strict` échoue sur une mécanique inconnue. Le mode `partial` conserve le résultat calculable et signale explicitement chaque élément non évalué.
 
