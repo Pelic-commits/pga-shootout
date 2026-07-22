@@ -1,0 +1,168 @@
+"""Explainable comparison of two saved bags without invented scoring weights."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Mapping
+
+from .bag_evaluation import BagEvaluation, evaluate_saved_bag, load_saved_bag
+from .models import EvaluationMode
+
+
+class BagComparisonError(ValueError):
+    pass
+
+
+@dataclass(frozen=True)
+class AppliedChange:
+    source: str
+    mechanism: str
+    modification: Mapping[str, float]
+
+
+@dataclass(frozen=True)
+class ComparedBag:
+    evaluation: BagEvaluation
+    current_position: int
+    applied_changes: tuple[AppliedChange, ...]
+
+
+@dataclass(frozen=True)
+class BagComparison:
+    left: ComparedBag
+    right: ComparedBag
+    level: int | str
+    mode: EvaluationMode
+    final_difference_right_minus_left: Mapping[str, float]
+
+    @property
+    def strict_failed(self) -> bool:
+        return self.left.evaluation.strict_failed or self.right.evaluation.strict_failed
+
+
+def _applied_changes(evaluation: BagEvaluation) -> tuple[AppliedChange, ...]:
+    return tuple(
+        AppliedChange(entry.source, entry.mechanism, dict(entry.modification))
+        for entry in evaluation.result.explain
+        if entry.mechanism != "dsl_pipeline"
+        and entry.applied
+        and any(value != 0 for value in entry.modification.values())
+    )
+
+
+def compare_saved_bags(
+    left_bag_id: str,
+    right_bag_id: str,
+    *,
+    level: int | str,
+    current_position: int = 1,
+    mode: EvaluationMode,
+    user_dir: str | Path = "data/user",
+    catalog_path: str | Path = "data/normalized/clubs_official.json",
+) -> BagComparison:
+    if current_position < 1:
+        raise BagComparisonError("Current position must be at least 1")
+    left_saved = load_saved_bag(user_dir, left_bag_id)
+    right_saved = load_saved_bag(user_dir, right_bag_id)
+    if current_position > len(left_saved.club_ids) or current_position > len(right_saved.club_ids):
+        raise BagComparisonError(f"Current position {current_position} is not present in both bags")
+
+    left = evaluate_saved_bag(
+        left_bag_id,
+        level=level,
+        mode=mode,
+        user_dir=user_dir,
+        catalog_path=catalog_path,
+        current_club_id=left_saved.club_ids[current_position - 1],
+    )
+    right = evaluate_saved_bag(
+        right_bag_id,
+        level=level,
+        mode=mode,
+        user_dir=user_dir,
+        catalog_path=catalog_path,
+        current_club_id=right_saved.club_ids[current_position - 1],
+    )
+    left_stats = left.result.final_stats.as_dict()
+    right_stats = right.result.final_stats.as_dict()
+    return BagComparison(
+        left=ComparedBag(left, current_position, _applied_changes(left)),
+        right=ComparedBag(right, current_position, _applied_changes(right)),
+        level=level,
+        mode=mode,
+        final_difference_right_minus_left={
+            stat: right_stats[stat] - left_stats[stat]
+            for stat in ("power", "control", "spin")
+        },
+    )
+
+
+def _change_lines(side: ComparedBag) -> list[str]:
+    if not side.applied_changes:
+        return ["  none"]
+    lines = []
+    for change in side.applied_changes:
+        deltas = ", ".join(
+            f"{stat} {value:+g}" for stat, value in change.modification.items() if value != 0
+        )
+        lines.append(f"  {change.source} / {change.mechanism}: {deltas}")
+    return lines
+
+
+def render_bag_comparison(comparison: BagComparison) -> str:
+    left = comparison.left.evaluation
+    right = comparison.right.evaluation
+    lines = [
+        "=" * 72,
+        "Bag comparison",
+        f"Level scenario: {comparison.level}",
+        f"Evaluation mode: {comparison.mode.value}",
+        f"Selected position: {comparison.left.current_position}",
+        "",
+        "Composition",
+    ]
+    for index, (left_id, right_id) in enumerate(zip(left.bag.club_ids, right.bag.club_ids), start=1):
+        marker = "==" if left_id == right_id else "!="
+        left_name = left.state.bag.get(left_id).club.name
+        right_name = right.state.bag.get(right_id).club.name
+        lines.append(f"{index}. {left_name} {marker} {right_name}")
+
+    left_current = left.state.current_entry.club.name
+    right_current = right.state.current_entry.club.name
+    lines.extend(
+        [
+            "",
+            f"Left:  {left.bag.name} - {left_current}",
+            f"Right: {right.bag.name} - {right_current}",
+            "",
+            "Stats (difference = right - left)",
+            "Stat       Left base  Left final  Right base  Right final  Difference",
+        ]
+    )
+    left_base = left.result.base_stats.as_dict()
+    left_final = left.result.final_stats.as_dict()
+    right_base = right.result.base_stats.as_dict()
+    right_final = right.result.final_stats.as_dict()
+    for stat in ("power", "control", "spin"):
+        lines.append(
+            f"{stat.capitalize():<10} {left_base[stat]:>9g}  {left_final[stat]:>10g}"
+            f"  {right_base[stat]:>10g}  {right_final[stat]:>11g}"
+            f"  {comparison.final_difference_right_minus_left[stat]:>+10g}"
+        )
+
+    lines.extend(["", "Applied stat changes - left"])
+    lines.extend(_change_lines(comparison.left))
+    lines.append("Applied stat changes - right")
+    lines.extend(_change_lines(comparison.right))
+    lines.extend(
+        [
+            "",
+            f"Unresolved effects - left: {len(left.result.unresolved)}",
+            f"Unresolved effects - right: {len(right.result.unresolved)}",
+            f"Strict status: {'FAILED' if comparison.strict_failed else 'SUCCESS' if comparison.mode is EvaluationMode.STRICT else 'NOT REQUESTED'}",
+            "No aggregate score: user preference weights and real club levels are not yet validated.",
+            "=" * 72,
+        ]
+    )
+    return "\n".join(lines)

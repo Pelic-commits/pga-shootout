@@ -7,6 +7,7 @@ import json
 from collections.abc import Sequence
 
 from .bag_evaluation import evaluate_saved_bag, render_bag_evaluation
+from .bag_comparison import compare_saved_bags, render_bag_comparison
 from .coverage import generate_coverage_report
 from .data_validation import validate_official_data
 from .loader import load_raw_json, summarize_raw_json
@@ -48,6 +49,15 @@ def build_parser() -> argparse.ArgumentParser:
     mode_group = evaluate_parser.add_mutually_exclusive_group(required=True)
     mode_group.add_argument("--strict", action="store_true")
     mode_group.add_argument("--partial", action="store_true")
+    compare_parser = subparsers.add_parser("compare-bags", help="compare two saved bags without an invented aggregate score")
+    compare_parser.add_argument("left_bag_id")
+    compare_parser.add_argument("right_bag_id")
+    compare_parser.add_argument("--level", required=True, type=_level_value, help="explicit scenario level for both bags")
+    compare_parser.add_argument("--position", type=int, default=1, help="1-based current club position in both bags")
+    _add_user_paths(compare_parser)
+    compare_mode = compare_parser.add_mutually_exclusive_group(required=True)
+    compare_mode.add_argument("--strict", action="store_true")
+    compare_mode.add_argument("--partial", action="store_true")
     normalize_parser = subparsers.add_parser("normalize", help="regenerate structural ability artifacts without interpretation")
     normalize_parser.add_argument("--source", default="data/normalized/clubs_official.json")
     normalize_parser.add_argument("--output-dir", default="data/normalized")
@@ -88,6 +98,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         print(render_bag_evaluation(evaluation))
         return 1 if evaluation.strict_failed else 0
+    elif args.command == "compare-bags":
+        mode = EvaluationMode.STRICT if args.strict else EvaluationMode.PARTIAL
+        comparison = compare_saved_bags(
+            args.left_bag_id,
+            args.right_bag_id,
+            level=args.level,
+            current_position=args.position,
+            mode=mode,
+            user_dir=args.user_dir,
+            catalog_path=args.catalog,
+        )
+        print(render_bag_comparison(comparison))
+        return 1 if comparison.strict_failed else 0
     elif args.command.startswith("user-"):
         bundle = load_user_data(args.user_dir)
         report = validate_user_data(bundle, ClubCatalogIndex.load(args.catalog))

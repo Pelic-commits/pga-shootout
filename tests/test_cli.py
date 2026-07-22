@@ -71,6 +71,28 @@ class CliTests(unittest.TestCase):
         self.assertEqual(strict_result, 1)
         self.assertIn("Strict mode: FAILED", strict_output.getvalue())
 
+    def test_compare_bags_cli_explains_differences_without_ranking(self):
+        root = Path(__file__).resolve().parents[1]
+        common = [
+            "compare-bags", "par3_divebomb", "par3_high_flight",
+            "--level", "12", "--position", "1",
+            "--user-dir", str(root / "data" / "user"),
+            "--catalog", str(root / "data" / "normalized" / "clubs_official.json"),
+        ]
+        partial_output = io.StringIO()
+        with contextlib.redirect_stdout(partial_output):
+            partial_result = main([*common, "--partial"])
+        self.assertEqual(partial_result, 0)
+        self.assertIn("Bag comparison", partial_output.getvalue())
+        self.assertIn("1. Divebomb != High Flight", partial_output.getvalue())
+        self.assertIn("No aggregate score", partial_output.getvalue())
+
+        strict_output = io.StringIO()
+        with contextlib.redirect_stdout(strict_output):
+            strict_result = main([*common, "--strict"])
+        self.assertEqual(strict_result, 1)
+        self.assertIn("Strict status: FAILED", strict_output.getvalue())
+
     def test_normalize_cli_regenerates_all_artifacts(self):
         root = Path(__file__).resolve().parents[1]
         with tempfile.TemporaryDirectory() as directory:

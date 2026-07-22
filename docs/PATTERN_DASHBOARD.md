@@ -33,6 +33,8 @@ Les groupes `smoke_x`, `steam_x` et `sparks_x` restent seulement des candidats. 
 
 | Indicateur | État |
 |---|---:|
+| Couverture technique | 16 / 125 groupes ; 36 / 162 occurrences |
+| Couverture fonctionnelle | 5 / 8 fonctionnalités utilisateur de référence |
 | Groupes couverts | 16 / 125 (12,80 %) |
 | Occurrences couvertes | 36 / 162 (22,22 %) |
 | Clubs couverts | 31 / 88 (35,23 %) |
@@ -41,3 +43,16 @@ Les groupes `smoke_x`, `steam_x` et `sparks_x` restent seulement des candidats. 
 | Familles qualifiées bloquées uniquement par une primitive absente | 0 |
 
 Les 109 groupes restants sont non qualifiés. Attribuer un nombre exact de primitives manquantes avant validation sémantique produirait une fausse précision ; ils ne sont pas comptés comme « bloqués par une seule primitive ».
+
+## Couverture fonctionnelle
+
+| Fonctionnalité utilisateur de référence | État |
+|---|---|
+| Charger et afficher les sacs sauvegardés | Supportée |
+| Évaluer un sac à un niveau de scénario explicite | Supportée |
+| Expliquer les effets appliqués et non résolus | Supportée |
+| Comparer deux sacs par composition, position et statistiques | Supportée |
+| Distinguer calcul complet et calcul partiel | Supportée |
+| Classer automatiquement plusieurs sacs | Non supportée — pondérations non validées |
+| Recommander le remplacement d'un club | Non supportée |
+| Recommander l'ordre optimal des clubs | Non supportée |
