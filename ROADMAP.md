@@ -15,7 +15,8 @@ Statut : initialisé et audité ; les phases Explain, la provenance et plusieurs
 
 - [x] Importer la capture brute, le catalogue officiel et l'audit dans un commit séparé
 - [x] Vérifier leurs hashes SHA-256 et les compteurs disponibles du manifeste
-- Importer les six artefacts sémantiques encore absents
+- [x] Générer cinq artefacts structurels reproductibles sans interprétation
+- Importer ou générer `assets.json` si nécessaire
 - Mapper explicitement le schéma JSON officiel
 - Documenter l’ordre d’application validé
 - Ajouter les mécaniques déterministes confirmées

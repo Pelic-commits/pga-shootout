@@ -67,7 +67,17 @@ Artefacts importés sans transformation :
 
 Contrôles automatisés présents : lien SHA-256 entre le normalisé et le brut, compteurs de clubs et marques, unicité des identifiants, occurrences de capacités et valeurs converties.
 
-Artefacts encore absents : `ability_occurrences.json`, `ability_labels.json`, `mechanics_catalog.json`, `semantic_map.json`, `assets.json` et `normalization_report.json`.
+Artefacts structurels générés automatiquement depuis `clubs_official.json` :
+
+| Fichier | SHA-256 |
+|---|---|
+| `ability_occurrences.json` | `884daf05d7ec2c02f12d5adbf305894007f8bf95097b3574a7c30df83bf9a512` |
+| `ability_labels.json` | `065e69e564d34d8e2cdcf197219af5e8d1d143d362ffcfdc061b9517150adb5` |
+| `mechanics_catalog.json` | `e69f8b9853d0ca0b5212e378f3b8fa703d918401f921b93b0da92b270c4a0f76` |
+| `semantic_map.json` | `d57344fb7d62ff486800fa23ece6ef8b3bcd7fa9d061b03c1c0926ae13cd6ef7` |
+| `normalization_report.json` | `0700c37302cc7b579d2392bbdfadc6e503b50767b760f55ba1c1535f4b46c5b9` |
+
+Ces fichiers conservent 162 occurrences et 125 intitulés exacts. Les 125 groupes restent `uninterpreted`, avec `mechanic_id`, complexité et dépendances non renseignés. `assets.json` reste absent.
 
 ## Couche utilisateur
 

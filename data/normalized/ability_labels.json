@@ -1,0 +1,1837 @@
+{
+  "label_order": [
+    "bag_loft_angle_10",
+    "bounce_reduction",
+    "brand_loyalty_x",
+    "chains_into_corvid",
+    "bag_wind_resist",
+    "chains_into_putters",
+    "corvid_wind_resist",
+    "flight_training",
+    "loft_angle_5",
+    "wind_resist_75",
+    "loft_angle_10",
+    "wind_resist",
+    "gravity_reduction",
+    "bag_wind_power",
+    "boundary_rush_75",
+    "zephyr_x_mph",
+    "wind_resistance_100",
+    "boundary_bonus",
+    "tree_bonus",
+    "wild_rush_speed",
+    "off_green_power",
+    "terrain_resist_50",
+    "adventure",
+    "tree_bonus_x",
+    "shared_growth",
+    "chains_into_wedges",
+    "rough_boosters",
+    "forester_power",
+    "forester_power_elite",
+    "home_turf_southwind",
+    "bag_tree_passing",
+    "bag_tree_bonus",
+    "tree_passing",
+    "bag_water_bounce",
+    "bag_water_bonus",
+    "random_boost_x",
+    "gem_ball_bonus",
+    "power_shot",
+    "bag_sand_bonus",
+    "water_rush",
+    "water_bonus",
+    "bag_bounce_reduction",
+    "bag_spin_bonus",
+    "ability_mirror",
+    "chains_into_woods_hybrids",
+    "chains_into_irons_putters_wedges_drivers",
+    "sand_bonus_x",
+    "shoreline_rush",
+    "nautilus_boost",
+    "first_gear",
+    "top_gear",
+    "emerald_rush_75",
+    "water_bonus_x",
+    "fade_draw_x2",
+    "sand_bounce",
+    "water_bounce",
+    "sand_bonus",
+    "groundspin_x3",
+    "tee_off_power",
+    "gravity_reduction_x",
+    "palo_control_on_hit_x",
+    "hollow_earth",
+    "smoke_x",
+    "steam_x",
+    "sparks_x",
+    "alloy",
+    "perfect_shot_bag_power",
+    "rocket_boosters",
+    "boundary_rush",
+    "stat_fusion",
+    "blazing_flight",
+    "ground_rush",
+    "phoenix_power",
+    "scottsdale_boosters",
+    "plasma_arc_x",
+    "perfect_shot_terrain_bonus_boost",
+    "terrain_bonus",
+    "spin_boost",
+    "bounce_reduction_boost",
+    "control_boost",
+    "power_boost",
+    "magnetism_0_15ft",
+    "swing_speed_x2",
+    "volt_bounce",
+    "loft_angle_3",
+    "fission",
+    "wind_up_toy",
+    "ludicrous_mode",
+    "super_fireball",
+    "rough_bonus",
+    "iron_wedge_exclusion",
+    "exclusion_zone",
+    "trumpet_blast",
+    "rough_power",
+    "bag_recklessness",
+    "bag_rough_power",
+    "shuffle_up",
+    "adjacent_power",
+    "driver_loyalty",
+    "stanchion_power",
+    "overdrive",
+    "overaim",
+    "bag_control",
+    "brand_fairway_rush",
+    "fairway_affinity",
+    "chains_into_willoughsby",
+    "groundspin_x4",
+    "green_grip",
+    "momentum",
+    "bag_rarity_boost",
+    "fellowship",
+    "brand_loyalty",
+    "texas_tee",
+    "three_heads",
+    "beast_strength",
+    "alien_relic_left",
+    "alien_relic_right",
+    "alien_world",
+    "combined_power",
+    "combined_spin",
+    "solidarity",
+    "electrodynamics_0_2ft",
+    "chains_into_itself",
+    "sacrifice",
+    "aura_of_death"
+  ],
+  "labels": {
+    "ability_mirror": {
+      "club_count": 1,
+      "club_ids": [
+        "mimic"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "ability_mirror",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "mimic__ability_mirror"
+      ],
+      "official_text_available": false
+    },
+    "adjacent_power": {
+      "club_count": 2,
+      "club_ids": [
+        "outlaw",
+        "rampart"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "adjacent_power",
+      "occurrence_count": 2,
+      "occurrence_ids": [
+        "outlaw__adjacent_power",
+        "rampart__adjacent_power"
+      ],
+      "official_text_available": false
+    },
+    "adventure": {
+      "club_count": 1,
+      "club_ids": [
+        "homecoming"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "adventure",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "homecoming__adventure"
+      ],
+      "official_text_available": false
+    },
+    "alien_relic_left": {
+      "club_count": 1,
+      "club_ids": [
+        "meteor"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "alien_relic_left",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "meteor__alien_relic_left"
+      ],
+      "official_text_available": false
+    },
+    "alien_relic_right": {
+      "club_count": 1,
+      "club_ids": [
+        "meteor"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "alien_relic_right",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "meteor__alien_relic_right"
+      ],
+      "official_text_available": false
+    },
+    "alien_world": {
+      "club_count": 1,
+      "club_ids": [
+        "meteor"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "alien_world",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "meteor__alien_world"
+      ],
+      "official_text_available": false
+    },
+    "alloy": {
+      "club_count": 1,
+      "club_ids": [
+        "ember"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "alloy",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "ember__alloy"
+      ],
+      "official_text_available": false
+    },
+    "aura_of_death": {
+      "club_count": 1,
+      "club_ids": [
+        "the_reaper"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "aura_of_death",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "the_reaper__aura_of_death"
+      ],
+      "official_text_available": false
+    },
+    "bag_bounce_reduction": {
+      "club_count": 1,
+      "club_ids": [
+        "maelstrom"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "bag_bounce_reduction",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "maelstrom__bag_bounce_reduction"
+      ],
+      "official_text_available": false
+    },
+    "bag_control": {
+      "club_count": 1,
+      "club_ids": [
+        "commonlaw"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "bag_control",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "commonlaw__bag_control"
+      ],
+      "official_text_available": false
+    },
+    "bag_loft_angle_10": {
+      "club_count": 1,
+      "club_ids": [
+        "cloudcatcher"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "bag_loft_angle_10",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "cloudcatcher__bag_loft_angle_10"
+      ],
+      "official_text_available": false
+    },
+    "bag_rarity_boost": {
+      "club_count": 1,
+      "club_ids": [
+        "steadfast"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "bag_rarity_boost",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "steadfast__bag_rarity_boost"
+      ],
+      "official_text_available": false
+    },
+    "bag_recklessness": {
+      "club_count": 1,
+      "club_ids": [
+        "into_the_breach"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "bag_recklessness",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "into_the_breach__bag_recklessness"
+      ],
+      "official_text_available": false
+    },
+    "bag_rough_power": {
+      "club_count": 1,
+      "club_ids": [
+        "new_frontier"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "bag_rough_power",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "new_frontier__bag_rough_power"
+      ],
+      "official_text_available": false
+    },
+    "bag_sand_bonus": {
+      "club_count": 1,
+      "club_ids": [
+        "dunecrawler"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "bag_sand_bonus",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "dunecrawler__bag_sand_bonus"
+      ],
+      "official_text_available": false
+    },
+    "bag_spin_bonus": {
+      "club_count": 1,
+      "club_ids": [
+        "maelstrom"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "bag_spin_bonus",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "maelstrom__bag_spin_bonus"
+      ],
+      "official_text_available": false
+    },
+    "bag_tree_bonus": {
+      "club_count": 1,
+      "club_ids": [
+        "the_seeker"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "bag_tree_bonus",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "the_seeker__bag_tree_bonus"
+      ],
+      "official_text_available": false
+    },
+    "bag_tree_passing": {
+      "club_count": 1,
+      "club_ids": [
+        "the_seeker"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "bag_tree_passing",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "the_seeker__bag_tree_passing"
+      ],
+      "official_text_available": false
+    },
+    "bag_water_bonus": {
+      "club_count": 1,
+      "club_ids": [
+        "atlantis"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "bag_water_bonus",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "atlantis__bag_water_bonus"
+      ],
+      "official_text_available": false
+    },
+    "bag_water_bounce": {
+      "club_count": 1,
+      "club_ids": [
+        "atlantis"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "bag_water_bounce",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "atlantis__bag_water_bounce"
+      ],
+      "official_text_available": false
+    },
+    "bag_wind_power": {
+      "club_count": 1,
+      "club_ids": [
+        "jetstream"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "bag_wind_power",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "jetstream__bag_wind_power"
+      ],
+      "official_text_available": false
+    },
+    "bag_wind_resist": {
+      "club_count": 2,
+      "club_ids": [
+        "conspiracy",
+        "rook"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "bag_wind_resist",
+      "occurrence_count": 2,
+      "occurrence_ids": [
+        "conspiracy__bag_wind_resist",
+        "rook__bag_wind_resist"
+      ],
+      "official_text_available": false
+    },
+    "beast_strength": {
+      "club_count": 1,
+      "club_ids": [
+        "chimera"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "beast_strength",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "chimera__beast_strength"
+      ],
+      "official_text_available": false
+    },
+    "blazing_flight": {
+      "club_count": 1,
+      "club_ids": [
+        "hot_streak"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "blazing_flight",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "hot_streak__blazing_flight"
+      ],
+      "official_text_available": false
+    },
+    "bounce_reduction": {
+      "club_count": 1,
+      "club_ids": [
+        "cloudcatcher"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "bounce_reduction",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "cloudcatcher__bounce_reduction"
+      ],
+      "official_text_available": false
+    },
+    "bounce_reduction_boost": {
+      "club_count": 1,
+      "club_ids": [
+        "cyclotron"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "bounce_reduction_boost",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "cyclotron__bounce_reduction_boost"
+      ],
+      "official_text_available": false
+    },
+    "boundary_bonus": {
+      "club_count": 3,
+      "club_ids": [
+        "edgewalker",
+        "leviathan",
+        "windstrike"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "boundary_bonus",
+      "occurrence_count": 3,
+      "occurrence_ids": [
+        "edgewalker__boundary_bonus",
+        "leviathan__boundary_bonus",
+        "windstrike__boundary_bonus"
+      ],
+      "official_text_available": false
+    },
+    "boundary_rush": {
+      "club_count": 1,
+      "club_ids": [
+        "flashpoint"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "boundary_rush",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "flashpoint__boundary_rush"
+      ],
+      "official_text_available": false
+    },
+    "boundary_rush_75": {
+      "club_count": 1,
+      "club_ids": [
+        "skyfury"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "boundary_rush_75",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "skyfury__boundary_rush_75"
+      ],
+      "official_text_available": false
+    },
+    "brand_fairway_rush": {
+      "club_count": 1,
+      "club_ids": [
+        "crusader"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "brand_fairway_rush",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "crusader__brand_fairway_rush"
+      ],
+      "official_text_available": false
+    },
+    "brand_loyalty": {
+      "club_count": 1,
+      "club_ids": [
+        "steward"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "brand_loyalty",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "steward__brand_loyalty"
+      ],
+      "official_text_available": false
+    },
+    "brand_loyalty_x": {
+      "club_count": 20,
+      "club_ids": [
+        "cloudcatcher",
+        "rook",
+        "trailblazer",
+        "lodestar",
+        "lowball",
+        "conqueror",
+        "into_the_breach",
+        "people_s_champion",
+        "rampart",
+        "saber",
+        "commonlaw",
+        "crusader",
+        "endeavor",
+        "groundskeep",
+        "homestead",
+        "kinship",
+        "meanderer",
+        "rolling_stone",
+        "sandsend",
+        "steadfast"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "brand_loyalty_x",
+      "occurrence_count": 20,
+      "occurrence_ids": [
+        "cloudcatcher__brand_loyalty_x",
+        "rook__brand_loyalty_x",
+        "trailblazer__brand_loyalty_x",
+        "lodestar__brand_loyalty_x",
+        "lowball__brand_loyalty_x",
+        "conqueror__brand_loyalty_x",
+        "into_the_breach__brand_loyalty_x",
+        "people_s_champion__brand_loyalty_x",
+        "rampart__brand_loyalty_x",
+        "saber__brand_loyalty_x",
+        "commonlaw__brand_loyalty_x",
+        "crusader__brand_loyalty_x",
+        "endeavor__brand_loyalty_x",
+        "groundskeep__brand_loyalty_x",
+        "homestead__brand_loyalty_x",
+        "kinship__brand_loyalty_x",
+        "meanderer__brand_loyalty_x",
+        "rolling_stone__brand_loyalty_x",
+        "sandsend__brand_loyalty_x",
+        "steadfast__brand_loyalty_x"
+      ],
+      "official_text_available": false
+    },
+    "chains_into_corvid": {
+      "club_count": 1,
+      "club_ids": [
+        "conspiracy"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "chains_into_corvid",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "conspiracy__chains_into_corvid"
+      ],
+      "official_text_available": false
+    },
+    "chains_into_irons_putters_wedges_drivers": {
+      "club_count": 1,
+      "club_ids": [
+        "navigator"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "chains_into_irons_putters_wedges_drivers",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "navigator__chains_into_irons_putters_wedges_drivers"
+      ],
+      "official_text_available": false
+    },
+    "chains_into_itself": {
+      "club_count": 1,
+      "club_ids": [
+        "sparky"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "chains_into_itself",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "sparky__chains_into_itself"
+      ],
+      "official_text_available": false
+    },
+    "chains_into_putters": {
+      "club_count": 2,
+      "club_ids": [
+        "divebomb",
+        "conqueror"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "chains_into_putters",
+      "occurrence_count": 2,
+      "occurrence_ids": [
+        "divebomb__chains_into_putters",
+        "conqueror__chains_into_putters"
+      ],
+      "official_text_available": false
+    },
+    "chains_into_wedges": {
+      "club_count": 1,
+      "club_ids": [
+        "outset"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "chains_into_wedges",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "outset__chains_into_wedges"
+      ],
+      "official_text_available": false
+    },
+    "chains_into_willoughsby": {
+      "club_count": 1,
+      "club_ids": [
+        "kinship"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "chains_into_willoughsby",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "kinship__chains_into_willoughsby"
+      ],
+      "official_text_available": false
+    },
+    "chains_into_woods_hybrids": {
+      "club_count": 1,
+      "club_ids": [
+        "navigator"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "chains_into_woods_hybrids",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "navigator__chains_into_woods_hybrids"
+      ],
+      "official_text_available": false
+    },
+    "combined_power": {
+      "club_count": 1,
+      "club_ids": [
+        "pantheon"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "combined_power",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "pantheon__combined_power"
+      ],
+      "official_text_available": false
+    },
+    "combined_spin": {
+      "club_count": 1,
+      "club_ids": [
+        "pantheon"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "combined_spin",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "pantheon__combined_spin"
+      ],
+      "official_text_available": false
+    },
+    "control_boost": {
+      "club_count": 1,
+      "club_ids": [
+        "galvanizer"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "control_boost",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "galvanizer__control_boost"
+      ],
+      "official_text_available": false
+    },
+    "corvid_wind_resist": {
+      "club_count": 1,
+      "club_ids": [
+        "divebomb"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "corvid_wind_resist",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "divebomb__corvid_wind_resist"
+      ],
+      "official_text_available": false
+    },
+    "driver_loyalty": {
+      "club_count": 1,
+      "club_ids": [
+        "people_s_champion"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "driver_loyalty",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "people_s_champion__driver_loyalty"
+      ],
+      "official_text_available": false
+    },
+    "electrodynamics_0_2ft": {
+      "club_count": 1,
+      "club_ids": [
+        "sparky"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "electrodynamics_0_2ft",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "sparky__electrodynamics_0_2ft"
+      ],
+      "official_text_available": false
+    },
+    "emerald_rush_75": {
+      "club_count": 1,
+      "club_ids": [
+        "green_demon"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "emerald_rush_75",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "green_demon__emerald_rush_75"
+      ],
+      "official_text_available": false
+    },
+    "exclusion_zone": {
+      "club_count": 1,
+      "club_ids": [
+        "earthquake"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "exclusion_zone",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "earthquake__exclusion_zone"
+      ],
+      "official_text_available": false
+    },
+    "fade_draw_x2": {
+      "club_count": 1,
+      "club_ids": [
+        "lodestar"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "fade_draw_x2",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "lodestar__fade_draw_x2"
+      ],
+      "official_text_available": false
+    },
+    "fairway_affinity": {
+      "club_count": 1,
+      "club_ids": [
+        "groundskeep"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "fairway_affinity",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "groundskeep__fairway_affinity"
+      ],
+      "official_text_available": false
+    },
+    "fellowship": {
+      "club_count": 1,
+      "club_ids": [
+        "steward"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "fellowship",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "steward__fellowship"
+      ],
+      "official_text_available": false
+    },
+    "first_gear": {
+      "club_count": 1,
+      "club_ids": [
+        "gearshift"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "first_gear",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "gearshift__first_gear"
+      ],
+      "official_text_available": false
+    },
+    "fission": {
+      "club_count": 1,
+      "club_ids": [
+        "supercollider"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "fission",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "supercollider__fission"
+      ],
+      "official_text_available": false
+    },
+    "flight_training": {
+      "club_count": 1,
+      "club_ids": [
+        "eagle_s_landing"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "flight_training",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "eagle_s_landing__flight_training"
+      ],
+      "official_text_available": false
+    },
+    "forester_power": {
+      "club_count": 1,
+      "club_ids": [
+        "ranger"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "forester_power",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "ranger__forester_power"
+      ],
+      "official_text_available": false
+    },
+    "forester_power_elite": {
+      "club_count": 1,
+      "club_ids": [
+        "ranger"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "forester_power_elite",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "ranger__forester_power_elite"
+      ],
+      "official_text_available": false
+    },
+    "gem_ball_bonus": {
+      "club_count": 1,
+      "club_ids": [
+        "crystallize"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "gem_ball_bonus",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "crystallize__gem_ball_bonus"
+      ],
+      "official_text_available": false
+    },
+    "gravity_reduction": {
+      "club_count": 1,
+      "club_ids": [
+        "into_the_blue"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "gravity_reduction",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "into_the_blue__gravity_reduction"
+      ],
+      "official_text_available": false
+    },
+    "gravity_reduction_x": {
+      "club_count": 1,
+      "club_ids": [
+        "tierra_hueca"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "gravity_reduction_x",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "tierra_hueca__gravity_reduction_x"
+      ],
+      "official_text_available": false
+    },
+    "green_grip": {
+      "club_count": 1,
+      "club_ids": [
+        "meanderer"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "green_grip",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "meanderer__green_grip"
+      ],
+      "official_text_available": false
+    },
+    "ground_rush": {
+      "club_count": 1,
+      "club_ids": [
+        "hot_streak"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "ground_rush",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "hot_streak__ground_rush"
+      ],
+      "official_text_available": false
+    },
+    "groundspin_x3": {
+      "club_count": 1,
+      "club_ids": [
+        "sidewinder"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "groundspin_x3",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "sidewinder__groundspin_x3"
+      ],
+      "official_text_available": false
+    },
+    "groundspin_x4": {
+      "club_count": 1,
+      "club_ids": [
+        "meanderer"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "groundspin_x4",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "meanderer__groundspin_x4"
+      ],
+      "official_text_available": false
+    },
+    "hollow_earth": {
+      "club_count": 1,
+      "club_ids": [
+        "tierra_hueca"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "hollow_earth",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "tierra_hueca__hollow_earth"
+      ],
+      "official_text_available": false
+    },
+    "home_turf_southwind": {
+      "club_count": 1,
+      "club_ids": [
+        "ranger"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "home_turf_southwind",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "ranger__home_turf_southwind"
+      ],
+      "official_text_available": false
+    },
+    "iron_wedge_exclusion": {
+      "club_count": 1,
+      "club_ids": [
+        "earthquake"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "iron_wedge_exclusion",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "earthquake__iron_wedge_exclusion"
+      ],
+      "official_text_available": false
+    },
+    "loft_angle_10": {
+      "club_count": 1,
+      "club_ids": [
+        "into_the_blue"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "loft_angle_10",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "into_the_blue__loft_angle_10"
+      ],
+      "official_text_available": false
+    },
+    "loft_angle_3": {
+      "club_count": 1,
+      "club_ids": [
+        "rebound"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "loft_angle_3",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "rebound__loft_angle_3"
+      ],
+      "official_text_available": false
+    },
+    "loft_angle_5": {
+      "club_count": 1,
+      "club_ids": [
+        "high_flight"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "loft_angle_5",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "high_flight__loft_angle_5"
+      ],
+      "official_text_available": false
+    },
+    "ludicrous_mode": {
+      "club_count": 1,
+      "club_ids": [
+        "xlr8r"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "ludicrous_mode",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "xlr8r__ludicrous_mode"
+      ],
+      "official_text_available": false
+    },
+    "magnetism_0_15ft": {
+      "club_count": 1,
+      "club_ids": [
+        "magnesis"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "magnetism_0_15ft",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "magnesis__magnetism_0_15ft"
+      ],
+      "official_text_available": false
+    },
+    "momentum": {
+      "club_count": 1,
+      "club_ids": [
+        "rolling_stone"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "momentum",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "rolling_stone__momentum"
+      ],
+      "official_text_available": false
+    },
+    "nautilus_boost": {
+      "club_count": 1,
+      "club_ids": [
+        "wave"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "nautilus_boost",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "wave__nautilus_boost"
+      ],
+      "official_text_available": false
+    },
+    "off_green_power": {
+      "club_count": 1,
+      "club_ids": [
+        "homecoming"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "off_green_power",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "homecoming__off_green_power"
+      ],
+      "official_text_available": false
+    },
+    "overaim": {
+      "club_count": 1,
+      "club_ids": [
+        "triumph"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "overaim",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "triumph__overaim"
+      ],
+      "official_text_available": false
+    },
+    "overdrive": {
+      "club_count": 1,
+      "club_ids": [
+        "triumph"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "overdrive",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "triumph__overdrive"
+      ],
+      "official_text_available": false
+    },
+    "palo_control_on_hit_x": {
+      "club_count": 1,
+      "club_ids": [
+        "tierra_hueca"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "palo_control_on_hit_x",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "tierra_hueca__palo_control_on_hit_x"
+      ],
+      "official_text_available": false
+    },
+    "perfect_shot_bag_power": {
+      "club_count": 1,
+      "club_ids": [
+        "flamethrower"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "perfect_shot_bag_power",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "flamethrower__perfect_shot_bag_power"
+      ],
+      "official_text_available": false
+    },
+    "perfect_shot_terrain_bonus_boost": {
+      "club_count": 1,
+      "club_ids": [
+        "color_theory"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "perfect_shot_terrain_bonus_boost",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "color_theory__perfect_shot_terrain_bonus_boost"
+      ],
+      "official_text_available": false
+    },
+    "phoenix_power": {
+      "club_count": 1,
+      "club_ids": [
+        "rising_flame"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "phoenix_power",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "rising_flame__phoenix_power"
+      ],
+      "official_text_available": false
+    },
+    "plasma_arc_x": {
+      "club_count": 1,
+      "club_ids": [
+        "sunstorm"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "plasma_arc_x",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "sunstorm__plasma_arc_x"
+      ],
+      "official_text_available": false
+    },
+    "power_boost": {
+      "club_count": 1,
+      "club_ids": [
+        "jumpstart"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "power_boost",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "jumpstart__power_boost"
+      ],
+      "official_text_available": false
+    },
+    "power_shot": {
+      "club_count": 4,
+      "club_ids": [
+        "dunecrawler",
+        "ember",
+        "flamethrower",
+        "neon_impulse"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "power_shot",
+      "occurrence_count": 4,
+      "occurrence_ids": [
+        "dunecrawler__power_shot",
+        "ember__power_shot",
+        "flamethrower__power_shot",
+        "neon_impulse__power_shot"
+      ],
+      "official_text_available": false
+    },
+    "random_boost_x": {
+      "club_count": 1,
+      "club_ids": [
+        "crystallize"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "random_boost_x",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "crystallize__random_boost_x"
+      ],
+      "official_text_available": false
+    },
+    "rocket_boosters": {
+      "club_count": 2,
+      "club_ids": [
+        "flashpoint",
+        "the_rocket"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "rocket_boosters",
+      "occurrence_count": 2,
+      "occurrence_ids": [
+        "flashpoint__rocket_boosters",
+        "the_rocket__rocket_boosters"
+      ],
+      "official_text_available": false
+    },
+    "rough_bonus": {
+      "club_count": 1,
+      "club_ids": [
+        "bushwhacker"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "rough_bonus",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "bushwhacker__rough_bonus"
+      ],
+      "official_text_available": false
+    },
+    "rough_boosters": {
+      "club_count": 1,
+      "club_ids": [
+        "overgrowth"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "rough_boosters",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "overgrowth__rough_boosters"
+      ],
+      "official_text_available": false
+    },
+    "rough_power": {
+      "club_count": 1,
+      "club_ids": [
+        "hero"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "rough_power",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "hero__rough_power"
+      ],
+      "official_text_available": false
+    },
+    "sacrifice": {
+      "club_count": 1,
+      "club_ids": [
+        "the_reaper"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "sacrifice",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "the_reaper__sacrifice"
+      ],
+      "official_text_available": false
+    },
+    "sand_bonus": {
+      "club_count": 1,
+      "club_ids": [
+        "sandblast"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "sand_bonus",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "sandblast__sand_bonus"
+      ],
+      "official_text_available": false
+    },
+    "sand_bonus_x": {
+      "club_count": 1,
+      "club_ids": [
+        "obelisk"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "sand_bonus_x",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "obelisk__sand_bonus_x"
+      ],
+      "official_text_available": false
+    },
+    "sand_bounce": {
+      "club_count": 1,
+      "club_ids": [
+        "mirage"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "sand_bounce",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "mirage__sand_bounce"
+      ],
+      "official_text_available": false
+    },
+    "scottsdale_boosters": {
+      "club_count": 1,
+      "club_ids": [
+        "rising_flame"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "scottsdale_boosters",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "rising_flame__scottsdale_boosters"
+      ],
+      "official_text_available": false
+    },
+    "shared_growth": {
+      "club_count": 1,
+      "club_ids": [
+        "oakheart"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "shared_growth",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "oakheart__shared_growth"
+      ],
+      "official_text_available": false
+    },
+    "shoreline_rush": {
+      "club_count": 1,
+      "club_ids": [
+        "wave"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "shoreline_rush",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "wave__shoreline_rush"
+      ],
+      "official_text_available": false
+    },
+    "shuffle_up": {
+      "club_count": 1,
+      "club_ids": [
+        "outlaw"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "shuffle_up",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "outlaw__shuffle_up"
+      ],
+      "official_text_available": false
+    },
+    "smoke_x": {
+      "club_count": 1,
+      "club_ids": [
+        "catalyst"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "smoke_x",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "catalyst__smoke_x"
+      ],
+      "official_text_available": false
+    },
+    "solidarity": {
+      "club_count": 1,
+      "club_ids": [
+        "pantheon"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "solidarity",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "pantheon__solidarity"
+      ],
+      "official_text_available": false
+    },
+    "sparks_x": {
+      "club_count": 1,
+      "club_ids": [
+        "catalyst"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "sparks_x",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "catalyst__sparks_x"
+      ],
+      "official_text_available": false
+    },
+    "spin_boost": {
+      "club_count": 1,
+      "club_ids": [
+        "cyclotron"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "spin_boost",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "cyclotron__spin_boost"
+      ],
+      "official_text_available": false
+    },
+    "stanchion_power": {
+      "club_count": 1,
+      "club_ids": [
+        "saber"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "stanchion_power",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "saber__stanchion_power"
+      ],
+      "official_text_available": false
+    },
+    "stat_fusion": {
+      "club_count": 1,
+      "club_ids": [
+        "fusion"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "stat_fusion",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "fusion__stat_fusion"
+      ],
+      "official_text_available": false
+    },
+    "steam_x": {
+      "club_count": 1,
+      "club_ids": [
+        "catalyst"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "steam_x",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "catalyst__steam_x"
+      ],
+      "official_text_available": false
+    },
+    "super_fireball": {
+      "club_count": 1,
+      "club_ids": [
+        "boomstick"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "super_fireball",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "boomstick__super_fireball"
+      ],
+      "official_text_available": false
+    },
+    "swing_speed_x2": {
+      "club_count": 1,
+      "club_ids": [
+        "magnesis"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "swing_speed_x2",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "magnesis__swing_speed_x2"
+      ],
+      "official_text_available": false
+    },
+    "tee_off_power": {
+      "club_count": 1,
+      "club_ids": [
+        "sidewinder"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "tee_off_power",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "sidewinder__tee_off_power"
+      ],
+      "official_text_available": false
+    },
+    "terrain_bonus": {
+      "club_count": 1,
+      "club_ids": [
+        "color_theory"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "terrain_bonus",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "color_theory__terrain_bonus"
+      ],
+      "official_text_available": false
+    },
+    "terrain_resist_50": {
+      "club_count": 6,
+      "club_ids": [
+        "homecoming",
+        "dunecrawler",
+        "obelisk",
+        "hydroforce",
+        "sandblast",
+        "windstrike"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "terrain_resist_50",
+      "occurrence_count": 6,
+      "occurrence_ids": [
+        "homecoming__terrain_resist_50",
+        "dunecrawler__terrain_resist_50",
+        "obelisk__terrain_resist_50",
+        "hydroforce__terrain_resist_50",
+        "sandblast__terrain_resist_50",
+        "windstrike__terrain_resist_50"
+      ],
+      "official_text_available": false
+    },
+    "texas_tee": {
+      "club_count": 1,
+      "club_ids": [
+        "blacksmith"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "texas_tee",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "blacksmith__texas_tee"
+      ],
+      "official_text_available": false
+    },
+    "three_heads": {
+      "club_count": 1,
+      "club_ids": [
+        "chimera"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "three_heads",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "chimera__three_heads"
+      ],
+      "official_text_available": false
+    },
+    "top_gear": {
+      "club_count": 1,
+      "club_ids": [
+        "gearshift"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "top_gear",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "gearshift__top_gear"
+      ],
+      "official_text_available": false
+    },
+    "tree_bonus": {
+      "club_count": 2,
+      "club_ids": [
+        "edgewalker",
+        "outset"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "tree_bonus",
+      "occurrence_count": 2,
+      "occurrence_ids": [
+        "edgewalker__tree_bonus",
+        "outset__tree_bonus"
+      ],
+      "official_text_available": false
+    },
+    "tree_bonus_x": {
+      "club_count": 3,
+      "club_ids": [
+        "huntsman",
+        "ironbark",
+        "oakheart"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "tree_bonus_x",
+      "occurrence_count": 3,
+      "occurrence_ids": [
+        "huntsman__tree_bonus_x",
+        "ironbark__tree_bonus_x",
+        "oakheart__tree_bonus_x"
+      ],
+      "official_text_available": false
+    },
+    "tree_passing": {
+      "club_count": 1,
+      "club_ids": [
+        "trailblazer"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "tree_passing",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "trailblazer__tree_passing"
+      ],
+      "official_text_available": false
+    },
+    "trumpet_blast": {
+      "club_count": 1,
+      "club_ids": [
+        "fanfare"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "trumpet_blast",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "fanfare__trumpet_blast"
+      ],
+      "official_text_available": false
+    },
+    "volt_bounce": {
+      "club_count": 1,
+      "club_ids": [
+        "rebound"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "volt_bounce",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "rebound__volt_bounce"
+      ],
+      "official_text_available": false
+    },
+    "water_bonus": {
+      "club_count": 1,
+      "club_ids": [
+        "leviathan"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "water_bonus",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "leviathan__water_bonus"
+      ],
+      "official_text_available": false
+    },
+    "water_bonus_x": {
+      "club_count": 1,
+      "club_ids": [
+        "hydroforce"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "water_bonus_x",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "hydroforce__water_bonus_x"
+      ],
+      "official_text_available": false
+    },
+    "water_bounce": {
+      "club_count": 1,
+      "club_ids": [
+        "mirage"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "water_bounce",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "mirage__water_bounce"
+      ],
+      "official_text_available": false
+    },
+    "water_rush": {
+      "club_count": 1,
+      "club_ids": [
+        "leviathan"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "water_rush",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "leviathan__water_rush"
+      ],
+      "official_text_available": false
+    },
+    "wild_rush_speed": {
+      "club_count": 1,
+      "club_ids": [
+        "explorer"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "wild_rush_speed",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "explorer__wild_rush_speed"
+      ],
+      "official_text_available": false
+    },
+    "wind_resist": {
+      "club_count": 2,
+      "club_ids": [
+        "into_the_blue",
+        "obelisk"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "wind_resist",
+      "occurrence_count": 2,
+      "occurrence_ids": [
+        "into_the_blue__wind_resist",
+        "obelisk__wind_resist"
+      ],
+      "official_text_available": false
+    },
+    "wind_resist_75": {
+      "club_count": 1,
+      "club_ids": [
+        "high_flight"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "wind_resist_75",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "high_flight__wind_resist_75"
+      ],
+      "official_text_available": false
+    },
+    "wind_resistance_100": {
+      "club_count": 1,
+      "club_ids": [
+        "stormbringer"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "wind_resistance_100",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "stormbringer__wind_resistance_100"
+      ],
+      "official_text_available": false
+    },
+    "wind_up_toy": {
+      "club_count": 1,
+      "club_ids": [
+        "xlr8r"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "wind_up_toy",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "xlr8r__wind_up_toy"
+      ],
+      "official_text_available": false
+    },
+    "zephyr_x_mph": {
+      "club_count": 1,
+      "club_ids": [
+        "stormbringer"
+      ],
+      "grouping_basis": "exact_source_label_id",
+      "label_id": "zephyr_x_mph",
+      "occurrence_count": 1,
+      "occurrence_ids": [
+        "stormbringer__zephyr_x_mph"
+      ],
+      "official_text_available": false
+    }
+  },
+  "layer": "exact_label_groups",
+  "schema_version": "1.0.0",
+  "source": {
+    "filename": "clubs_official.json",
+    "schema_version": "2.0.0",
+    "sha256": "76d298789030964a32cd4b047cba2598cc5b647b61a90b13ca962767f3417a85"
+  }
+}

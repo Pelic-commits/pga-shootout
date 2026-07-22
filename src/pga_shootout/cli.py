@@ -10,6 +10,7 @@ from .bag_evaluation import evaluate_saved_bag, render_bag_evaluation
 from .data_validation import validate_official_data
 from .loader import load_raw_json, summarize_raw_json
 from .models import EvaluationMode
+from .normalization import normalize_catalog
 from .user_data import ClubCatalogIndex, load_user_data, validate_user_data
 
 
@@ -46,6 +47,9 @@ def build_parser() -> argparse.ArgumentParser:
     mode_group = evaluate_parser.add_mutually_exclusive_group(required=True)
     mode_group.add_argument("--strict", action="store_true")
     mode_group.add_argument("--partial", action="store_true")
+    normalize_parser = subparsers.add_parser("normalize", help="regenerate structural ability artifacts without interpretation")
+    normalize_parser.add_argument("--source", default="data/normalized/clubs_official.json")
+    normalize_parser.add_argument("--output-dir", default="data/normalized")
     return parser
 
 
@@ -56,6 +60,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif args.command == "validate-data":
         report = validate_official_data(args.raw_path, args.normalized_path)
         print(json.dumps(report.as_dict(), indent=2, ensure_ascii=False))
+    elif args.command == "normalize":
+        summary = normalize_catalog(args.source, args.output_dir)
+        print(json.dumps(summary.__dict__, indent=2, ensure_ascii=False))
     elif args.command == "evaluate-bag":
         mode = EvaluationMode.STRICT if args.strict else EvaluationMode.PARTIAL
         evaluation = evaluate_saved_bag(

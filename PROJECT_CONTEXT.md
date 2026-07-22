@@ -203,7 +203,7 @@ Conforme aujourd'hui : aucune logique de nom de club, séparation conditions/eff
 - capacités des clubs non chargées automatiquement dans l'évaluation ;
 - aucune validation du schéma officiel ni test des compteurs annoncés ;
 - tests réalisés avec `unittest` alors que la convention cible indique `pytest` ;
-- capture brute, catalogue officiel et audit présents ; les autres artefacts sémantiques restent absents.
+- capture brute, catalogue officiel et audit présents ; cinq artefacts structurels sont régénérables par la CLI sans interprétation ; `assets.json` reste absent.
 
 Git au 22 juillet 2026 : branche `main`, distant `origin` égal à `https://github.com/Pelic-commits/pga-shootout.git`, local et distant synchronisés au début de l'audit sur `cc8dc80`.
 

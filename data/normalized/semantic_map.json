@@ -1,0 +1,1261 @@
+{
+  "entries": {
+    "label:ability_mirror": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:ability_mirror",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:adjacent_power": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:adjacent_power",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:adventure": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:adventure",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:alien_relic_left": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:alien_relic_left",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:alien_relic_right": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:alien_relic_right",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:alien_world": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:alien_world",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:alloy": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:alloy",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:aura_of_death": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:aura_of_death",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:bag_bounce_reduction": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:bag_bounce_reduction",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:bag_control": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:bag_control",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:bag_loft_angle_10": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:bag_loft_angle_10",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:bag_rarity_boost": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:bag_rarity_boost",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:bag_recklessness": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:bag_recklessness",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:bag_rough_power": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:bag_rough_power",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:bag_sand_bonus": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:bag_sand_bonus",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:bag_spin_bonus": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:bag_spin_bonus",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:bag_tree_bonus": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:bag_tree_bonus",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:bag_tree_passing": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:bag_tree_passing",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:bag_water_bonus": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:bag_water_bonus",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:bag_water_bounce": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:bag_water_bounce",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:bag_wind_power": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:bag_wind_power",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:bag_wind_resist": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:bag_wind_resist",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:beast_strength": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:beast_strength",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:blazing_flight": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:blazing_flight",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:bounce_reduction": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:bounce_reduction",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:bounce_reduction_boost": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:bounce_reduction_boost",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:boundary_bonus": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:boundary_bonus",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:boundary_rush": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:boundary_rush",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:boundary_rush_75": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:boundary_rush_75",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:brand_fairway_rush": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:brand_fairway_rush",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:brand_loyalty": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:brand_loyalty",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:brand_loyalty_x": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:brand_loyalty_x",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:chains_into_corvid": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:chains_into_corvid",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:chains_into_irons_putters_wedges_drivers": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:chains_into_irons_putters_wedges_drivers",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:chains_into_itself": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:chains_into_itself",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:chains_into_putters": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:chains_into_putters",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:chains_into_wedges": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:chains_into_wedges",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:chains_into_willoughsby": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:chains_into_willoughsby",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:chains_into_woods_hybrids": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:chains_into_woods_hybrids",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:combined_power": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:combined_power",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:combined_spin": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:combined_spin",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:control_boost": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:control_boost",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:corvid_wind_resist": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:corvid_wind_resist",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:driver_loyalty": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:driver_loyalty",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:electrodynamics_0_2ft": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:electrodynamics_0_2ft",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:emerald_rush_75": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:emerald_rush_75",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:exclusion_zone": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:exclusion_zone",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:fade_draw_x2": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:fade_draw_x2",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:fairway_affinity": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:fairway_affinity",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:fellowship": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:fellowship",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:first_gear": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:first_gear",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:fission": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:fission",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:flight_training": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:flight_training",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:forester_power": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:forester_power",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:forester_power_elite": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:forester_power_elite",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:gem_ball_bonus": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:gem_ball_bonus",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:gravity_reduction": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:gravity_reduction",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:gravity_reduction_x": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:gravity_reduction_x",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:green_grip": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:green_grip",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:ground_rush": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:ground_rush",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:groundspin_x3": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:groundspin_x3",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:groundspin_x4": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:groundspin_x4",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:hollow_earth": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:hollow_earth",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:home_turf_southwind": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:home_turf_southwind",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:iron_wedge_exclusion": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:iron_wedge_exclusion",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:loft_angle_10": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:loft_angle_10",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:loft_angle_3": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:loft_angle_3",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:loft_angle_5": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:loft_angle_5",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:ludicrous_mode": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:ludicrous_mode",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:magnetism_0_15ft": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:magnetism_0_15ft",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:momentum": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:momentum",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:nautilus_boost": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:nautilus_boost",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:off_green_power": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:off_green_power",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:overaim": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:overaim",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:overdrive": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:overdrive",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:palo_control_on_hit_x": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:palo_control_on_hit_x",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:perfect_shot_bag_power": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:perfect_shot_bag_power",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:perfect_shot_terrain_bonus_boost": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:perfect_shot_terrain_bonus_boost",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:phoenix_power": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:phoenix_power",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:plasma_arc_x": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:plasma_arc_x",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:power_boost": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:power_boost",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:power_shot": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:power_shot",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:random_boost_x": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:random_boost_x",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:rocket_boosters": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:rocket_boosters",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:rough_bonus": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:rough_bonus",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:rough_boosters": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:rough_boosters",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:rough_power": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:rough_power",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:sacrifice": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:sacrifice",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:sand_bonus": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:sand_bonus",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:sand_bonus_x": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:sand_bonus_x",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:sand_bounce": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:sand_bounce",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:scottsdale_boosters": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:scottsdale_boosters",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:shared_growth": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:shared_growth",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:shoreline_rush": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:shoreline_rush",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:shuffle_up": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:shuffle_up",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:smoke_x": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:smoke_x",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:solidarity": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:solidarity",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:sparks_x": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:sparks_x",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:spin_boost": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:spin_boost",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:stanchion_power": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:stanchion_power",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:stat_fusion": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:stat_fusion",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:steam_x": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:steam_x",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:super_fireball": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:super_fireball",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:swing_speed_x2": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:swing_speed_x2",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:tee_off_power": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:tee_off_power",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:terrain_bonus": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:terrain_bonus",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:terrain_resist_50": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:terrain_resist_50",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:texas_tee": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:texas_tee",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:three_heads": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:three_heads",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:top_gear": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:top_gear",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:tree_bonus": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:tree_bonus",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:tree_bonus_x": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:tree_bonus_x",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:tree_passing": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:tree_passing",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:trumpet_blast": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:trumpet_blast",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:volt_bounce": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:volt_bounce",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:water_bonus": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:water_bonus",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:water_bonus_x": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:water_bonus_x",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:water_bounce": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:water_bounce",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:water_rush": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:water_rush",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:wild_rush_speed": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:wild_rush_speed",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:wind_resist": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:wind_resist",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:wind_resist_75": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:wind_resist_75",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:wind_resistance_100": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:wind_resistance_100",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:wind_up_toy": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:wind_up_toy",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    },
+    "label:zephyr_x_mph": {
+      "complexity": null,
+      "dependencies": null,
+      "group_id": "label:zephyr_x_mph",
+      "interpretation_status": "uninterpreted",
+      "mechanic_id": null,
+      "notes": [],
+      "priority": null,
+      "validation_status": "not_started"
+    }
+  },
+  "layer": "semantic_interpretation_placeholders",
+  "schema_version": "1.0.0",
+  "source": {
+    "filename": "clubs_official.json",
+    "schema_version": "2.0.0",
+    "sha256": "76d298789030964a32cd4b047cba2598cc5b647b61a90b13ca962767f3417a85"
+  }
+}

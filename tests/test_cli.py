@@ -71,6 +71,29 @@ class CliTests(unittest.TestCase):
         self.assertEqual(strict_result, 1)
         self.assertIn("Strict mode: FAILED", strict_output.getvalue())
 
+    def test_normalize_cli_regenerates_all_artifacts(self):
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as directory:
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                result = main([
+                    "normalize",
+                    "--source", str(root / "data" / "normalized" / "clubs_official.json"),
+                    "--output-dir", directory,
+                ])
+            self.assertEqual(result, 0)
+            self.assertIn('"occurrences": 162', output.getvalue())
+            self.assertEqual(
+                {path.name for path in Path(directory).iterdir()},
+                {
+                    "ability_occurrences.json",
+                    "ability_labels.json",
+                    "mechanics_catalog.json",
+                    "semantic_map.json",
+                    "normalization_report.json",
+                },
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

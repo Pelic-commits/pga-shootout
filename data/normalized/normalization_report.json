@@ -1,0 +1,31 @@
+{
+  "ambiguities": [],
+  "counts": {
+    "ability_occurrences": 162,
+    "clubs": 88,
+    "converted_level_values": 1333,
+    "labels_shared_by_multiple_occurrences": 11,
+    "structural_groups": 125,
+    "unique_label_ids": 125
+  },
+  "integrity": {
+    "all_groups_uninterpreted": true,
+    "missing_label_ids": [],
+    "occurrence_club_prefix_mismatches": [],
+    "source_ability_count_matches": true,
+    "unique_occurrence_ids": true
+  },
+  "schema_version": "1.0.0",
+  "source": {
+    "filename": "clubs_official.json",
+    "schema_version": "2.0.0",
+    "sha256": "76d298789030964a32cd4b047cba2598cc5b647b61a90b13ca962767f3417a85"
+  },
+  "source_limitations": [
+    {
+      "affected_occurrences": 162,
+      "code": "official_ability_text_unavailable",
+      "detail": "Source abilities contain label_id and values_by_level, but no official title, description or icon."
+    }
+  ]
+}
