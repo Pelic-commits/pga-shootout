@@ -131,8 +131,24 @@ def _match_brand(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats
     if parameters.get("operator", "equals") != "equals":
         raise DslExecutionError("MATCH_BRAND currently requires the equals operator")
     source = state.bag.get(_club_id(inputs["source"])).club
+    matches, evaluations, directional = _match_club_attribute(inputs, state, lambda club_id: state.bag.get(club_id).club.brand, source.brand)
+    return PrimitiveResult(
+        {"clubs": matches},
+        stats,
+        f"matched {len(matches)} club(s) against brand {source.brand}",
+        explain_inputs={"source": source.name, "brand": source.brand, "candidates": [item["club"] for item in evaluations]},
+        explain_outputs=directional,
+    )
+
+
+def _match_club_attribute(
+    inputs: Mapping[str, Any],
+    state: GameState,
+    read_attribute: Callable[[str], str],
+    expected: str,
+) -> tuple[tuple[str, ...], list[dict[str, Any]], dict[str, dict[str, Any] | None]]:
     clubs = tuple(_club_id(value) for value in inputs.get("clubs", ()))
-    matches = tuple(club_id for club_id in clubs if state.bag.get(club_id).club.brand == source.brand)
+    matches = tuple(club_id for club_id in clubs if read_attribute(club_id) == expected)
     evaluations = [
         {"club": _club_name(state, club_id), "matches": club_id in matches}
         for club_id in clubs
@@ -148,11 +164,24 @@ def _match_brand(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats
         )
         for direction in ("left", "right")
     }
+    return matches, evaluations, directional
+
+
+def _match_type(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
+    if parameters.get("operator", "equals") != "equals":
+        raise DslExecutionError("MATCH_TYPE currently requires the equals operator")
+    expected = str(parameters["expected"])
+    matches, evaluations, directional = _match_club_attribute(
+        inputs,
+        state,
+        lambda club_id: state.bag.get(club_id).club.club_type,
+        expected,
+    )
     return PrimitiveResult(
         {"clubs": matches},
         stats,
-        f"matched {len(matches)} club(s) against brand {source.brand}",
-        explain_inputs={"source": source.name, "brand": source.brand, "candidates": [item["club"] for item in evaluations]},
+        f"matched {len(matches)} club(s) against type {expected}",
+        explain_inputs={"type": expected, "candidates": [item["club"] for item in evaluations]},
         explain_outputs=directional,
     )
 
@@ -234,6 +263,7 @@ def default_dsl_registry() -> DslPrimitiveRegistry:
     registry.register("READ_LEVEL_VALUE", _read_level_value)
     registry.register("SELECT_ADJACENT", _select_adjacent)
     registry.register("MATCH_BRAND", _match_brand)
+    registry.register("MATCH_TYPE", _match_type)
     registry.register("COUNT", _count)
     registry.register("SCALE", _scale)
     registry.register("ADD_STAT", _add_stat)

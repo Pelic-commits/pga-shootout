@@ -708,14 +708,119 @@
       "validation_status": "not_started"
     },
     "label:driver_loyalty": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "club_type",
+        "ability_level_value"
+      ],
       "group_id": "label:driver_loyalty",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: Has +X power for each Driver next to People's Champion.",
+        "Uses the generic adjacent-filter-count-scale-stat pipeline with MATCH_TYPE(expected=driver)."
+      ],
+      "priority": 4,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "neighbors",
+            "inputs": {
+              "origin": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ADJACENT",
+            "parameters": {
+              "directions": [
+                "left",
+                "right"
+              ],
+              "distance": 1
+            }
+          },
+          {
+            "id": "matching_neighbors",
+            "inputs": {
+              "clubs": {
+                "from": "neighbors.clubs"
+              },
+              "left": {
+                "from": "neighbors.left"
+              },
+              "right": {
+                "from": "neighbors.right"
+              }
+            },
+            "operation": "MATCH_TYPE",
+            "parameters": {
+              "expected": "driver",
+              "operator": "equals"
+            }
+          },
+          {
+            "id": "matching_count",
+            "inputs": {
+              "items": {
+                "from": "matching_neighbors.clubs"
+              }
+            },
+            "operation": "COUNT"
+          },
+          {
+            "id": "bonus",
+            "inputs": {
+              "amount": {
+                "from": "level_value.value"
+              },
+              "factor": {
+                "from": "matching_count.value"
+              }
+            },
+            "operation": "SCALE"
+          },
+          {
+            "id": "apply_power",
+            "inputs": {
+              "delta": {
+                "from": "bonus.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "power"
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:electrodynamics_0_2ft": {
       "complexity": null,

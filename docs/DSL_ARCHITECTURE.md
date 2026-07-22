@@ -4,11 +4,12 @@
 
 ## Sous-ensemble implémenté
 
-Le premier exécuteur du DSL couvre uniquement le pipeline qualifié dans les données pour le groupe `brand_loyalty_x` :
+L'exécuteur couvre deux variantes du pipeline générique d'adjacence qualifiées dans les données :
 
-`SELECT_SELF → READ_LEVEL_VALUE → SELECT_ADJACENT → MATCH_BRAND → COUNT → SCALE → ADD_STAT(power)`
+- marque : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_ADJACENT → MATCH_BRAND → COUNT → SCALE → ADD_STAT` ;
+- type : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_ADJACENT → MATCH_TYPE → COUNT → SCALE → ADD_STAT`.
 
-Ces sept primitives sont enregistrées indépendamment. Le Rule Engine ne connaît ni le nom de la famille ni les noms des clubs : il reçoit le programme depuis `semantic_map.json`, le transmet à `dsl_pipeline` et ajoute une entrée Explain pour chaque nœud. Toutes les autres primitives de ce document restent des éléments d'architecture non implémentés.
+Le registre contient huit primitives : `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ADJACENT`, `MATCH_BRAND`, `MATCH_TYPE`, `COUNT`, `SCALE` et `ADD_STAT`. Le Rule Engine ne connaît ni le nom de la famille ni les noms des clubs : il reçoit le programme depuis `semantic_map.json`, le transmet à `dsl_pipeline` et ajoute une entrée Explain pour chaque nœud. Toutes les autres primitives de ce document restent des éléments d'architecture non implémentés.
 
 ## Principes
 

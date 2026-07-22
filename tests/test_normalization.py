@@ -45,6 +45,7 @@ class NormalizationPipelineTests(unittest.TestCase):
             "label:brand_loyalty",
             "label:brand_loyalty_x",
             "label:control_boost",
+            "label:driver_loyalty",
             "label:power_boost",
             "label:spin_boost",
         }
