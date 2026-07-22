@@ -1,3 +1,6 @@
+import json
+import shutil
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -48,6 +51,48 @@ class BagComparisonTests(unittest.TestCase):
         )
         self.assertTrue(comparison.right.applied_changes)
         self.assertNotIn("dsl_pipeline", {change.mechanism for change in comparison.right.applied_changes})
+
+    def test_new_tradeoff_is_reported_as_gained_and_lost_bonuses(self):
+        with tempfile.TemporaryDirectory() as directory:
+            user_dir = Path(directory) / "user"
+            shutil.copytree(USER_DIR, user_dir)
+            bags_path = user_dir / "bags.json"
+            data = json.loads(bags_path.read_text(encoding="utf-8"))
+            data["bags"].extend(
+                [
+                    {
+                        "id": "baseline",
+                        "name": "Baseline",
+                        "status": "user_observed",
+                        "club_ids": ["jumpstart", "outset", "high_flight", "rampart", "sunstorm"],
+                    },
+                    {
+                        "id": "reckless",
+                        "name": "Reckless",
+                        "status": "user_observed",
+                        "club_ids": ["jumpstart", "into_the_breach", "high_flight", "rampart", "sunstorm"],
+                    },
+                ]
+            )
+            bags_path.write_text(json.dumps(data), encoding="utf-8")
+            comparison = compare_saved_bags(
+                "baseline",
+                "reckless",
+                level=12,
+                current_position=1,
+                mode=EvaluationMode.PARTIAL,
+                user_dir=user_dir,
+                catalog_path=CATALOG,
+            )
+
+        self.assertEqual(
+            comparison.ability_impact_difference_right_minus_left,
+            {"power": 4.0, "control": -4.0, "spin": 4.0},
+        )
+        rendered = render_bag_comparison(comparison)
+        self.assertIn("Bonuses gained by right vs left: power +4, spin +4", rendered)
+        self.assertIn("Bonuses lost by right vs left: control -4", rendered)
+        self.assertIn("Into the Breach / into_the_breach__bag_recklessness", rendered)
 
     def test_composition_is_rendered_position_by_position(self):
         rendered = render_bag_comparison(self.compare())

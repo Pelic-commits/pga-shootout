@@ -45,6 +45,7 @@ class NormalizationPipelineTests(unittest.TestCase):
             "label:adjacent_power",
             "label:alloy",
             "label:bag_control",
+            "label:bag_recklessness",
             "label:bag_spin_bonus",
             "label:brand_loyalty",
             "label:brand_loyalty_x",

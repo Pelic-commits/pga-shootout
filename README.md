@@ -44,7 +44,7 @@ Le niveau est un niveau de scénario explicite, jamais déduit de l'inventaire u
 
 Le mode `strict` échoue sur une mécanique inconnue. Le mode `partial` conserve le résultat calculable et signale explicitement chaque élément non évalué.
 
-`compare-bags` compare la composition et le club occupant la même position dans deux sacs. Il affiche les statistiques de base, les statistiques finales, les écarts et les effets appliqués, sans inventer de score global ni de poids de préférence.
+`compare-bags` compare la composition et le club occupant la même position dans deux sacs. Il affiche les statistiques de base, l'impact des capacités, les statistiques finales, les bonus gagnés ou perdus et les bonus non résolus, sans inventer de score global ni de poids de préférence.
 
 ## Données utilisateur
 

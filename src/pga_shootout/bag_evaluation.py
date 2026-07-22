@@ -56,6 +56,20 @@ def _official_level_scalar(value: Mapping[str, Any]) -> float | None:
     return float(scalar)
 
 
+def _official_level_components(value: Mapping[str, Any]) -> dict[str, float]:
+    semantic = value.get("semantic_value")
+    components = semantic.get("components") if isinstance(semantic, Mapping) else None
+    if not isinstance(components, Mapping):
+        return {}
+    resolved: dict[str, float] = {}
+    for name, component in components.items():
+        numeric = component.get("value") if isinstance(component, Mapping) else None
+        if isinstance(numeric, bool) or not isinstance(numeric, (int, float)):
+            continue
+        resolved[str(name)] = float(numeric)
+    return resolved
+
+
 def _materialize_pattern(value: Any, parameters: Mapping[str, Any]) -> Any:
     """Resolve declarative pattern parameters without knowing any ability family."""
     if isinstance(value, Mapping) and set(value) == {"pattern_parameter"}:
@@ -117,14 +131,17 @@ def _abilities_at_level(
         program = _semantic_program(semantic, semantic_patterns or {}) if isinstance(semantic, Mapping) else None
         if not mechanism and isinstance(semantic, Mapping) and semantic.get("mechanic_id") and program is not None:
             level_value = _official_level_scalar(value) if isinstance(value, Mapping) else None
-            if level_value is not None:
+            level_components = _official_level_components(value) if isinstance(value, Mapping) else {}
+            if level_value is not None or level_components:
                 mechanism = str(semantic["mechanic_id"])
                 parameters = {
                     "program": program,
                     "source_club_id": str(club_data["id"]),
                     "ability_level": level,
-                    "level_value": level_value,
+                    "level_components": level_components,
                 }
+                if level_value is not None:
+                    parameters["level_value"] = level_value
         if not mechanism:
             mechanism = f"unsupported:{label_id}"
         effect = Effect(

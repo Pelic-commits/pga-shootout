@@ -424,11 +424,19 @@ def _resolve(
     if isinstance(value, Mapping) and set(value) == {"from"}:
         reference = str(value["from"])
         if reference.startswith("effect."):
-            key = reference.removeprefix("effect.")
+            path = reference.removeprefix("effect.").split(".")
+            resolved: Any = effect.parameters
             try:
-                return effect.parameters[key]
-            except KeyError as exc:
-                raise DslExecutionError(f"Missing effect input: {key}") from exc
+                for key in path:
+                    if isinstance(resolved, Mapping):
+                        resolved = resolved[key]
+                    elif isinstance(resolved, Sequence) and not isinstance(resolved, (str, bytes)):
+                        resolved = resolved[int(key)]
+                    else:
+                        raise KeyError(key)
+                return resolved
+            except (KeyError, IndexError, ValueError) as exc:
+                raise DslExecutionError(f"Missing effect input: {'.'.join(path)}") from exc
         if reference.startswith("iteration."):
             key = reference.removeprefix("iteration.")
             if bindings is None or key not in bindings:
@@ -489,6 +497,8 @@ def _execute_nodes(
             )
         )
         for continuation in result.continuations:
+            nested_bindings = dict(bindings or {})
+            nested_bindings.update(continuation.bindings)
             current, nested_journal, _ = _execute_nodes(
                 continuation.nodes,
                 current,
@@ -496,7 +506,7 @@ def _execute_nodes(
                 state,
                 registry,
                 outputs=resolved_outputs,
-                bindings=continuation.bindings,
+                bindings=nested_bindings,
                 scope=f"{scoped_node_id}[{continuation.label}]",
             )
             journal.extend(nested_journal)

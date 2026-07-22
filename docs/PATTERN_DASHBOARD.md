@@ -12,6 +12,7 @@ Le catalogue officiel contient 125 groupes, 162 occurrences et 88 clubs. Les pou
 | Bonus direct aux cibles d'une marque | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `MATCH_BRAND`, `FOR_EACH`, `ADD_STAT` | `forester_power`, `phoenix_power`, `stanchion_power` | aucune | 3 | 1,85 % |
 | Bonus par correspondance à la cible et à la source | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL` ou `SELECT_ADJACENT`, `MATCH_TYPE` ou `MATCH_BRAND`, `FOR_EACH`, `ADD_STAT` | `alloy`, `nautilus_boost` | aucune | 2 | 1,23 % |
 | Bonus sous condition d'absence de types | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `MATCH_TYPE`, `EXISTS`, `UNLESS`, `FOR_EACH`, `ADD_STAT` | `iron_wedge_exclusion`, `exclusion_zone` | aucune | 2 | 1,23 % |
+| Compromis multi-statistiques du sac | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `FOR_EACH`, `ADD_STAT` | `bag_recklessness` | aucune | 1 | 0,62 % |
 
 ## Patterns paramétrés
 
@@ -29,20 +30,24 @@ Les groupes `smoke_x`, `steam_x` et `sparks_x` restent seulement des candidats. 
 - `exclusion_zone` sélectionne tous les clubs sauf la source ;
 - les deux familles utilisent le même filtre `MATCH_TYPE(in: iron, wedge)`, le même test `EXISTS` et la même branche `UNLESS`.
 
+`bag_multi_stat_tradeoff` lit séparément chaque composante signée du niveau officiel. `bag_recklessness` configure les statistiques bonifiées (`power`, `spin`) et pénalisée (`control`) ; aucune perte n'est déduite par inversion du bonus.
+
 ## Architecture Dashboard
 
 | Indicateur | État |
 |---|---:|
-| Couverture technique | 16 / 125 groupes ; 36 / 162 occurrences |
+| Couverture technique | 17 / 125 groupes ; 37 / 162 occurrences |
 | Couverture fonctionnelle | 5 / 8 fonctionnalités utilisateur de référence |
-| Groupes couverts | 16 / 125 (12,80 %) |
-| Occurrences couvertes | 36 / 162 (22,22 %) |
+| Groupes couverts | 17 / 125 (13,60 %) |
+| Occurrences couvertes | 37 / 162 (22,84 %) |
 | Clubs couverts | 31 / 88 (35,23 %) |
 | Primitives disponibles | 12 / 50 |
 | Primitives encore manquantes | 38 / 50 |
 | Familles qualifiées bloquées uniquement par une primitive absente | 0 |
 
-Les 109 groupes restants sont non qualifiés. Attribuer un nombre exact de primitives manquantes avant validation sémantique produirait une fausse précision ; ils ne sont pas comptés comme « bloqués par une seule primitive ».
+Les 108 groupes restants sont non qualifiés. Attribuer un nombre exact de primitives manquantes avant validation sémantique produirait une fausse précision ; ils ne sont pas comptés comme « bloqués par une seule primitive ».
+
+Précision fonctionnelle améliorée dans ce lot : 1 club (`into_the_breach`) et sa capacité `bag_recklessness`.
 
 ## Couverture fonctionnelle
 
@@ -51,7 +56,7 @@ Les 109 groupes restants sont non qualifiés. Attribuer un nombre exact de primi
 | Charger et afficher les sacs sauvegardés | Supportée |
 | Évaluer un sac à un niveau de scénario explicite | Supportée |
 | Expliquer les effets appliqués et non résolus | Supportée |
-| Comparer deux sacs par composition, position et statistiques | Supportée |
+| Comparer deux sacs par composition, position, statistiques, bonus gagnés/perdus et bonus non résolus | Supportée |
 | Distinguer calcul complet et calcul partiel | Supportée |
 | Classer automatiquement plusieurs sacs | Non supportée — pondérations non validées |
 | Recommander le remplacement d'un club | Non supportée |

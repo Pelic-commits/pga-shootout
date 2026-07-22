@@ -26,6 +26,7 @@ class ComparedBag:
     evaluation: BagEvaluation
     current_position: int
     applied_changes: tuple[AppliedChange, ...]
+    ability_impact: Mapping[str, float]
 
 
 @dataclass(frozen=True)
@@ -35,6 +36,7 @@ class BagComparison:
     level: int | str
     mode: EvaluationMode
     final_difference_right_minus_left: Mapping[str, float]
+    ability_impact_difference_right_minus_left: Mapping[str, float]
 
     @property
     def strict_failed(self) -> bool:
@@ -49,6 +51,12 @@ def _applied_changes(evaluation: BagEvaluation) -> tuple[AppliedChange, ...]:
         and entry.applied
         and any(value != 0 for value in entry.modification.values())
     )
+
+
+def _ability_impact(evaluation: BagEvaluation) -> dict[str, float]:
+    base = evaluation.result.base_stats.as_dict()
+    final = evaluation.result.final_stats.as_dict()
+    return {stat: final[stat] - base[stat] for stat in ("power", "control", "spin")}
 
 
 def compare_saved_bags(
@@ -86,13 +94,19 @@ def compare_saved_bags(
     )
     left_stats = left.result.final_stats.as_dict()
     right_stats = right.result.final_stats.as_dict()
+    left_impact = _ability_impact(left)
+    right_impact = _ability_impact(right)
     return BagComparison(
-        left=ComparedBag(left, current_position, _applied_changes(left)),
-        right=ComparedBag(right, current_position, _applied_changes(right)),
+        left=ComparedBag(left, current_position, _applied_changes(left), left_impact),
+        right=ComparedBag(right, current_position, _applied_changes(right), right_impact),
         level=level,
         mode=mode,
         final_difference_right_minus_left={
             stat: right_stats[stat] - left_stats[stat]
+            for stat in ("power", "control", "spin")
+        },
+        ability_impact_difference_right_minus_left={
+            stat: right_impact[stat] - left_impact[stat]
             for stat in ("power", "control", "spin")
         },
     )
@@ -108,6 +122,12 @@ def _change_lines(side: ComparedBag) -> list[str]:
         )
         lines.append(f"  {change.source} / {change.mechanism}: {deltas}")
     return lines
+
+
+def _unresolved_lines(evaluation: BagEvaluation) -> list[str]:
+    if not evaluation.result.unresolved:
+        return ["  none"]
+    return [f"  {item}" for item in evaluation.result.unresolved]
 
 
 def render_bag_comparison(comparison: BagComparison) -> str:
@@ -137,7 +157,7 @@ def render_bag_comparison(comparison: BagComparison) -> str:
             f"Right: {right.bag.name} - {right_current}",
             "",
             "Stats (difference = right - left)",
-            "Stat       Left base  Left final  Right base  Right final  Difference",
+            "Stat       Left base  Left abilities  Left final  Right base  Right abilities  Right final  Final diff",
         ]
     )
     left_base = left.result.base_stats.as_dict()
@@ -146,8 +166,9 @@ def render_bag_comparison(comparison: BagComparison) -> str:
     right_final = right.result.final_stats.as_dict()
     for stat in ("power", "control", "spin"):
         lines.append(
-            f"{stat.capitalize():<10} {left_base[stat]:>9g}  {left_final[stat]:>10g}"
-            f"  {right_base[stat]:>10g}  {right_final[stat]:>11g}"
+            f"{stat.capitalize():<10} {left_base[stat]:>9g}  {comparison.left.ability_impact[stat]:>+14g}"
+            f"  {left_final[stat]:>10g}  {right_base[stat]:>10g}"
+            f"  {comparison.right.ability_impact[stat]:>+15g}  {right_final[stat]:>11g}"
             f"  {comparison.final_difference_right_minus_left[stat]:>+10g}"
         )
 
@@ -155,11 +176,26 @@ def render_bag_comparison(comparison: BagComparison) -> str:
     lines.extend(_change_lines(comparison.left))
     lines.append("Applied stat changes - right")
     lines.extend(_change_lines(comparison.right))
+    gained = [
+        f"{stat} +{value:g}"
+        for stat, value in comparison.ability_impact_difference_right_minus_left.items()
+        if value > 0
+    ]
+    lost = [
+        f"{stat} {value:g}"
+        for stat, value in comparison.ability_impact_difference_right_minus_left.items()
+        if value < 0
+    ]
     lines.extend(
         [
             "",
-            f"Unresolved effects - left: {len(left.result.unresolved)}",
-            f"Unresolved effects - right: {len(right.result.unresolved)}",
+            "Bonuses gained by right vs left: " + (", ".join(gained) if gained else "none"),
+            "Bonuses lost by right vs left: " + (", ".join(lost) if lost else "none"),
+            "",
+            f"Unresolved bonuses - left ({len(left.result.unresolved)}):",
+            *_unresolved_lines(left),
+            f"Unresolved bonuses - right ({len(right.result.unresolved)}):",
+            *_unresolved_lines(right),
             f"Strict status: {'FAILED' if comparison.strict_failed else 'SUCCESS' if comparison.mode is EvaluationMode.STRICT else 'NOT REQUESTED'}",
             "No aggregate score: user preference weights and real club levels are not yet validated.",
             "=" * 72,
