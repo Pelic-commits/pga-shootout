@@ -9,8 +9,12 @@
 - Rule Engine et journal Explain
 - CLI et tests unitaires
 
+Statut : initialisé et audité ; les phases Explain, la provenance et plusieurs champs de domaine restent à compléter.
+
 ## 2. Validation des données
 
+- Importer la capture brute et les artefacts officiels dans un commit séparé
+- Vérifier les hashes SHA-256 et les compteurs du manifeste
 - Mapper explicitement le schéma JSON officiel
 - Documenter l’ordre d’application validé
 - Ajouter les mécaniques déterministes confirmées
