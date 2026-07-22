@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Ajout du pattern déclaratif de bonus multi-statistiques filtré par rareté, de `MATCH_RARITY` et de golden tests produit sur les sacs par-3 de référence.
 - Implémentation déclarative du premier pipeline DSL, avec les sept primitives requises par Brand Loyalty et une trace Explain par étape.
 
 - Ajout d'un analyseur reproductible de couverture des groupes de capacités et de leur mapping vers les handlers.

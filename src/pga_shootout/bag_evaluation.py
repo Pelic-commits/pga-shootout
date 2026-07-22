@@ -188,6 +188,7 @@ def build_game_state(
             club_type=str(data["club_type"]["id"]),
             stats_by_level=stats,
             abilities=_abilities_at_level(data, level, semantic_entries, semantic_patterns),
+            rarity=str(data["rarity"]["id"]),
         )
         entries.append(BagEntry(club=club, level=level))
     return GameState(bag=Bag(tuple(entries)), current_club_id=current_id)

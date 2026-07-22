@@ -197,21 +197,27 @@ def _match_club_attribute(
     return matches, evaluations, directional
 
 
-def _match_type(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
+def _match_values(
+    operation: str,
+    attribute_name: str,
+    read_attribute: Callable[[str], str | None],
+    inputs: Mapping[str, Any],
+    parameters: Mapping[str, Any],
+    stats: dict[str, float],
+    state: GameState,
+) -> PrimitiveResult:
     operator = str(parameters.get("operator", "equals"))
     expected_value = parameters["expected"]
     if operator == "equals":
         expected = (str(expected_value),)
     elif operator == "in":
         if not isinstance(expected_value, Sequence) or isinstance(expected_value, (str, bytes)):
-            raise DslExecutionError("MATCH_TYPE with the in operator requires a sequence")
+            raise DslExecutionError(f"{operation} with the in operator requires a sequence")
         expected = tuple(str(value) for value in expected_value)
     else:
-        raise DslExecutionError(f"Unknown MATCH_TYPE operator: {operator}")
+        raise DslExecutionError(f"Unknown {operation} operator: {operator}")
     clubs = tuple(_club_id(value) for value in inputs.get("clubs", ()))
-    matches = tuple(
-        club_id for club_id in clubs if state.bag.get(club_id).club.club_type in expected
-    )
+    matches = tuple(club_id for club_id in clubs if read_attribute(club_id) in expected)
     evaluations = [
         {"club": _club_name(state, club_id), "matches": club_id in matches}
         for club_id in clubs
@@ -229,7 +235,7 @@ def _match_type(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats:
     }
     displayed_expected: str | list[str] = expected[0] if operator == "equals" else list(expected)
     explain_inputs: dict[str, Any] = {
-        "type": displayed_expected,
+        attribute_name: displayed_expected,
         "candidates": [item["club"] for item in evaluations],
     }
     if operator != "equals":
@@ -237,9 +243,33 @@ def _match_type(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats:
     return PrimitiveResult(
         {"clubs": matches},
         stats,
-        f"matched {len(matches)} club(s) against type filter {displayed_expected}",
+        f"matched {len(matches)} club(s) against {attribute_name} filter {displayed_expected}",
         explain_inputs=explain_inputs,
         explain_outputs=directional,
+    )
+
+
+def _match_type(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
+    return _match_values(
+        "MATCH_TYPE",
+        "type",
+        lambda club_id: state.bag.get(club_id).club.club_type,
+        inputs,
+        parameters,
+        stats,
+        state,
+    )
+
+
+def _match_rarity(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
+    return _match_values(
+        "MATCH_RARITY",
+        "rarity",
+        lambda club_id: state.bag.get(club_id).club.rarity,
+        inputs,
+        parameters,
+        stats,
+        state,
     )
 
 
@@ -406,6 +436,7 @@ def default_dsl_registry() -> DslPrimitiveRegistry:
     registry.register("SELECT_ADJACENT", _select_adjacent)
     registry.register("MATCH_BRAND", _match_brand)
     registry.register("MATCH_TYPE", _match_type)
+    registry.register("MATCH_RARITY", _match_rarity)
     registry.register("COUNT", _count)
     registry.register("EXISTS", _exists)
     registry.register("SCALE", _scale)

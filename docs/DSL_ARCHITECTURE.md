@@ -17,7 +17,7 @@ L'exécuteur couvre huit compositions génériques qualifiées dans les données
 
 Cette dernière composition est stockée une seule fois comme pattern paramétré dans `semantic_map.json`. Les familles ne déclarent que la sélection, le filtre et la statistique ; le chargeur matérialise le programme sans connaître leurs noms.
 
-Le registre contient douze primitives : `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `SELECT_ADJACENT`, `MATCH_BRAND`, `MATCH_TYPE`, `COUNT`, `EXISTS`, `SCALE`, `FOR_EACH`, `UNLESS` et `ADD_STAT`. Le Rule Engine ne connaît ni le nom de la famille ni les noms des clubs : il reçoit le programme depuis `semantic_map.json`, le transmet à `dsl_pipeline` et ajoute une entrée Explain pour chaque nœud, y compris chaque sous-exécution ordonnée. Toutes les autres primitives de ce document restent des éléments d'architecture non implémentés.
+Le registre contient treize primitives : `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `SELECT_ADJACENT`, `MATCH_BRAND`, `MATCH_TYPE`, `MATCH_RARITY`, `COUNT`, `EXISTS`, `SCALE`, `FOR_EACH`, `UNLESS` et `ADD_STAT`. Le Rule Engine ne connaît ni le nom de la famille ni les noms des clubs : il reçoit le programme depuis `semantic_map.json`, le transmet à `dsl_pipeline` et ajoute une entrée Explain pour chaque nœud, y compris chaque sous-exécution ordonnée. Toutes les autres primitives de ce document restent des éléments d'architecture non implémentés.
 
 ## Principes
 

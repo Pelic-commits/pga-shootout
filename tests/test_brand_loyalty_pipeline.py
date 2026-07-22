@@ -56,6 +56,7 @@ class BrandLoyaltyPipelineTests(unittest.TestCase):
                 "SELECT_ADJACENT",
                 "MATCH_BRAND",
                 "MATCH_TYPE",
+                "MATCH_RARITY",
                 "COUNT",
                 "EXISTS",
                 "SCALE",

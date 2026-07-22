@@ -13,6 +13,7 @@ Le catalogue officiel contient 125 groupes, 162 occurrences et 88 clubs. Les pou
 | Bonus par correspondance à la cible et à la source | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL` ou `SELECT_ADJACENT`, `MATCH_TYPE` ou `MATCH_BRAND`, `FOR_EACH`, `ADD_STAT` | `alloy`, `nautilus_boost` | aucune | 2 | 1,23 % |
 | Bonus sous condition d'absence de types | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `MATCH_TYPE`, `EXISTS`, `UNLESS`, `FOR_EACH`, `ADD_STAT` | `iron_wedge_exclusion`, `exclusion_zone` | aucune | 2 | 1,23 % |
 | Compromis multi-statistiques du sac | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `FOR_EACH`, `ADD_STAT` | `bag_recklessness` | aucune | 1 | 0,62 % |
+| Bonus multi-statistiques du sac filtré par rareté | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `MATCH_RARITY`, `FOR_EACH`, `ADD_STAT` | `bag_rarity_boost` | aucune | 1 | 0,62 % |
 
 ## Patterns paramétrés
 
@@ -32,22 +33,24 @@ Les groupes `smoke_x`, `steam_x` et `sparks_x` restent seulement des candidats. 
 
 `bag_multi_stat_tradeoff` lit séparément chaque composante signée du niveau officiel. `bag_recklessness` configure les statistiques bonifiées (`power`, `spin`) et pénalisée (`control`) ; aucune perte n'est déduite par inversion du bonus.
 
+`filtered_bag_multi_stat_bonus` sélectionne le sac, filtre les raretés configurées puis applique la valeur officielle aux statistiques configurées. `bag_rarity_boost` utilise les raretés `common` et `rare` et les trois statistiques, sans condition liée au nom de Steadfast.
+
 ## Architecture Dashboard
 
 | Indicateur | État |
 |---|---:|
-| Couverture technique | 17 / 125 groupes ; 37 / 162 occurrences |
+| Couverture technique | 18 / 125 groupes ; 38 / 162 occurrences |
 | Couverture fonctionnelle | 5 / 8 fonctionnalités utilisateur de référence |
-| Groupes couverts | 17 / 125 (13,60 %) |
-| Occurrences couvertes | 37 / 162 (22,84 %) |
+| Groupes couverts | 18 / 125 (14,40 %) |
+| Occurrences couvertes | 38 / 162 (23,46 %) |
 | Clubs couverts | 31 / 88 (35,23 %) |
-| Primitives disponibles | 12 / 50 |
-| Primitives encore manquantes | 38 / 50 |
+| Primitives disponibles | 13 / 50 |
+| Primitives encore manquantes | 37 / 50 |
 | Familles qualifiées bloquées uniquement par une primitive absente | 0 |
 
-Les 108 groupes restants sont non qualifiés. Attribuer un nombre exact de primitives manquantes avant validation sémantique produirait une fausse précision ; ils ne sont pas comptés comme « bloqués par une seule primitive ».
+Les 107 groupes restants sont non qualifiés. Attribuer un nombre exact de primitives manquantes avant validation sémantique produirait une fausse précision ; ils ne sont pas comptés comme « bloqués par une seule primitive ».
 
-Précision fonctionnelle améliorée dans ce lot : 1 club (`into_the_breach`) et sa capacité `bag_recklessness`.
+Précision fonctionnelle améliorée dans ce lot : la capacité `bag_rarity_boost` de Steadfast est résolue et ses bonus sur Divebomb, Jumpstart et Ember apparaissent dans `compare-bags`. Deux sacs de référence sont protégés par des golden tests de comparaison et d'Explain ; zéro régression a été détectée.
 
 ## Couverture fonctionnelle
 

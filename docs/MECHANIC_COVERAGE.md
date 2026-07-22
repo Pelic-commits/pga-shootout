@@ -9,11 +9,11 @@
 | Structural groups | 125 |
 | Ability occurrences | 162 |
 | Clubs represented | 88 |
-| Groups mapped to a registered handler | 17 |
-| Occurrence coverage | 22.84% |
+| Groups mapped to a registered handler | 18 |
+| Occurrence coverage | 23.46% |
 | Club coverage | 35.23% |
-| Interpreted groups | 17 |
-| Unclassified groups | 108 |
+| Interpreted groups | 18 |
+| Unclassified groups | 107 |
 
 Registered handlers: `add_stat, add_all_stats, dsl_pipeline`.
 
@@ -38,19 +38,19 @@ Registered handlers: `add_stat, add_all_stats, dsl_pipeline`.
 | 15 | `aura_of_death` | uninterpreted | 1 | 1 | unclassified | unknown | no |
 | 16 | `bag_bounce_reduction` | uninterpreted | 1 | 1 | unclassified | unknown | no |
 | 17 | `bag_loft_angle_10` | uninterpreted | 1 | 1 | unclassified | unknown | no |
-| 18 | `bag_rarity_boost` | uninterpreted | 1 | 1 | unclassified | unknown | no |
-| 19 | `bag_rough_power` | uninterpreted | 1 | 1 | unclassified | unknown | no |
-| 20 | `bag_sand_bonus` | uninterpreted | 1 | 1 | unclassified | unknown | no |
+| 18 | `bag_rough_power` | uninterpreted | 1 | 1 | unclassified | unknown | no |
+| 19 | `bag_sand_bonus` | uninterpreted | 1 | 1 | unclassified | unknown | no |
+| 20 | `bag_tree_bonus` | uninterpreted | 1 | 1 | unclassified | unknown | no |
 
 ## Roadmap
 
 ### Remaining semantic qualification
 
-Validate mechanic ID, complexity and dependencies for the 108 remaining uninterpreted groups in ranking order.
+Validate mechanic ID, complexity and dependencies for the 107 remaining uninterpreted groups in ranking order.
 
 ### Qualified coverage
 
-17 qualified group(s) currently map to a registered handler. Uninterpreted groups are never treated as implementation-ready.
+18 qualified group(s) currently map to a registered handler. Uninterpreted groups are never treated as implementation-ready.
 
 ## Complete group coverage
 
@@ -73,100 +73,100 @@ Validate mechanic ID, complexity and dependencies for the 108 remaining uninterp
 | 15 | `aura_of_death` | uninterpreted | 1 | 1 | The Reaper (`the_reaper`) | 0% | unclassified | unknown |
 | 16 | `bag_bounce_reduction` | uninterpreted | 1 | 1 | Maelstrom (`maelstrom`) | 0% | unclassified | unknown |
 | 17 | `bag_loft_angle_10` | uninterpreted | 1 | 1 | Cloudcatcher (`cloudcatcher`) | 0% | unclassified | unknown |
-| 18 | `bag_rarity_boost` | uninterpreted | 1 | 1 | Steadfast (`steadfast`) | 0% | unclassified | unknown |
-| 19 | `bag_rough_power` | uninterpreted | 1 | 1 | New Frontier (`new_frontier`) | 0% | unclassified | unknown |
-| 20 | `bag_sand_bonus` | uninterpreted | 1 | 1 | Dunecrawler (`dunecrawler`) | 0% | unclassified | unknown |
-| 21 | `bag_tree_bonus` | uninterpreted | 1 | 1 | The Seeker (`the_seeker`) | 0% | unclassified | unknown |
-| 22 | `bag_tree_passing` | uninterpreted | 1 | 1 | The Seeker (`the_seeker`) | 0% | unclassified | unknown |
-| 23 | `bag_water_bonus` | uninterpreted | 1 | 1 | Atlantis (`atlantis`) | 0% | unclassified | unknown |
-| 24 | `bag_water_bounce` | uninterpreted | 1 | 1 | Atlantis (`atlantis`) | 0% | unclassified | unknown |
-| 25 | `bag_wind_power` | uninterpreted | 1 | 1 | Jetstream (`jetstream`) | 0% | unclassified | unknown |
-| 26 | `beast_strength` | uninterpreted | 1 | 1 | Chimera (`chimera`) | 0% | unclassified | unknown |
-| 27 | `blazing_flight` | uninterpreted | 1 | 1 | Hot Streak (`hot_streak`) | 0% | unclassified | unknown |
-| 28 | `bounce_reduction` | uninterpreted | 1 | 1 | Cloudcatcher (`cloudcatcher`) | 0% | unclassified | unknown |
-| 29 | `bounce_reduction_boost` | uninterpreted | 1 | 1 | Cyclotron (`cyclotron`) | 0% | unclassified | unknown |
-| 30 | `boundary_rush` | uninterpreted | 1 | 1 | Flashpoint (`flashpoint`) | 0% | unclassified | unknown |
-| 31 | `boundary_rush_75` | uninterpreted | 1 | 1 | Skyfury (`skyfury`) | 0% | unclassified | unknown |
-| 32 | `brand_fairway_rush` | uninterpreted | 1 | 1 | Crusader (`crusader`) | 0% | unclassified | unknown |
-| 33 | `chains_into_corvid` | uninterpreted | 1 | 1 | Conspiracy (`conspiracy`) | 0% | unclassified | unknown |
-| 34 | `chains_into_irons_putters_wedges_drivers` | uninterpreted | 1 | 1 | Navigator (`navigator`) | 0% | unclassified | unknown |
-| 35 | `chains_into_itself` | uninterpreted | 1 | 1 | Sparky (`sparky`) | 0% | unclassified | unknown |
-| 36 | `chains_into_wedges` | uninterpreted | 1 | 1 | Outset (`outset`) | 0% | unclassified | unknown |
-| 37 | `chains_into_willoughsby` | uninterpreted | 1 | 1 | Kinship (`kinship`) | 0% | unclassified | unknown |
-| 38 | `chains_into_woods_hybrids` | uninterpreted | 1 | 1 | Navigator (`navigator`) | 0% | unclassified | unknown |
-| 39 | `combined_power` | uninterpreted | 1 | 1 | Pantheon (`pantheon`) | 0% | unclassified | unknown |
-| 40 | `combined_spin` | uninterpreted | 1 | 1 | Pantheon (`pantheon`) | 0% | unclassified | unknown |
-| 41 | `corvid_wind_resist` | uninterpreted | 1 | 1 | Divebomb (`divebomb`) | 0% | unclassified | unknown |
-| 42 | `electrodynamics_0_2ft` | uninterpreted | 1 | 1 | Sparky (`sparky`) | 0% | unclassified | unknown |
-| 43 | `emerald_rush_75` | uninterpreted | 1 | 1 | Green Demon (`green_demon`) | 0% | unclassified | unknown |
-| 44 | `fade_draw_x2` | uninterpreted | 1 | 1 | Lodestar (`lodestar`) | 0% | unclassified | unknown |
-| 45 | `fairway_affinity` | uninterpreted | 1 | 1 | Groundskeep (`groundskeep`) | 0% | unclassified | unknown |
-| 46 | `fellowship` | uninterpreted | 1 | 1 | Steward (`steward`) | 0% | unclassified | unknown |
-| 47 | `first_gear` | uninterpreted | 1 | 1 | Gearshift (`gearshift`) | 0% | unclassified | unknown |
-| 48 | `fission` | uninterpreted | 1 | 1 | Supercollider (`supercollider`) | 0% | unclassified | unknown |
-| 49 | `flight_training` | uninterpreted | 1 | 1 | Eagle's Landing (`eagle_s_landing`) | 0% | unclassified | unknown |
-| 50 | `forester_power_elite` | uninterpreted | 1 | 1 | Ranger (`ranger`) | 0% | unclassified | unknown |
-| 51 | `gem_ball_bonus` | uninterpreted | 1 | 1 | Crystallize (`crystallize`) | 0% | unclassified | unknown |
-| 52 | `gravity_reduction` | uninterpreted | 1 | 1 | Into the Blue (`into_the_blue`) | 0% | unclassified | unknown |
-| 53 | `gravity_reduction_x` | uninterpreted | 1 | 1 | Tierra Hueca (`tierra_hueca`) | 0% | unclassified | unknown |
-| 54 | `green_grip` | uninterpreted | 1 | 1 | Meanderer (`meanderer`) | 0% | unclassified | unknown |
-| 55 | `ground_rush` | uninterpreted | 1 | 1 | Hot Streak (`hot_streak`) | 0% | unclassified | unknown |
-| 56 | `groundspin_x3` | uninterpreted | 1 | 1 | Sidewinder (`sidewinder`) | 0% | unclassified | unknown |
-| 57 | `groundspin_x4` | uninterpreted | 1 | 1 | Meanderer (`meanderer`) | 0% | unclassified | unknown |
-| 58 | `hollow_earth` | uninterpreted | 1 | 1 | Tierra Hueca (`tierra_hueca`) | 0% | unclassified | unknown |
-| 59 | `home_turf_southwind` | uninterpreted | 1 | 1 | Ranger (`ranger`) | 0% | unclassified | unknown |
-| 60 | `loft_angle_10` | uninterpreted | 1 | 1 | Into the Blue (`into_the_blue`) | 0% | unclassified | unknown |
-| 61 | `loft_angle_3` | uninterpreted | 1 | 1 | Rebound (`rebound`) | 0% | unclassified | unknown |
-| 62 | `loft_angle_5` | uninterpreted | 1 | 1 | High Flight (`high_flight`) | 0% | unclassified | unknown |
-| 63 | `ludicrous_mode` | uninterpreted | 1 | 1 | XLR8R (`xlr8r`) | 0% | unclassified | unknown |
-| 64 | `magnetism_0_15ft` | uninterpreted | 1 | 1 | Magnesis (`magnesis`) | 0% | unclassified | unknown |
-| 65 | `momentum` | uninterpreted | 1 | 1 | Rolling Stone (`rolling_stone`) | 0% | unclassified | unknown |
-| 66 | `off_green_power` | uninterpreted | 1 | 1 | Homecoming (`homecoming`) | 0% | unclassified | unknown |
-| 67 | `overaim` | uninterpreted | 1 | 1 | Triumph (`triumph`) | 0% | unclassified | unknown |
-| 68 | `overdrive` | uninterpreted | 1 | 1 | Triumph (`triumph`) | 0% | unclassified | unknown |
-| 69 | `palo_control_on_hit_x` | uninterpreted | 1 | 1 | Tierra Hueca (`tierra_hueca`) | 0% | unclassified | unknown |
-| 70 | `perfect_shot_bag_power` | uninterpreted | 1 | 1 | Flamethrower (`flamethrower`) | 0% | unclassified | unknown |
-| 71 | `perfect_shot_terrain_bonus_boost` | uninterpreted | 1 | 1 | Color Theory (`color_theory`) | 0% | unclassified | unknown |
-| 72 | `plasma_arc_x` | uninterpreted | 1 | 1 | Sunstorm (`sunstorm`) | 0% | unclassified | unknown |
-| 73 | `random_boost_x` | uninterpreted | 1 | 1 | Crystallize (`crystallize`) | 0% | unclassified | unknown |
-| 74 | `rough_bonus` | uninterpreted | 1 | 1 | Bushwhacker (`bushwhacker`) | 0% | unclassified | unknown |
-| 75 | `rough_boosters` | uninterpreted | 1 | 1 | Overgrowth (`overgrowth`) | 0% | unclassified | unknown |
-| 76 | `rough_power` | uninterpreted | 1 | 1 | Hero (`hero`) | 0% | unclassified | unknown |
-| 77 | `sacrifice` | uninterpreted | 1 | 1 | The Reaper (`the_reaper`) | 0% | unclassified | unknown |
-| 78 | `sand_bonus` | uninterpreted | 1 | 1 | Sandblast (`sandblast`) | 0% | unclassified | unknown |
-| 79 | `sand_bonus_x` | uninterpreted | 1 | 1 | Obelisk (`obelisk`) | 0% | unclassified | unknown |
-| 80 | `sand_bounce` | uninterpreted | 1 | 1 | Mirage (`mirage`) | 0% | unclassified | unknown |
-| 81 | `scottsdale_boosters` | uninterpreted | 1 | 1 | Rising Flame (`rising_flame`) | 0% | unclassified | unknown |
-| 82 | `shared_growth` | uninterpreted | 1 | 1 | Oakheart (`oakheart`) | 0% | unclassified | unknown |
-| 83 | `shoreline_rush` | uninterpreted | 1 | 1 | Wave (`wave`) | 0% | unclassified | unknown |
-| 84 | `shuffle_up` | uninterpreted | 1 | 1 | Outlaw (`outlaw`) | 0% | unclassified | unknown |
-| 85 | `smoke_x` | uninterpreted | 1 | 1 | Catalyst (`catalyst`) | 0% | unclassified | unknown |
-| 86 | `solidarity` | uninterpreted | 1 | 1 | Pantheon (`pantheon`) | 0% | unclassified | unknown |
-| 87 | `sparks_x` | uninterpreted | 1 | 1 | Catalyst (`catalyst`) | 0% | unclassified | unknown |
-| 88 | `stat_fusion` | uninterpreted | 1 | 1 | Fusion (`fusion`) | 0% | unclassified | unknown |
-| 89 | `steam_x` | uninterpreted | 1 | 1 | Catalyst (`catalyst`) | 0% | unclassified | unknown |
-| 90 | `super_fireball` | uninterpreted | 1 | 1 | Boomstick (`boomstick`) | 0% | unclassified | unknown |
-| 91 | `swing_speed_x2` | uninterpreted | 1 | 1 | Magnesis (`magnesis`) | 0% | unclassified | unknown |
-| 92 | `tee_off_power` | uninterpreted | 1 | 1 | Sidewinder (`sidewinder`) | 0% | unclassified | unknown |
-| 93 | `terrain_bonus` | uninterpreted | 1 | 1 | Color Theory (`color_theory`) | 0% | unclassified | unknown |
-| 94 | `texas_tee` | uninterpreted | 1 | 1 | Blacksmith (`blacksmith`) | 0% | unclassified | unknown |
-| 95 | `three_heads` | uninterpreted | 1 | 1 | Chimera (`chimera`) | 0% | unclassified | unknown |
-| 96 | `top_gear` | uninterpreted | 1 | 1 | Gearshift (`gearshift`) | 0% | unclassified | unknown |
-| 97 | `tree_passing` | uninterpreted | 1 | 1 | Trailblazer (`trailblazer`) | 0% | unclassified | unknown |
-| 98 | `trumpet_blast` | uninterpreted | 1 | 1 | Fanfare (`fanfare`) | 0% | unclassified | unknown |
-| 99 | `volt_bounce` | uninterpreted | 1 | 1 | Rebound (`rebound`) | 0% | unclassified | unknown |
-| 100 | `water_bonus` | uninterpreted | 1 | 1 | Leviathan (`leviathan`) | 0% | unclassified | unknown |
-| 101 | `water_bonus_x` | uninterpreted | 1 | 1 | Hydroforce (`hydroforce`) | 0% | unclassified | unknown |
-| 102 | `water_bounce` | uninterpreted | 1 | 1 | Mirage (`mirage`) | 0% | unclassified | unknown |
-| 103 | `water_rush` | uninterpreted | 1 | 1 | Leviathan (`leviathan`) | 0% | unclassified | unknown |
-| 104 | `wild_rush_speed` | uninterpreted | 1 | 1 | Explorer (`explorer`) | 0% | unclassified | unknown |
-| 105 | `wind_resist_75` | uninterpreted | 1 | 1 | High Flight (`high_flight`) | 0% | unclassified | unknown |
-| 106 | `wind_resistance_100` | uninterpreted | 1 | 1 | Stormbringer (`stormbringer`) | 0% | unclassified | unknown |
-| 107 | `wind_up_toy` | uninterpreted | 1 | 1 | XLR8R (`xlr8r`) | 0% | unclassified | unknown |
-| 108 | `zephyr_x_mph` | uninterpreted | 1 | 1 | Stormbringer (`stormbringer`) | 0% | unclassified | unknown |
-| 109 | `adjacent_power` | `dsl_pipeline` | 2 | 2 | Outlaw (`outlaw`), Rampart (`rampart`) | 100% | parameterized | ordered_bag, source_club, ability_level_value, resolved_targets |
-| 110 | `alloy` | `dsl_pipeline` | 1 | 1 | Ember (`ember`) | 100% | parameterized | ordered_bag, source_club, ability_level_value, resolved_targets |
-| 111 | `bag_control` | `dsl_pipeline` | 1 | 1 | Commonlaw (`commonlaw`) | 100% | parameterized | ordered_bag, source_club, ability_level_value, resolved_targets |
+| 18 | `bag_rough_power` | uninterpreted | 1 | 1 | New Frontier (`new_frontier`) | 0% | unclassified | unknown |
+| 19 | `bag_sand_bonus` | uninterpreted | 1 | 1 | Dunecrawler (`dunecrawler`) | 0% | unclassified | unknown |
+| 20 | `bag_tree_bonus` | uninterpreted | 1 | 1 | The Seeker (`the_seeker`) | 0% | unclassified | unknown |
+| 21 | `bag_tree_passing` | uninterpreted | 1 | 1 | The Seeker (`the_seeker`) | 0% | unclassified | unknown |
+| 22 | `bag_water_bonus` | uninterpreted | 1 | 1 | Atlantis (`atlantis`) | 0% | unclassified | unknown |
+| 23 | `bag_water_bounce` | uninterpreted | 1 | 1 | Atlantis (`atlantis`) | 0% | unclassified | unknown |
+| 24 | `bag_wind_power` | uninterpreted | 1 | 1 | Jetstream (`jetstream`) | 0% | unclassified | unknown |
+| 25 | `beast_strength` | uninterpreted | 1 | 1 | Chimera (`chimera`) | 0% | unclassified | unknown |
+| 26 | `blazing_flight` | uninterpreted | 1 | 1 | Hot Streak (`hot_streak`) | 0% | unclassified | unknown |
+| 27 | `bounce_reduction` | uninterpreted | 1 | 1 | Cloudcatcher (`cloudcatcher`) | 0% | unclassified | unknown |
+| 28 | `bounce_reduction_boost` | uninterpreted | 1 | 1 | Cyclotron (`cyclotron`) | 0% | unclassified | unknown |
+| 29 | `boundary_rush` | uninterpreted | 1 | 1 | Flashpoint (`flashpoint`) | 0% | unclassified | unknown |
+| 30 | `boundary_rush_75` | uninterpreted | 1 | 1 | Skyfury (`skyfury`) | 0% | unclassified | unknown |
+| 31 | `brand_fairway_rush` | uninterpreted | 1 | 1 | Crusader (`crusader`) | 0% | unclassified | unknown |
+| 32 | `chains_into_corvid` | uninterpreted | 1 | 1 | Conspiracy (`conspiracy`) | 0% | unclassified | unknown |
+| 33 | `chains_into_irons_putters_wedges_drivers` | uninterpreted | 1 | 1 | Navigator (`navigator`) | 0% | unclassified | unknown |
+| 34 | `chains_into_itself` | uninterpreted | 1 | 1 | Sparky (`sparky`) | 0% | unclassified | unknown |
+| 35 | `chains_into_wedges` | uninterpreted | 1 | 1 | Outset (`outset`) | 0% | unclassified | unknown |
+| 36 | `chains_into_willoughsby` | uninterpreted | 1 | 1 | Kinship (`kinship`) | 0% | unclassified | unknown |
+| 37 | `chains_into_woods_hybrids` | uninterpreted | 1 | 1 | Navigator (`navigator`) | 0% | unclassified | unknown |
+| 38 | `combined_power` | uninterpreted | 1 | 1 | Pantheon (`pantheon`) | 0% | unclassified | unknown |
+| 39 | `combined_spin` | uninterpreted | 1 | 1 | Pantheon (`pantheon`) | 0% | unclassified | unknown |
+| 40 | `corvid_wind_resist` | uninterpreted | 1 | 1 | Divebomb (`divebomb`) | 0% | unclassified | unknown |
+| 41 | `electrodynamics_0_2ft` | uninterpreted | 1 | 1 | Sparky (`sparky`) | 0% | unclassified | unknown |
+| 42 | `emerald_rush_75` | uninterpreted | 1 | 1 | Green Demon (`green_demon`) | 0% | unclassified | unknown |
+| 43 | `fade_draw_x2` | uninterpreted | 1 | 1 | Lodestar (`lodestar`) | 0% | unclassified | unknown |
+| 44 | `fairway_affinity` | uninterpreted | 1 | 1 | Groundskeep (`groundskeep`) | 0% | unclassified | unknown |
+| 45 | `fellowship` | uninterpreted | 1 | 1 | Steward (`steward`) | 0% | unclassified | unknown |
+| 46 | `first_gear` | uninterpreted | 1 | 1 | Gearshift (`gearshift`) | 0% | unclassified | unknown |
+| 47 | `fission` | uninterpreted | 1 | 1 | Supercollider (`supercollider`) | 0% | unclassified | unknown |
+| 48 | `flight_training` | uninterpreted | 1 | 1 | Eagle's Landing (`eagle_s_landing`) | 0% | unclassified | unknown |
+| 49 | `forester_power_elite` | uninterpreted | 1 | 1 | Ranger (`ranger`) | 0% | unclassified | unknown |
+| 50 | `gem_ball_bonus` | uninterpreted | 1 | 1 | Crystallize (`crystallize`) | 0% | unclassified | unknown |
+| 51 | `gravity_reduction` | uninterpreted | 1 | 1 | Into the Blue (`into_the_blue`) | 0% | unclassified | unknown |
+| 52 | `gravity_reduction_x` | uninterpreted | 1 | 1 | Tierra Hueca (`tierra_hueca`) | 0% | unclassified | unknown |
+| 53 | `green_grip` | uninterpreted | 1 | 1 | Meanderer (`meanderer`) | 0% | unclassified | unknown |
+| 54 | `ground_rush` | uninterpreted | 1 | 1 | Hot Streak (`hot_streak`) | 0% | unclassified | unknown |
+| 55 | `groundspin_x3` | uninterpreted | 1 | 1 | Sidewinder (`sidewinder`) | 0% | unclassified | unknown |
+| 56 | `groundspin_x4` | uninterpreted | 1 | 1 | Meanderer (`meanderer`) | 0% | unclassified | unknown |
+| 57 | `hollow_earth` | uninterpreted | 1 | 1 | Tierra Hueca (`tierra_hueca`) | 0% | unclassified | unknown |
+| 58 | `home_turf_southwind` | uninterpreted | 1 | 1 | Ranger (`ranger`) | 0% | unclassified | unknown |
+| 59 | `loft_angle_10` | uninterpreted | 1 | 1 | Into the Blue (`into_the_blue`) | 0% | unclassified | unknown |
+| 60 | `loft_angle_3` | uninterpreted | 1 | 1 | Rebound (`rebound`) | 0% | unclassified | unknown |
+| 61 | `loft_angle_5` | uninterpreted | 1 | 1 | High Flight (`high_flight`) | 0% | unclassified | unknown |
+| 62 | `ludicrous_mode` | uninterpreted | 1 | 1 | XLR8R (`xlr8r`) | 0% | unclassified | unknown |
+| 63 | `magnetism_0_15ft` | uninterpreted | 1 | 1 | Magnesis (`magnesis`) | 0% | unclassified | unknown |
+| 64 | `momentum` | uninterpreted | 1 | 1 | Rolling Stone (`rolling_stone`) | 0% | unclassified | unknown |
+| 65 | `off_green_power` | uninterpreted | 1 | 1 | Homecoming (`homecoming`) | 0% | unclassified | unknown |
+| 66 | `overaim` | uninterpreted | 1 | 1 | Triumph (`triumph`) | 0% | unclassified | unknown |
+| 67 | `overdrive` | uninterpreted | 1 | 1 | Triumph (`triumph`) | 0% | unclassified | unknown |
+| 68 | `palo_control_on_hit_x` | uninterpreted | 1 | 1 | Tierra Hueca (`tierra_hueca`) | 0% | unclassified | unknown |
+| 69 | `perfect_shot_bag_power` | uninterpreted | 1 | 1 | Flamethrower (`flamethrower`) | 0% | unclassified | unknown |
+| 70 | `perfect_shot_terrain_bonus_boost` | uninterpreted | 1 | 1 | Color Theory (`color_theory`) | 0% | unclassified | unknown |
+| 71 | `plasma_arc_x` | uninterpreted | 1 | 1 | Sunstorm (`sunstorm`) | 0% | unclassified | unknown |
+| 72 | `random_boost_x` | uninterpreted | 1 | 1 | Crystallize (`crystallize`) | 0% | unclassified | unknown |
+| 73 | `rough_bonus` | uninterpreted | 1 | 1 | Bushwhacker (`bushwhacker`) | 0% | unclassified | unknown |
+| 74 | `rough_boosters` | uninterpreted | 1 | 1 | Overgrowth (`overgrowth`) | 0% | unclassified | unknown |
+| 75 | `rough_power` | uninterpreted | 1 | 1 | Hero (`hero`) | 0% | unclassified | unknown |
+| 76 | `sacrifice` | uninterpreted | 1 | 1 | The Reaper (`the_reaper`) | 0% | unclassified | unknown |
+| 77 | `sand_bonus` | uninterpreted | 1 | 1 | Sandblast (`sandblast`) | 0% | unclassified | unknown |
+| 78 | `sand_bonus_x` | uninterpreted | 1 | 1 | Obelisk (`obelisk`) | 0% | unclassified | unknown |
+| 79 | `sand_bounce` | uninterpreted | 1 | 1 | Mirage (`mirage`) | 0% | unclassified | unknown |
+| 80 | `scottsdale_boosters` | uninterpreted | 1 | 1 | Rising Flame (`rising_flame`) | 0% | unclassified | unknown |
+| 81 | `shared_growth` | uninterpreted | 1 | 1 | Oakheart (`oakheart`) | 0% | unclassified | unknown |
+| 82 | `shoreline_rush` | uninterpreted | 1 | 1 | Wave (`wave`) | 0% | unclassified | unknown |
+| 83 | `shuffle_up` | uninterpreted | 1 | 1 | Outlaw (`outlaw`) | 0% | unclassified | unknown |
+| 84 | `smoke_x` | uninterpreted | 1 | 1 | Catalyst (`catalyst`) | 0% | unclassified | unknown |
+| 85 | `solidarity` | uninterpreted | 1 | 1 | Pantheon (`pantheon`) | 0% | unclassified | unknown |
+| 86 | `sparks_x` | uninterpreted | 1 | 1 | Catalyst (`catalyst`) | 0% | unclassified | unknown |
+| 87 | `stat_fusion` | uninterpreted | 1 | 1 | Fusion (`fusion`) | 0% | unclassified | unknown |
+| 88 | `steam_x` | uninterpreted | 1 | 1 | Catalyst (`catalyst`) | 0% | unclassified | unknown |
+| 89 | `super_fireball` | uninterpreted | 1 | 1 | Boomstick (`boomstick`) | 0% | unclassified | unknown |
+| 90 | `swing_speed_x2` | uninterpreted | 1 | 1 | Magnesis (`magnesis`) | 0% | unclassified | unknown |
+| 91 | `tee_off_power` | uninterpreted | 1 | 1 | Sidewinder (`sidewinder`) | 0% | unclassified | unknown |
+| 92 | `terrain_bonus` | uninterpreted | 1 | 1 | Color Theory (`color_theory`) | 0% | unclassified | unknown |
+| 93 | `texas_tee` | uninterpreted | 1 | 1 | Blacksmith (`blacksmith`) | 0% | unclassified | unknown |
+| 94 | `three_heads` | uninterpreted | 1 | 1 | Chimera (`chimera`) | 0% | unclassified | unknown |
+| 95 | `top_gear` | uninterpreted | 1 | 1 | Gearshift (`gearshift`) | 0% | unclassified | unknown |
+| 96 | `tree_passing` | uninterpreted | 1 | 1 | Trailblazer (`trailblazer`) | 0% | unclassified | unknown |
+| 97 | `trumpet_blast` | uninterpreted | 1 | 1 | Fanfare (`fanfare`) | 0% | unclassified | unknown |
+| 98 | `volt_bounce` | uninterpreted | 1 | 1 | Rebound (`rebound`) | 0% | unclassified | unknown |
+| 99 | `water_bonus` | uninterpreted | 1 | 1 | Leviathan (`leviathan`) | 0% | unclassified | unknown |
+| 100 | `water_bonus_x` | uninterpreted | 1 | 1 | Hydroforce (`hydroforce`) | 0% | unclassified | unknown |
+| 101 | `water_bounce` | uninterpreted | 1 | 1 | Mirage (`mirage`) | 0% | unclassified | unknown |
+| 102 | `water_rush` | uninterpreted | 1 | 1 | Leviathan (`leviathan`) | 0% | unclassified | unknown |
+| 103 | `wild_rush_speed` | uninterpreted | 1 | 1 | Explorer (`explorer`) | 0% | unclassified | unknown |
+| 104 | `wind_resist_75` | uninterpreted | 1 | 1 | High Flight (`high_flight`) | 0% | unclassified | unknown |
+| 105 | `wind_resistance_100` | uninterpreted | 1 | 1 | Stormbringer (`stormbringer`) | 0% | unclassified | unknown |
+| 106 | `wind_up_toy` | uninterpreted | 1 | 1 | XLR8R (`xlr8r`) | 0% | unclassified | unknown |
+| 107 | `zephyr_x_mph` | uninterpreted | 1 | 1 | Stormbringer (`stormbringer`) | 0% | unclassified | unknown |
+| 108 | `adjacent_power` | `dsl_pipeline` | 2 | 2 | Outlaw (`outlaw`), Rampart (`rampart`) | 100% | parameterized | ordered_bag, source_club, ability_level_value, resolved_targets |
+| 109 | `alloy` | `dsl_pipeline` | 1 | 1 | Ember (`ember`) | 100% | parameterized | ordered_bag, source_club, ability_level_value, resolved_targets |
+| 110 | `bag_control` | `dsl_pipeline` | 1 | 1 | Commonlaw (`commonlaw`) | 100% | parameterized | ordered_bag, source_club, ability_level_value, resolved_targets |
+| 111 | `bag_rarity_boost` | `dsl_pipeline` | 1 | 1 | Steadfast (`steadfast`) | 100% | parameterized | ordered_bag, club_rarity, source_club, ability_level_value, resolved_targets |
 | 112 | `bag_recklessness` | `dsl_pipeline` | 1 | 1 | Into the Breach (`into_the_breach`) | 100% | parameterized | ordered_bag, source_club, ability_level_components, resolved_targets |
 | 113 | `bag_spin_bonus` | `dsl_pipeline` | 1 | 1 | Maelstrom (`maelstrom`) | 100% | parameterized | ordered_bag, source_club, ability_level_value, resolved_targets |
 | 114 | `brand_loyalty` | `dsl_pipeline` | 1 | 1 | Steward (`steward`) | 100% | parameterized | ordered_bag, source_club, club_brand, ability_level_value |

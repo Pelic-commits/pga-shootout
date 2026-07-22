@@ -1,0 +1,159 @@
+SELECT_SELF
+Inputs: {"source_club_id": "steadfast"}
+Outputs: {"club": "Steadfast"}
+Applied: yes
+Before: {"control": 6.0, "power": 12.0, "spin": 6.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 6.0, "power": 12.0, "spin": 6.0}
+Detail: selected source club Steadfast
+
+READ_LEVEL_VALUE
+Inputs: {"level": 12}
+Outputs: {"value": 4.0}
+Applied: yes
+Before: {"control": 6.0, "power": 12.0, "spin": 6.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 6.0, "power": 12.0, "spin": 6.0}
+Detail: read value +4 at level 12
+
+SELECT_ALL
+Inputs: {"include_source": true, "source": "Steadfast"}
+Outputs: {"clubs": ["Divebomb", "Jumpstart", "Steadfast", "Ember", "Sunstorm"]}
+Applied: yes
+Before: {"control": 6.0, "power": 12.0, "spin": 6.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 6.0, "power": 12.0, "spin": 6.0}
+Detail: selected 5 club(s) from the ordered bag
+
+MATCH_RARITY
+Inputs: {"candidates": ["Divebomb", "Jumpstart", "Steadfast", "Ember", "Sunstorm"], "operator": "in", "rarity": ["common", "rare"]}
+Outputs: {"left": null, "right": null}
+Applied: yes
+Before: {"control": 6.0, "power": 12.0, "spin": 6.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 6.0, "power": 12.0, "spin": 6.0}
+Detail: matched 3 club(s) against rarity filter ['common', 'rare']
+
+FOR_EACH
+Inputs: {"binding": "target", "items": ["Divebomb", "Jumpstart", "Ember"]}
+Outputs: {"iterations": 3}
+Applied: yes
+Before: {"control": 6.0, "power": 12.0, "spin": 6.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 6.0, "power": 12.0, "spin": 6.0}
+Detail: executing sub-pipeline for 3 item(s)
+
+FOR_EACH
+Inputs: {"binding": "stat", "items": ["power", "control", "spin"]}
+Outputs: {"iterations": 3}
+Applied: yes
+Before: {"control": 6.0, "power": 12.0, "spin": 6.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 6.0, "power": 12.0, "spin": 6.0}
+Detail: executing sub-pipeline for 3 item(s)
+
+ADD_STAT
+Inputs: {"delta": 4.0, "stat": "power", "target": "Divebomb"}
+Outputs: {"after": 16.0, "before": 12.0}
+Applied: yes
+Before: {"control": 6.0, "power": 12.0, "spin": 6.0}
+Change: {"control": 0.0, "power": 4.0, "spin": 0.0}
+After: {"control": 6.0, "power": 16.0, "spin": 6.0}
+Detail: POWER += 4
+
+ADD_STAT
+Inputs: {"delta": 4.0, "stat": "control", "target": "Divebomb"}
+Outputs: {"after": 10.0, "before": 6.0}
+Applied: yes
+Before: {"control": 6.0, "power": 16.0, "spin": 6.0}
+Change: {"control": 4.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 16.0, "spin": 6.0}
+Detail: CONTROL += 4
+
+ADD_STAT
+Inputs: {"delta": 4.0, "stat": "spin", "target": "Divebomb"}
+Outputs: {"after": 10.0, "before": 6.0}
+Applied: yes
+Before: {"control": 10.0, "power": 16.0, "spin": 6.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 4.0}
+After: {"control": 10.0, "power": 16.0, "spin": 10.0}
+Detail: SPIN += 4
+
+FOR_EACH
+Inputs: {"binding": "stat", "items": ["power", "control", "spin"]}
+Outputs: {"iterations": 3}
+Applied: yes
+Before: {"control": 10.0, "power": 16.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 16.0, "spin": 10.0}
+Detail: executing sub-pipeline for 3 item(s)
+
+ADD_STAT
+Inputs: {"delta": 4.0, "stat": "power", "target": "Jumpstart"}
+Outputs: {"value": 16.0}
+Applied: no
+Before: {"control": 10.0, "power": 16.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 16.0, "spin": 10.0}
+Detail: target Jumpstart is not the current club; stat unchanged
+
+ADD_STAT
+Inputs: {"delta": 4.0, "stat": "control", "target": "Jumpstart"}
+Outputs: {"value": 10.0}
+Applied: no
+Before: {"control": 10.0, "power": 16.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 16.0, "spin": 10.0}
+Detail: target Jumpstart is not the current club; stat unchanged
+
+ADD_STAT
+Inputs: {"delta": 4.0, "stat": "spin", "target": "Jumpstart"}
+Outputs: {"value": 10.0}
+Applied: no
+Before: {"control": 10.0, "power": 16.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 16.0, "spin": 10.0}
+Detail: target Jumpstart is not the current club; stat unchanged
+
+FOR_EACH
+Inputs: {"binding": "stat", "items": ["power", "control", "spin"]}
+Outputs: {"iterations": 3}
+Applied: yes
+Before: {"control": 10.0, "power": 16.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 16.0, "spin": 10.0}
+Detail: executing sub-pipeline for 3 item(s)
+
+ADD_STAT
+Inputs: {"delta": 4.0, "stat": "power", "target": "Ember"}
+Outputs: {"value": 16.0}
+Applied: no
+Before: {"control": 10.0, "power": 16.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 16.0, "spin": 10.0}
+Detail: target Ember is not the current club; stat unchanged
+
+ADD_STAT
+Inputs: {"delta": 4.0, "stat": "control", "target": "Ember"}
+Outputs: {"value": 10.0}
+Applied: no
+Before: {"control": 10.0, "power": 16.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 16.0, "spin": 10.0}
+Detail: target Ember is not the current club; stat unchanged
+
+ADD_STAT
+Inputs: {"delta": 4.0, "stat": "spin", "target": "Ember"}
+Outputs: {"value": 10.0}
+Applied: no
+Before: {"control": 10.0, "power": 16.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 16.0, "spin": 10.0}
+Detail: target Ember is not the current club; stat unchanged
+
+dsl_pipeline
+Applied: yes
+Before: {"control": 6.0, "power": 12.0, "spin": 6.0}
+Change: {"control": 4.0, "power": 4.0, "spin": 4.0}
+After: {"control": 10.0, "power": 16.0, "spin": 10.0}
+Detail: applied

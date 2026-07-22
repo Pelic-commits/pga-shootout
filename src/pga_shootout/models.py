@@ -56,6 +56,7 @@ class Club:
     club_type: str
     stats_by_level: Mapping[int, Stats]
     abilities: tuple[Ability, ...] = ()
+    rarity: str | None = None
 
     def stats_at(self, level: int) -> Stats:
         try:

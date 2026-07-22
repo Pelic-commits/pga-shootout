@@ -1,0 +1,50 @@
+========================================================================
+Bag comparison
+Level scenario: 12
+Evaluation mode: partial
+Selected position: 1
+
+Composition
+1. Divebomb != High Flight
+2. Jumpstart != Cyclotron
+3. Steadfast != Ember
+4. Ember != Maelstrom
+5. Sunstorm == Sunstorm
+
+Left:  Sac de référence / par-3 Divebomb - Divebomb
+Right: Sac par-3 High Flight - High Flight
+
+Stats (difference = right - left)
+Stat       Left base  Left abilities  Left final  Right base  Right abilities  Right final  Final diff
+Power             12              +8          20          14               +7           21          +1
+Control            6              +4          10          10               +0           10          +0
+Spin               6              +4          10           8              +10           18          +8
+
+Applied stat changes - left
+  Jumpstart / jumpstart__power_boost / ADD_STAT: power +4
+  Steadfast / steadfast__bag_rarity_boost / ADD_STAT: power +4
+  Steadfast / steadfast__bag_rarity_boost / ADD_STAT: control +4
+  Steadfast / steadfast__bag_rarity_boost / ADD_STAT: spin +4
+Applied stat changes - right
+  Cyclotron / cyclotron__spin_boost / ADD_STAT: spin +6
+  Ember / ember__alloy / ADD_STAT: power +7
+  Maelstrom / maelstrom__bag_spin_bonus / ADD_STAT: spin +4
+
+Bonuses gained by right vs left: spin +6
+Bonuses lost by right vs left: power -1, control -4
+
+Unresolved bonuses - left (4):
+  Unresolved UnknownMechanismError: unsupported:chains_into_putters
+  Unresolved UnknownMechanismError: unsupported:corvid_wind_resist
+  Unresolved UnknownMechanismError: unsupported:power_shot
+  Unresolved UnknownMechanismError: unsupported:plasma_arc_x
+Unresolved bonuses - right (6):
+  Unresolved UnknownMechanismError: unsupported:loft_angle_5
+  Unresolved UnknownMechanismError: unsupported:wind_resist_75
+  Unresolved UnknownMechanismError: unsupported:bounce_reduction_boost
+  Unresolved UnknownMechanismError: unsupported:power_shot
+  Unresolved UnknownMechanismError: unsupported:bag_bounce_reduction
+  Unresolved UnknownMechanismError: unsupported:plasma_arc_x
+Strict status: NOT REQUESTED
+No aggregate score: user preference weights and real club levels are not yet validated.
+========================================================================

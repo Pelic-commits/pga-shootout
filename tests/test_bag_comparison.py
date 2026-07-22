@@ -36,7 +36,7 @@ class BagComparisonTests(unittest.TestCase):
         comparison = self.compare()
         self.assertEqual(
             comparison.final_difference_right_minus_left,
-            {"power": 5.0, "control": 4.0, "spin": 12.0},
+            {"power": 1.0, "control": 0.0, "spin": 8.0},
         )
         rendered = render_bag_comparison(comparison)
         self.assertIn("Stats (difference = right - left)", rendered)
@@ -47,7 +47,12 @@ class BagComparisonTests(unittest.TestCase):
         comparison = self.compare()
         self.assertEqual(
             [(change.source, change.mechanism) for change in comparison.left.applied_changes],
-            [("Jumpstart / jumpstart__power_boost", "ADD_STAT")],
+            [
+                ("Jumpstart / jumpstart__power_boost", "ADD_STAT"),
+                ("Steadfast / steadfast__bag_rarity_boost", "ADD_STAT"),
+                ("Steadfast / steadfast__bag_rarity_boost", "ADD_STAT"),
+                ("Steadfast / steadfast__bag_rarity_boost", "ADD_STAT"),
+            ],
         )
         self.assertTrue(comparison.right.applied_changes)
         self.assertNotIn("dsl_pipeline", {change.mechanism for change in comparison.right.applied_changes})
