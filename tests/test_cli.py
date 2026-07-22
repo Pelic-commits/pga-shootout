@@ -94,6 +94,21 @@ class CliTests(unittest.TestCase):
                 },
             )
 
+    def test_coverage_cli_regenerates_markdown_report(self):
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as directory:
+            report_path = Path(directory) / "coverage.md"
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                result = main([
+                    "coverage",
+                    "--normalized-dir", str(root / "data" / "normalized"),
+                    "--output", str(report_path),
+                ])
+            self.assertEqual(result, 0)
+            self.assertIn('"total_groups": 125', output.getvalue())
+            self.assertIn("# Mechanic Coverage", report_path.read_text(encoding="utf-8"))
+
 
 if __name__ == "__main__":
     unittest.main()

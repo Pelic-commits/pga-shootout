@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Ajout d'un analyseur reproductible de couverture des groupes de capacités et de leur mapping vers les handlers.
 - Ajout d'un pipeline reproductible de normalisation structurelle des 162 capacités officielles, sans interprétation de gameplay.
 - Ajout d'une couche utilisateur séparée pour le compte, l'inventaire partiel, les préférences, les sacs et les observations.
 - Ajout des modèles, validateurs et commandes CLI de consultation utilisateur.

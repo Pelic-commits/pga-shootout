@@ -7,6 +7,7 @@ import json
 from collections.abc import Sequence
 
 from .bag_evaluation import evaluate_saved_bag, render_bag_evaluation
+from .coverage import generate_coverage_report
 from .data_validation import validate_official_data
 from .loader import load_raw_json, summarize_raw_json
 from .models import EvaluationMode
@@ -50,6 +51,9 @@ def build_parser() -> argparse.ArgumentParser:
     normalize_parser = subparsers.add_parser("normalize", help="regenerate structural ability artifacts without interpretation")
     normalize_parser.add_argument("--source", default="data/normalized/clubs_official.json")
     normalize_parser.add_argument("--output-dir", default="data/normalized")
+    coverage_parser = subparsers.add_parser("coverage", help="regenerate mechanic coverage report")
+    coverage_parser.add_argument("--normalized-dir", default="data/normalized")
+    coverage_parser.add_argument("--output", default="docs/MECHANIC_COVERAGE.md")
     return parser
 
 
@@ -60,6 +64,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif args.command == "validate-data":
         report = validate_official_data(args.raw_path, args.normalized_path)
         print(json.dumps(report.as_dict(), indent=2, ensure_ascii=False))
+    elif args.command == "coverage":
+        report = generate_coverage_report(args.normalized_dir, args.output)
+        print(json.dumps({
+            "total_groups": report.total_groups,
+            "implemented_groups": report.implemented_groups,
+            "occurrence_coverage_percent": report.occurrence_coverage_percent,
+            "club_coverage_percent": report.club_coverage_percent,
+            "report": args.output,
+        }, indent=2, ensure_ascii=False))
     elif args.command == "normalize":
         summary = normalize_catalog(args.source, args.output_dir)
         print(json.dumps(summary.__dict__, indent=2, ensure_ascii=False))
