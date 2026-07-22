@@ -16,9 +16,9 @@ Right: Sac par-3 High Flight - High Flight
 
 Stats (difference = right - left)
 Stat       Left base  Left abilities  Left final  Right base  Right abilities  Right final  Final diff
-Power             12              +8          20          14               +7           21          +1
-Control            6              +4          10          10               +0           10          +0
-Spin               6              +4          10           8              +10           18          +8
+Power             12             +12          24          14              +11           25          +1
+Control            6              +8          14          10               +4           14          +0
+Spin               6              +8          14           8              +14           22          +8
 
 Static modifiers (difference = right - left)
 Metric                              Left  Right  Diff
@@ -30,26 +30,45 @@ Applied ability changes - left
   Steadfast / steadfast__bag_rarity_boost / ADD_STAT: power +4
   Steadfast / steadfast__bag_rarity_boost / ADD_STAT: control +4
   Steadfast / steadfast__bag_rarity_boost / ADD_STAT: spin +4
+  Sunstorm / sunstorm__plasma_arc_x / ADD_STAT: power +4
+  Sunstorm / sunstorm__plasma_arc_x / ADD_STAT: control +4
+  Sunstorm / sunstorm__plasma_arc_x / ADD_STAT: spin +4
 Applied ability changes - right
   High Flight / high_flight__loft_angle_5 / ADD_MODIFIER: loft_angle_degrees +5
   Cyclotron / cyclotron__spin_boost / ADD_STAT: spin +6
   Ember / ember__alloy / ADD_STAT: power +7
   Maelstrom / maelstrom__bag_bounce_reduction / ADD_MODIFIER: bounce_reduction_percent +20
   Maelstrom / maelstrom__bag_spin_bonus / ADD_STAT: spin +4
+  Sunstorm / sunstorm__plasma_arc_x / ADD_STAT: power +4
+  Sunstorm / sunstorm__plasma_arc_x / ADD_STAT: control +4
+  Sunstorm / sunstorm__plasma_arc_x / ADD_STAT: spin +4
 
 Bonuses gained by right vs left: spin +6
 Bonuses lost by right vs left: power -1, control -4
 
-Unresolved bonuses - left (4):
+Unresolved bonuses - left (3):
   Unresolved UnknownMechanismError: unsupported:chains_into_putters
   Unresolved UnknownMechanismError: unsupported:corvid_wind_resist
   Unresolved UnknownMechanismError: unsupported:power_shot
-  Unresolved UnknownMechanismError: unsupported:plasma_arc_x
-Unresolved bonuses - right (4):
+Unresolved bonuses - right (3):
   Unresolved UnknownMechanismError: unsupported:wind_resist_75
   Unresolved UnknownMechanismError: unsupported:bounce_reduction_boost
   Unresolved UnknownMechanismError: unsupported:power_shot
-  Unresolved UnknownMechanismError: unsupported:plasma_arc_x
 Strict status: NOT REQUESTED
 No aggregate score: user preference weights and real club levels are not yet validated.
+
+Confidence diagnostic (objective facts; no score)
+Metrics compared: power, control, spin, bounce_reduction_percent, loft_angle_degrees
+Left bag (par3_divebomb):
+  Simulated abilities: 5/8
+  Non-simulated abilities: 3
+  Classified gaps: ambiguous=0, scenario_required=2, unsupported=1, partial=0
+  Contributions: resolved=5, effective=3, ignored=2, unresolved=3
+  Unknown user levels: divebomb, jumpstart, steadfast, ember, sunstorm
+Right bag (par3_high_flight):
+  Simulated abilities: 6/9
+  Non-simulated abilities: 3
+  Classified gaps: ambiguous=1, scenario_required=1, unsupported=1, partial=0
+  Contributions: resolved=6, effective=6, ignored=0, unresolved=3
+  Unknown user levels: high_flight, cyclotron, ember, maelstrom, sunstorm
 ========================================================================

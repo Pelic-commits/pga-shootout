@@ -1854,14 +1854,32 @@
       "validation_status": "official_text_validated"
     },
     "label:plasma_arc_x": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value",
+        "unique_farthest_target",
+        "resolved_targets"
+      ],
       "group_id": "label:plasma_arc_x",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_with_explicit_tie_guard",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: The farthest club from Sunstorm has +X stats.",
+        "The official level value is added to Power, Control, and Spin of the unique farthest club.",
+        "If multiple clubs tie for the farthest position, strict mode fails and partial mode reports the ability as unresolved instead of inventing a tie rule."
+      ],
+      "pattern_id": "unique_farthest_multi_stat_bonus",
+      "pattern_parameters": {
+        "stats": [
+          "power",
+          "control",
+          "spin"
+        ]
+      },
+      "priority": 10,
+      "validation_status": "validated_from_official_text_with_explicit_tie_guard"
     },
     "label:power_boost": {
       "complexity": "parameterized",
@@ -3342,6 +3360,80 @@
                     "parameters": {
                       "modifier": {
                         "pattern_parameter": "modifier"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      }
+    },
+    "unique_farthest_multi_stat_bonus": {
+      "description": "Apply one level-scaled bonus to configured statistics of the unique farthest club in the ordered bag.",
+      "parameters": [
+        "stats"
+      ],
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "target",
+            "inputs": {
+              "origin": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_FARTHEST"
+          },
+          {
+            "id": "apply_stats",
+            "inputs": {
+              "items": {
+                "pattern_parameter": "stats"
+              }
+            },
+            "operation": "FOR_EACH",
+            "parameters": {
+              "binding": "stat",
+              "program": {
+                "nodes": [
+                  {
+                    "id": "add_stat",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "target.club"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": {
+                        "from": "iteration.stat"
                       }
                     }
                   }

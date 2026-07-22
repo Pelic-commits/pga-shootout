@@ -54,6 +54,7 @@ class BrandLoyaltyPipelineTests(unittest.TestCase):
                 "READ_LEVEL_VALUE",
                 "SELECT_ALL",
                 "SELECT_ADJACENT",
+                "SELECT_FARTHEST",
                 "MATCH_BRAND",
                 "MATCH_TYPE",
                 "MATCH_RARITY",

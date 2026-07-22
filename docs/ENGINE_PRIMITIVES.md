@@ -2,7 +2,7 @@
 
 > Proposition architecturale issue uniquement de l'analyse du groupe structurel `brand_loyalty_x`. Ce document ne valide aucune règle de jeu et n'autorise l'implémentation d'aucun handler.
 
-> État actuel : cette proposition a depuis été précisée par `DSL_ARCHITECTURE.md`. Le sous-ensemble `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ADJACENT`, `MATCH_BRAND`, `COUNT`, `SCALE` et `ADD_STAT` est désormais implémenté par le registre DSL générique.
+> État actuel : cette proposition a depuis été précisée par `DSL_ARCHITECTURE.md`. Le registre générique comprend notamment `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ADJACENT`, `SELECT_FARTHEST`, `MATCH_BRAND`, `COUNT`, `SCALE` et `ADD_STAT`.
 
 ## Objectif
 

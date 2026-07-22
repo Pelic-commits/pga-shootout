@@ -157,6 +157,35 @@ def _select_adjacent(inputs: Mapping[str, Any], parameters: Mapping[str, Any], s
     )
 
 
+def _select_farthest(inputs: Mapping[str, Any], _parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
+    origin = _club_id(inputs["origin"])
+    ordered = [entry.club.identifier for entry in state.bag.entries]
+    try:
+        origin_index = ordered.index(origin)
+    except ValueError as exc:
+        raise DslExecutionError(f"Club {origin!r} is not in the ordered bag") from exc
+    candidates = [
+        (abs(index - origin_index), club_id)
+        for index, club_id in enumerate(ordered)
+        if club_id != origin
+    ]
+    if not candidates:
+        raise DslExecutionError("SELECT_FARTHEST requires at least two clubs")
+    maximum_distance = max(distance for distance, _club_id_value in candidates)
+    farthest = tuple(club_id for distance, club_id in candidates if distance == maximum_distance)
+    if len(farthest) != 1:
+        names = ", ".join(_club_name(state, club_id) for club_id in farthest)
+        raise DslExecutionError(f"Farthest club is tied at distance {maximum_distance}: {names}")
+    selected = farthest[0]
+    return PrimitiveResult(
+        {"club": selected, "clubs": (selected,), "distance": maximum_distance},
+        stats,
+        f"selected unique farthest club {_club_name(state, selected)} at distance {maximum_distance}",
+        explain_inputs={"origin": _club_name(state, origin), "ordered_clubs": [_club_name(state, club_id) for club_id in ordered]},
+        explain_outputs={"club": _club_name(state, selected), "distance": maximum_distance},
+    )
+
+
 def _match_brand(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
     if parameters.get("operator", "equals") != "equals":
         raise DslExecutionError("MATCH_BRAND currently requires the equals operator")
@@ -468,6 +497,7 @@ def default_dsl_registry() -> DslPrimitiveRegistry:
     registry.register("READ_LEVEL_VALUE", _read_level_value)
     registry.register("SELECT_ALL", _select_all)
     registry.register("SELECT_ADJACENT", _select_adjacent)
+    registry.register("SELECT_FARTHEST", _select_farthest)
     registry.register("MATCH_BRAND", _match_brand)
     registry.register("MATCH_TYPE", _match_type)
     registry.register("MATCH_RARITY", _match_rarity)

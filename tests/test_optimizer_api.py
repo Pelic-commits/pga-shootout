@@ -26,8 +26,8 @@ class OptimizerApiTests(unittest.TestCase):
         result = evaluator.evaluate(BagEvaluationRequest(self.candidate(), 1, EvaluationMode.PARTIAL))
 
         self.assertEqual(result.evaluation.state.current_club_id, "divebomb")
-        self.assertEqual(result.evaluation.result.final_stats.as_dict(), {"power": 20.0, "control": 10.0, "spin": 10.0})
-        self.assertEqual(result.ability_impact, {"power": 8.0, "control": 4.0, "spin": 4.0})
+        self.assertEqual(result.evaluation.result.final_stats.as_dict(), {"power": 24.0, "control": 14.0, "spin": 14.0})
+        self.assertEqual(result.ability_impact, {"power": 12.0, "control": 8.0, "spin": 8.0})
         self.assertTrue(result.ability_contributions)
         self.assertTrue(result.evaluation.result.explain)
         self.assertTrue(result.evaluation.result.unresolved)

@@ -52,6 +52,9 @@ class BagComparisonTests(unittest.TestCase):
                 ("Steadfast / steadfast__bag_rarity_boost", "ADD_STAT"),
                 ("Steadfast / steadfast__bag_rarity_boost", "ADD_STAT"),
                 ("Steadfast / steadfast__bag_rarity_boost", "ADD_STAT"),
+                ("Sunstorm / sunstorm__plasma_arc_x", "ADD_STAT"),
+                ("Sunstorm / sunstorm__plasma_arc_x", "ADD_STAT"),
+                ("Sunstorm / sunstorm__plasma_arc_x", "ADD_STAT"),
             ],
         )
         self.assertTrue(comparison.right.applied_changes)

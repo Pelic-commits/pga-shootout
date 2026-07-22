@@ -79,7 +79,7 @@ class BagBounceReductionTests(unittest.TestCase):
             current_club_id="high_flight",
         )
         self.assertEqual(evaluation.result.modifiers["bounce_reduction_percent"], 20)
-        self.assertEqual(len(evaluation.result.unresolved), 4)
+        self.assertEqual(len(evaluation.result.unresolved), 3)
 
     def test_compare_bags_exposes_the_new_metric(self):
         comparison = compare_saved_bags(

@@ -33,9 +33,9 @@ class ReferenceGapReportTests(unittest.TestCase):
 
     def test_coverage_is_computed_from_saved_bags(self):
         coverage = {item.bag_id: item for item in self.report().bag_coverage}
-        self.assertEqual((coverage["par3_divebomb"].implemented_occurrences, coverage["par3_divebomb"].ability_occurrences), (4, 8))
-        self.assertEqual((coverage["par3_high_flight"].implemented_occurrences, coverage["par3_high_flight"].ability_occurrences), (5, 9))
-        self.assertEqual(coverage["par3_high_flight"].coverage_percent, 55.56)
+        self.assertEqual((coverage["par3_divebomb"].implemented_occurrences, coverage["par3_divebomb"].ability_occurrences), (5, 8))
+        self.assertEqual((coverage["par3_high_flight"].implemented_occurrences, coverage["par3_high_flight"].ability_occurrences), (6, 9))
+        self.assertEqual(coverage["par3_high_flight"].coverage_percent, 66.67)
 
     def test_exact_maelstrom_text_is_implemented_but_cyclotron_remains_ambiguous(self):
         abilities = {item.occurrence_id: item for item in self.report().abilities}
@@ -45,6 +45,8 @@ class ReferenceGapReportTests(unittest.TestCase):
         self.assertEqual(maelstrom.status, "implemented")
         self.assertEqual(maelstrom.confidence, "high")
         self.assertEqual(abilities["cyclotron__bounce_reduction_boost"].status, "ambiguous")
+        self.assertEqual(abilities["sunstorm__plasma_arc_x"].normalized_pattern, "unique_farthest_multi_stat_bonus")
+        self.assertEqual(abilities["sunstorm__plasma_arc_x"].status, "implemented")
 
     def test_report_generation_is_reproducible(self):
         expected = render_reference_gap_markdown(self.report())

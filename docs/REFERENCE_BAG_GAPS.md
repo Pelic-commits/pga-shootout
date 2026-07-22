@@ -6,8 +6,8 @@
 
 | Bag | Implemented | Total | Coverage |
 |---|---:|---:|---:|
-| `par3_divebomb` | 4 | 8 | 50.00% |
-| `par3_high_flight` | 5 | 9 | 55.56% |
+| `par3_divebomb` | 5 | 8 | 62.50% |
+| `par3_high_flight` | 6 | 9 | 66.67% |
 
 ## Ability matrix
 
@@ -20,7 +20,7 @@
 | Steadfast (`steadfast`) | null | **Brand Loyalty +X** — Has +X power per Willoughsby club next to Steadfast. (`steadfast__brand_loyalty_x`) | `mechanic:dsl_pipeline` | `implemented` | `ordered_bag`, `source_club`, `club_brand`, `ability_level_value` | medium | may change Power, Control or Spin totals and their ability contributions | `par3_divebomb` |
 | Ember (`ember`) | null | **Power Shot** — Pull all the way back with Ember for extra range and tougher swing timing. (`ember__power_shot`) | `unqualified:power_shot` | `unsupported` | `ability_level_value`, `static_metric_or_physics_contract` | medium | outside the deterministic static comparator | `par3_divebomb`, `par3_high_flight` |
 | Ember (`ember`) | null | **Alloy** — For each Hybrid club in your bag, that club and Ember each gain +X Power. (`ember__alloy`) | `matching_targets_and_source_per_match` | `implemented` | `ordered_bag`, `source_club`, `ability_level_value`, `resolved_targets` | high | may change Power, Control or Spin totals and their ability contributions | `par3_divebomb`, `par3_high_flight` |
-| Sunstorm (`sunstorm`) | null | **Plasma Arc +X** — The farthest club from Sunstorm has +X stats. (`sunstorm__plasma_arc_x`) | `unqualified:plasma_arc_x` | `ambiguous` | `ability_level_value`, `ordered_bag` | low | cannot be quantified before semantic qualification | `par3_divebomb`, `par3_high_flight` |
+| Sunstorm (`sunstorm`) | null | **Plasma Arc +X** — The farthest club from Sunstorm has +X stats. (`sunstorm__plasma_arc_x`) | `unique_farthest_multi_stat_bonus` | `implemented` | `ordered_bag`, `source_club`, `ability_level_value`, `unique_farthest_target`, `resolved_targets` | high | included in the current objective comparison | `par3_divebomb`, `par3_high_flight` |
 | High Flight (`high_flight`) | null | **Loft Angle +5°** — Launches the ball with a 5° higher angle than other hybrids. (`high_flight__loft_angle_5`) | `static_modifier_targets` | `implemented` | `source_club`, `ability_level_value`, `resolved_targets`, `static_modifiers` | high | included in the current objective comparison | `par3_high_flight` |
 | High Flight (`high_flight`) | null | **Wind Resist 75%** — High Flight is 75% less affected by wind. (`high_flight__wind_resist_75`) | `unqualified:wind_resist_75` | `scenario_required` | `ability_level_value`, `wind_speed` | medium | requires a wind scenario; unresolved in static comparison | `par3_high_flight` |
 | Cyclotron (`cyclotron`) | null | **Spin Boost** — The club to the left of Cyclotron has +X spin. (`cyclotron__spin_boost`) | `mechanic:dsl_pipeline` | `implemented` | `ordered_bag`, `source_club`, `ability_level_value` | high | may change Power, Control or Spin totals and their ability contributions | `par3_high_flight` |

@@ -62,6 +62,7 @@ class NormalizationPipelineTests(unittest.TestCase):
             "label:loft_angle_5",
             "label:nautilus_boost",
             "label:phoenix_power",
+            "label:plasma_arc_x",
             "label:power_boost",
             "label:sand_bounce",
             "label:spin_boost",

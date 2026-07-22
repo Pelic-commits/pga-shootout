@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Mapping
 
 from .bag_evaluation import BagEvaluation, evaluate_saved_bag, load_saved_bag
+from .comparison_diagnostic import ComparisonDiagnostic, build_comparison_diagnostic, render_comparison_diagnostic
 from .models import EvaluationMode
 from .value_api import ComparableMetric, MetricKind, metric_definition
 
@@ -54,6 +55,7 @@ class BagComparison:
     ability_impact_difference_right_minus_left: Mapping[str, float]
     modifier_difference_right_minus_left: Mapping[str, float]
     metrics: tuple[ComparableMetric, ...]
+    diagnostic: ComparisonDiagnostic
 
     @property
     def strict_failed(self) -> bool:
@@ -220,6 +222,14 @@ def compare_saved_bags(
     left_summary = summarize_bag_evaluation(left, current_position)
     right_summary = summarize_bag_evaluation(right, current_position)
     modifier_names = left_summary.modifier_impact.keys() | right_summary.modifier_impact.keys()
+    metrics = _comparable_metrics(left_summary, right_summary)
+    diagnostic = build_comparison_diagnostic(
+        left_summary,
+        right_summary,
+        metrics,
+        user_dir=user_dir,
+        catalog_path=catalog_path,
+    )
     return BagComparison(
         left=left_summary,
         right=right_summary,
@@ -237,7 +247,8 @@ def compare_saved_bags(
             name: right_summary.modifier_impact.get(name, 0.0) - left_summary.modifier_impact.get(name, 0.0)
             for name in sorted(modifier_names)
         },
-        metrics=_comparable_metrics(left_summary, right_summary),
+        metrics=metrics,
+        diagnostic=diagnostic,
     )
 
 
@@ -335,6 +346,8 @@ def render_bag_comparison(comparison: BagComparison) -> str:
             *_unresolved_lines(right),
             f"Strict status: {'FAILED' if comparison.strict_failed else 'SUCCESS' if comparison.mode is EvaluationMode.STRICT else 'NOT REQUESTED'}",
             "No aggregate score: user preference weights and real club levels are not yet validated.",
+            "",
+            *render_comparison_diagnostic(comparison.diagnostic),
             "=" * 72,
         ]
     )

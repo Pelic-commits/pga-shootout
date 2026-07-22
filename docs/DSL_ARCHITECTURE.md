@@ -15,11 +15,12 @@ L'exécuteur couvre huit compositions génériques qualifiées dans les données
 - bonus sous condition d'absence de types : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_ALL → MATCH_TYPE(in) → EXISTS → SELECT_SELF|SELECT_ALL → UNLESS → FOR_EACH(ADD_STAT)`.
 - bonus adjacent avec multiplicateur de marque : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_ADJACENT → FOR_EACH(ADD_STAT) → MATCH_BRAND → FOR_EACH(ADD_STAT)`.
 - modificateur statique ciblé : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_SELF|SELECT_ALL → FOR_EACH(ADD_MODIFIER)`.
+- bonus multi-statistiques à la cible la plus éloignée unique : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_FARTHEST → FOR_EACH(ADD_STAT)`.
 - compromis multi-statistiques du sac : `SELECT_SELF → READ_LEVEL_VALUE(component) × 2 → SELECT_ALL → FOR_EACH(FOR_EACH(ADD_STAT), ADD_STAT)`.
 
 Cette dernière composition est stockée une seule fois comme pattern paramétré dans `semantic_map.json`. Les familles ne déclarent que la sélection, le filtre et la statistique ; le chargeur matérialise le programme sans connaître leurs noms.
 
-Le registre contient quatorze primitives : `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `SELECT_ADJACENT`, `MATCH_BRAND`, `MATCH_TYPE`, `MATCH_RARITY`, `COUNT`, `EXISTS`, `SCALE`, `FOR_EACH`, `UNLESS`, `ADD_STAT` et `ADD_MODIFIER`. Le Rule Engine ne connaît ni le nom de la famille ni les noms des clubs : il reçoit le programme depuis `semantic_map.json`, le transmet à `dsl_pipeline` et ajoute une entrée Explain pour chaque nœud, y compris chaque sous-exécution ordonnée. Toutes les autres primitives de ce document restent des éléments d'architecture non implémentés.
+Le registre contient quinze primitives : `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `SELECT_ADJACENT`, `SELECT_FARTHEST`, `MATCH_BRAND`, `MATCH_TYPE`, `MATCH_RARITY`, `COUNT`, `EXISTS`, `SCALE`, `FOR_EACH`, `UNLESS`, `ADD_STAT` et `ADD_MODIFIER`. Le Rule Engine ne connaît ni le nom de la famille ni les noms des clubs : il reçoit le programme depuis `semantic_map.json`, le transmet à `dsl_pipeline` et ajoute une entrée Explain pour chaque nœud, y compris chaque sous-exécution ordonnée. Toutes les autres primitives de ce document restent des éléments d'architecture non implémentés.
 
 ## Principes
 
@@ -86,6 +87,7 @@ Une valeur littérale passe par `LITERAL`. Une donnée du jeu passe par une prim
 | `SELECT_CURRENT` | Sélectionner le club joué actuellement. | `GameState` | `ClubRef` | aucune | club courant | Bonus du coup courant. |
 | `SELECT_ALL` | Sélectionner le sac ordonné. | sac | `ClubSet` | `include_source` | modèle `Bag` | Analyse de composition. |
 | `SELECT_ADJACENT` | Sélectionner les voisins immédiats. | sac, origine | `ClubSet` | `directions`, `distance` | positions stables | Voisins de Brand Loyalty. |
+| `SELECT_FARTHEST` | Sélectionner le club dont la distance de position à l'origine est maximale, uniquement si la cible est unique. | sac, origine | `ClubRef` | aucune | positions stables | Cible de Plasma Arc ; une égalité est non résolue. |
 | `SELECT_BY_POSITION` | Sélectionner une ou plusieurs positions. | sac | `ClubSet` | indices/plage | positions stables | Premier ou dernier club. |
 | `SELECT_BEFORE` | Sélectionner les clubs avant une origine. | sac, origine | `ClubSet` | inclusivité | positions stables | Effet directionnel gauche. |
 | `SELECT_AFTER` | Sélectionner les clubs après une origine. | sac, origine | `ClubSet` | inclusivité | positions stables | Effet directionnel droit. |
