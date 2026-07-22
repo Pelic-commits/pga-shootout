@@ -13,8 +13,9 @@ Statut : initialisé et audité ; les phases Explain, la provenance et plusieurs
 
 ## 2. Validation des données
 
-- Importer la capture brute et les artefacts officiels dans un commit séparé
-- Vérifier les hashes SHA-256 et les compteurs du manifeste
+- [x] Importer la capture brute, le catalogue officiel et l'audit dans un commit séparé
+- [x] Vérifier leurs hashes SHA-256 et les compteurs disponibles du manifeste
+- Importer les six artefacts sémantiques encore absents
 - Mapper explicitement le schéma JSON officiel
 - Documenter l’ordre d’application validé
 - Ajouter les mécaniques déterministes confirmées

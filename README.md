@@ -19,6 +19,12 @@ Placer le fichier officiel `pga_club_stats_extract_v2_2026-07-21.json` dans `dat
 
 Le catalogue des artefacts attendus, leurs invariants et les règles d'import sont décrits dans [DATA_MANIFEST.md](DATA_MANIFEST.md).
 
+Valider la provenance et la structure des données importées :
+
+```powershell
+pga-shootout validate-data data/raw/pga_club_stats_extract_v2_2026-07-21.json data/normalized/clubs_official.json
+```
+
 ## CLI
 
 ```powershell

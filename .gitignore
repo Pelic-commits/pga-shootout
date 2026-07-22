@@ -11,3 +11,4 @@ build/
 # Raw official exports are supplied separately.
 data/raw/*
 !data/raw/.gitkeep
+!data/raw/pga_club_stats_extract_v2_2026-07-21.json

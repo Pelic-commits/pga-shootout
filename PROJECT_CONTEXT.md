@@ -201,7 +201,7 @@ Conforme aujourd'hui : aucune logique de nom de club, séparation conditions/eff
 - capacités des clubs non chargées automatiquement dans l'évaluation ;
 - aucune validation du schéma officiel ni test des compteurs annoncés ;
 - tests réalisés avec `unittest` alors que la convention cible indique `pytest` ;
-- aucune donnée officielle présente dans le dépôt au moment de cet audit.
+- capture brute, catalogue officiel et audit présents ; les autres artefacts sémantiques restent absents.
 
 Git au 22 juillet 2026 : branche `main`, distant `origin` égal à `https://github.com/Pelic-commits/pga-shootout.git`, local et distant synchronisés au début de l'audit sur `cc8dc80`.
 
@@ -236,7 +236,7 @@ Le brut est immuable. Chaque normalisation déclare version de schéma et hash S
 - Phases 4 à 6 — environnement, historique, transformations et hasard.
 - Phase 7 — optimiseur, seulement après validation.
 
-Prochaine tâche recommandée : importer séparément la capture brute, `clubs_official.json` et `ABILITY_AUDIT.md`, vérifier leurs hashes et invariants sans interpréter de capacité, puis concevoir explicitement le schéma de provenance.
+La capture brute, `clubs_official.json` et `ABILITY_AUDIT.md` sont désormais importés avec hashes et invariants testés. Prochaine tâche recommandée : modéliser séparément l'inventaire utilisateur réel, puis exposer la consultation club+niveau sans encore exécuter les capacités sémantiques non validées.
 
 ## 15. Définition de terminé et règle de travail
 

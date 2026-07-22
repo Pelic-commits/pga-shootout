@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Import immuable de la capture officielle, du catalogue normalisé et de l'audit des capacités.
+- Ajout d'une validation automatisée de la provenance, de la structure et des compteurs officiels.
 - Fusion du contexte durable et ajout du manifeste des données.
 - Documentation de l'architecture réelle, des écarts et de la prochaine étape d'import.
 - Initialisation du projet Python.
