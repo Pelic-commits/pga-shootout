@@ -51,6 +51,15 @@ class OptimizerApiTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     RuleEngineBagEvaluator(CATALOG).evaluate(request)
 
+    def test_optimizer_result_exposes_static_modifiers_and_their_source(self):
+        club_ids = ("high_flight", "cyclotron", "ember", "maelstrom", "sunstorm")
+        candidate = BagCandidate("high-flight", club_ids, {club_id: 12 for club_id in club_ids})
+        result = RuleEngineBagEvaluator(CATALOG).evaluate(BagEvaluationRequest(candidate, 1))
+
+        self.assertEqual(result.modifier_impact, {"loft_angle_degrees": 5.0})
+        contribution = next(item for item in result.ability_contributions if item.ability_id == "high_flight__loft_angle_5")
+        self.assertEqual(contribution.modification["loft_angle_degrees"], 5.0)
+
 
 if __name__ == "__main__":
     unittest.main()

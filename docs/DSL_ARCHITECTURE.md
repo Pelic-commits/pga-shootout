@@ -14,11 +14,12 @@ L'exécuteur couvre huit compositions génériques qualifiées dans les données
 - application par correspondance à la cible et à la source : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_ALL|SELECT_ADJACENT → MATCH_TYPE|MATCH_BRAND → FOR_EACH(ADD_STAT(target), ADD_STAT(source))`.
 - bonus sous condition d'absence de types : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_ALL → MATCH_TYPE(in) → EXISTS → SELECT_SELF|SELECT_ALL → UNLESS → FOR_EACH(ADD_STAT)`.
 - bonus adjacent avec multiplicateur de marque : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_ADJACENT → FOR_EACH(ADD_STAT) → MATCH_BRAND → FOR_EACH(ADD_STAT)`.
+- modificateur statique ciblé : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_SELF|SELECT_ALL → FOR_EACH(ADD_MODIFIER)`.
 - compromis multi-statistiques du sac : `SELECT_SELF → READ_LEVEL_VALUE(component) × 2 → SELECT_ALL → FOR_EACH(FOR_EACH(ADD_STAT), ADD_STAT)`.
 
 Cette dernière composition est stockée une seule fois comme pattern paramétré dans `semantic_map.json`. Les familles ne déclarent que la sélection, le filtre et la statistique ; le chargeur matérialise le programme sans connaître leurs noms.
 
-Le registre contient treize primitives : `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `SELECT_ADJACENT`, `MATCH_BRAND`, `MATCH_TYPE`, `MATCH_RARITY`, `COUNT`, `EXISTS`, `SCALE`, `FOR_EACH`, `UNLESS` et `ADD_STAT`. Le Rule Engine ne connaît ni le nom de la famille ni les noms des clubs : il reçoit le programme depuis `semantic_map.json`, le transmet à `dsl_pipeline` et ajoute une entrée Explain pour chaque nœud, y compris chaque sous-exécution ordonnée. Toutes les autres primitives de ce document restent des éléments d'architecture non implémentés.
+Le registre contient quatorze primitives : `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `SELECT_ADJACENT`, `MATCH_BRAND`, `MATCH_TYPE`, `MATCH_RARITY`, `COUNT`, `EXISTS`, `SCALE`, `FOR_EACH`, `UNLESS`, `ADD_STAT` et `ADD_MODIFIER`. Le Rule Engine ne connaît ni le nom de la famille ni les noms des clubs : il reçoit le programme depuis `semantic_map.json`, le transmet à `dsl_pipeline` et ajoute une entrée Explain pour chaque nœud, y compris chaque sous-exécution ordonnée. Toutes les autres primitives de ce document restent des éléments d'architecture non implémentés.
 
 ## Principes
 

@@ -7,8 +7,8 @@ L'optimiseur futur doit dépendre de `BagEvaluator`, pas du CLI ni des sacs sauv
 - `BagCandidate` décrit un identifiant, un ordre de clubs et le niveau réel de chaque club.
 - `BagEvaluationRequest` choisit une position courante et le mode `strict` ou `partial`.
 - `BagEvaluator.evaluate()` retourne un `ComparedBag` contenant l'évaluation complète.
-- `ComparedBag` expose les statistiques de base et finales via `evaluation.result`, l'impact total des capacités, l'Explain, les éléments non résolus et une contribution structurée pour chaque capacité.
-- `BagComparison` expose les différences finales, les différences d'impact des capacités et les bonus gagnés ou perdus sous forme de mappings numériques.
+- `ComparedBag` expose les statistiques de base et finales via `evaluation.result`, les modificateurs statiques, l'impact total des capacités, l'Explain, les éléments non résolus et une contribution structurée pour chaque capacité.
+- `BagComparison` expose les différences finales, les différences d'impact des capacités et les statistiques ou modificateurs gagnés/perdus sous forme de mappings numériques.
 
 ## Préparation
 

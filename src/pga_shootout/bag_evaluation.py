@@ -274,11 +274,15 @@ def render_bag_evaluation(evaluation: BagEvaluation) -> str:
         if entry.message:
             lines.append(f"Reason: {entry.message}")
     applied = sum(entry.applied for entry in result.explain)
-    lines.extend(
+    summary = [
+        "-" * 60,
+        "Evaluation finished",
+        f"Final stats: {result.final_stats.as_dict()}",
+    ]
+    if result.modifiers:
+        summary.append(f"Static modifiers: {dict(result.modifiers)}")
+    summary.extend(
         [
-            "-" * 60,
-            "Evaluation finished",
-            f"Final stats: {result.final_stats.as_dict()}",
             f"Supported mechanics: {len(evaluation.supported_mechanics)} ({', '.join(evaluation.supported_mechanics)})",
             f"Applied effects: {applied}",
             f"Unsupported effects: {len(result.unresolved)}",
@@ -287,4 +291,5 @@ def render_bag_evaluation(evaluation: BagEvaluation) -> str:
             "=" * 60,
         ]
     )
+    lines.extend(summary)
     return "\n".join(lines)

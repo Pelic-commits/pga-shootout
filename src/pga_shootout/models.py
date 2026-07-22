@@ -117,5 +117,6 @@ class EvaluationResult:
     base_stats: Stats
     final_stats: Stats
     explain: tuple[ExplainEntry, ...]
+    modifiers: Mapping[str, float] = field(default_factory=dict)
     unresolved: tuple[str, ...] = ()
     complete: bool = True

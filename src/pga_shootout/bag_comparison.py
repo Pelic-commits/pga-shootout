@@ -39,6 +39,7 @@ class ComparedBag:
     current_position: int
     applied_changes: tuple[AppliedChange, ...]
     ability_impact: Mapping[str, float]
+    modifier_impact: Mapping[str, float]
     ability_contributions: tuple[AbilityContribution, ...]
 
 
@@ -50,6 +51,7 @@ class BagComparison:
     mode: EvaluationMode
     final_difference_right_minus_left: Mapping[str, float]
     ability_impact_difference_right_minus_left: Mapping[str, float]
+    modifier_difference_right_minus_left: Mapping[str, float]
 
     @property
     def strict_failed(self) -> bool:
@@ -62,6 +64,14 @@ class BagComparison:
     @property
     def lost_ability_impact(self) -> Mapping[str, float]:
         return {stat: value for stat, value in self.ability_impact_difference_right_minus_left.items() if value < 0}
+
+    @property
+    def gained_modifier_impact(self) -> Mapping[str, float]:
+        return {name: value for name, value in self.modifier_difference_right_minus_left.items() if value > 0}
+
+    @property
+    def lost_modifier_impact(self) -> Mapping[str, float]:
+        return {name: value for name, value in self.modifier_difference_right_minus_left.items() if value < 0}
 
 
 def _applied_changes(evaluation: BagEvaluation) -> tuple[AppliedChange, ...]:
@@ -92,6 +102,18 @@ def ability_contributions(evaluation: BagEvaluation) -> tuple[AbilityContributio
                     stat: sum(entry.modification.get(stat, 0.0) for entry in leaves if entry.applied)
                     for stat in ("power", "control", "spin")
                 }
+                modifier_names = {
+                    name
+                    for entry in leaves
+                    for name in entry.modification
+                    if name not in modification
+                }
+                modification.update(
+                    {
+                        name: sum(entry.modification.get(name, 0.0) for entry in leaves if entry.applied)
+                        for name in sorted(modifier_names)
+                    }
+                )
                 unresolved = tuple(entry.message for entry in journal if entry.message.startswith("Unresolved"))
                 contributions.append(
                     AbilityContribution(
@@ -114,6 +136,7 @@ def summarize_bag_evaluation(evaluation: BagEvaluation, current_position: int) -
         current_position,
         _applied_changes(evaluation),
         _ability_impact(evaluation),
+        dict(evaluation.result.modifiers),
         ability_contributions(evaluation),
     )
 
@@ -155,9 +178,12 @@ def compare_saved_bags(
     right_stats = right.result.final_stats.as_dict()
     left_impact = _ability_impact(left)
     right_impact = _ability_impact(right)
+    left_summary = summarize_bag_evaluation(left, current_position)
+    right_summary = summarize_bag_evaluation(right, current_position)
+    modifier_names = left_summary.modifier_impact.keys() | right_summary.modifier_impact.keys()
     return BagComparison(
-        left=summarize_bag_evaluation(left, current_position),
-        right=summarize_bag_evaluation(right, current_position),
+        left=left_summary,
+        right=right_summary,
         level=level,
         mode=mode,
         final_difference_right_minus_left={
@@ -167,6 +193,10 @@ def compare_saved_bags(
         ability_impact_difference_right_minus_left={
             stat: right_impact[stat] - left_impact[stat]
             for stat in ("power", "control", "spin")
+        },
+        modifier_difference_right_minus_left={
+            name: right_summary.modifier_impact.get(name, 0.0) - left_summary.modifier_impact.get(name, 0.0)
+            for name in sorted(modifier_names)
         },
     )
 
@@ -231,9 +261,17 @@ def render_bag_comparison(comparison: BagComparison) -> str:
             f"  {comparison.final_difference_right_minus_left[stat]:>+10g}"
         )
 
-    lines.extend(["", "Applied stat changes - left"])
+    if comparison.modifier_difference_right_minus_left:
+        lines.extend(["", "Static modifiers (difference = right - left)", "Modifier                 Left  Right  Diff"])
+        for name, difference in comparison.modifier_difference_right_minus_left.items():
+            lines.append(
+                f"{name:<24} {comparison.left.modifier_impact.get(name, 0.0):>5g}"
+                f"  {comparison.right.modifier_impact.get(name, 0.0):>5g}  {difference:>+5g}"
+            )
+
+    lines.extend(["", "Applied ability changes - left"])
     lines.extend(_change_lines(comparison.left))
-    lines.append("Applied stat changes - right")
+    lines.append("Applied ability changes - right")
     lines.extend(_change_lines(comparison.right))
     gained = [
         f"{stat} +{value:g}"

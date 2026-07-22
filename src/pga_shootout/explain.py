@@ -16,7 +16,10 @@ def explain_entry(
     after: dict[str, float],
     message: str = "",
 ) -> ExplainEntry:
-    modification = {name: after[name] - before[name] for name in before}
+    modification = {
+        name: after.get(name, 0.0) - before.get(name, 0.0)
+        for name in before.keys() | after.keys()
+    }
     condition = effect.condition.description or effect.condition.kind
     return ExplainEntry(
         source=effect.source,

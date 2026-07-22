@@ -79,6 +79,8 @@ class BagComparisonTests(unittest.TestCase):
         comparison = self.compare()
         self.assertEqual(comparison.gained_ability_impact, {"spin": 6.0})
         self.assertEqual(comparison.lost_ability_impact, {"power": -1.0, "control": -4.0})
+        self.assertEqual(comparison.gained_modifier_impact, {"loft_angle_degrees": 5.0})
+        self.assertEqual(comparison.lost_modifier_impact, {})
 
     def test_new_tradeoff_is_reported_as_gained_and_lost_bonuses(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -70,6 +70,7 @@ class RuleEngine:
                         base_stats=base,
                         final_stats=Stats.from_mapping(current),
                         explain=tuple(journal),
+                        modifiers={name: value for name, value in current.items() if name not in base.as_dict()},
                         unresolved=tuple(unresolved),
                         complete=False,
                     )
@@ -79,6 +80,7 @@ class RuleEngine:
             base_stats=base,
             final_stats=Stats.from_mapping(current),
             explain=tuple(journal),
+            modifiers={name: value for name, value in current.items() if name not in base.as_dict()},
             unresolved=tuple(unresolved),
             complete=not unresolved,
         )

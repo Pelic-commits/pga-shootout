@@ -1,0 +1,51 @@
+SELECT_SELF
+Inputs: {"source_club_id": "high_flight"}
+Outputs: {"club": "High Flight"}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: selected source club High Flight
+
+READ_LEVEL_VALUE
+Inputs: {"level": 12}
+Outputs: {"value": 5.0}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: read value +5 at level 12
+
+SELECT_SELF
+Inputs: {"source_club_id": "high_flight"}
+Outputs: {"club": "High Flight"}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: selected source club High Flight
+
+FOR_EACH
+Inputs: {"binding": "target", "items": ["High Flight"]}
+Outputs: {"iterations": 1}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: executing sub-pipeline for 1 item(s)
+
+ADD_MODIFIER
+Inputs: {"delta": 5.0, "modifier": "loft_angle_degrees", "target": "High Flight"}
+Outputs: {"after": 5.0, "before": 0.0}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "loft_angle_degrees": 5.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "loft_angle_degrees": 5.0, "power": 14.0, "spin": 8.0}
+Detail: LOFT_ANGLE_DEGREES += 5
+
+dsl_pipeline
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "loft_angle_degrees": 5.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "loft_angle_degrees": 5.0, "power": 14.0, "spin": 8.0}
+Detail: applied

@@ -428,6 +428,40 @@ def _add_stat(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: d
     )
 
 
+def _add_modifier(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
+    modifier = str(parameters["modifier"])
+    target_value = inputs.get("target")
+    delta = float(inputs["delta"])
+    if target_value is None:
+        return PrimitiveResult(
+            {},
+            stats,
+            "no target selected; modifier unchanged",
+            applied=False,
+            explain_inputs={"target": None, "modifier": modifier, "delta": delta},
+            explain_outputs={"value": stats.get(modifier, 0.0)},
+        )
+    target = _club_id(target_value)
+    if target != state.current_club_id:
+        return PrimitiveResult(
+            {},
+            stats,
+            f"target {_club_name(state, target)} is not the current club; modifier unchanged",
+            applied=False,
+            explain_inputs={"target": _club_name(state, target), "modifier": modifier, "delta": delta},
+            explain_outputs={"value": stats.get(modifier, 0.0)},
+        )
+    before = stats.get(modifier, 0.0)
+    stats[modifier] = before + delta
+    return PrimitiveResult(
+        {"value": stats[modifier]},
+        stats,
+        f"{modifier.upper()} += {delta:g}",
+        explain_inputs={"target": _club_name(state, target), "modifier": modifier, "delta": delta},
+        explain_outputs={"before": before, "after": stats[modifier]},
+    )
+
+
 def default_dsl_registry() -> DslPrimitiveRegistry:
     registry = DslPrimitiveRegistry()
     registry.register("SELECT_SELF", _select_self)
@@ -443,6 +477,7 @@ def default_dsl_registry() -> DslPrimitiveRegistry:
     registry.register("FOR_EACH", _for_each)
     registry.register("UNLESS", _unless)
     registry.register("ADD_STAT", _add_stat)
+    registry.register("ADD_MODIFIER", _add_modifier)
     return registry
 
 
@@ -520,7 +555,10 @@ def _execute_nodes(
                 condition=f"DSL node {scoped_node_id}",
                 applied=result.applied,
                 before=before,
-                modification={name: current[name] - before[name] for name in before},
+                modification={
+                    name: current.get(name, 0.0) - before.get(name, 0.0)
+                    for name in before.keys() | current.keys()
+                },
                 after=dict(current),
                 message=result.message,
                 inputs=dict(result.explain_inputs if result.explain_inputs is not None else inputs),
