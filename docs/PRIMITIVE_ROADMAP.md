@@ -4,7 +4,7 @@
 
 This roadmap is derived from the 125 normalized ability groups, the 162 audited occurrences, and the actual DSL registry. It does not qualify or implement any additional gameplay family.
 
-The impact ranking is a baseline from the 21-occurrence Brand Loyalty milestone. Current implementation and coverage status are authoritative in `MECHANIC_COVERAGE.md`; primitives implemented after this baseline, including `MATCH_TYPE` and `FOR_EACH`, must be excluded when using the table for a new architectural decision.
+The impact ranking is a baseline from the 21-occurrence Brand Loyalty milestone. Current implementation and coverage status are authoritative in `MECHANIC_COVERAGE.md`; primitives implemented after this baseline, including `MATCH_TYPE`, `FOR_EACH`, and `SELECT_ALL`, must be excluded when using the table for a new architectural decision.
 
 Already available and therefore excluded from the ranking:
 

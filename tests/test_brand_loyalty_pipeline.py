@@ -49,7 +49,7 @@ class BrandLoyaltyPipelineTests(unittest.TestCase):
     def test_registry_contains_the_reference_and_reusable_type_filter_primitives(self):
         self.assertEqual(
             default_dsl_registry().names,
-            ("SELECT_SELF", "READ_LEVEL_VALUE", "SELECT_ADJACENT", "MATCH_BRAND", "MATCH_TYPE", "COUNT", "SCALE", "FOR_EACH", "ADD_STAT"),
+            ("SELECT_SELF", "READ_LEVEL_VALUE", "SELECT_ALL", "SELECT_ADJACENT", "MATCH_BRAND", "MATCH_TYPE", "COUNT", "SCALE", "FOR_EACH", "ADD_STAT"),
         )
 
     def test_no_matching_neighbor_adds_nothing(self):

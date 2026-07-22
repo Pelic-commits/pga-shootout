@@ -99,6 +99,28 @@ def _read_level_value(inputs: Mapping[str, Any], _parameters: Mapping[str, Any],
     )
 
 
+def _select_all(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
+    include_source = bool(parameters.get("include_source", True))
+    source_value = inputs.get("source")
+    source = _club_id(source_value) if source_value is not None else None
+    if not include_source and source is None:
+        raise DslExecutionError("SELECT_ALL requires a source when include_source is false")
+    clubs = tuple(
+        entry.club.identifier
+        for entry in state.bag.entries
+        if include_source or entry.club.identifier != source
+    )
+    source_name = _club_name(state, source) if source is not None else None
+    names = [_club_name(state, club_id) for club_id in clubs]
+    return PrimitiveResult(
+        {"clubs": clubs},
+        stats,
+        f"selected {len(clubs)} club(s) from the ordered bag",
+        explain_inputs={"source": source_name, "include_source": include_source},
+        explain_outputs={"clubs": names},
+    )
+
+
 def _select_adjacent(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
     origin = _club_id(inputs["origin"])
     distance = int(parameters.get("distance", 1))
@@ -303,6 +325,7 @@ def default_dsl_registry() -> DslPrimitiveRegistry:
     registry = DslPrimitiveRegistry()
     registry.register("SELECT_SELF", _select_self)
     registry.register("READ_LEVEL_VALUE", _read_level_value)
+    registry.register("SELECT_ALL", _select_all)
     registry.register("SELECT_ADJACENT", _select_adjacent)
     registry.register("MATCH_BRAND", _match_brand)
     registry.register("MATCH_TYPE", _match_type)

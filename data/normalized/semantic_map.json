@@ -172,14 +172,91 @@
       "validation_status": "not_started"
     },
     "label:bag_control": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value",
+        "resolved_targets"
+      ],
       "group_id": "label:bag_control",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: Your other clubs gain +X control.",
+        "Uses the generic ordered bag-target pipeline with include_source=false and stat=control."
+      ],
+      "priority": 6,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "targets",
+            "inputs": {
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ALL",
+            "parameters": {
+              "include_source": false
+            }
+          },
+          {
+            "id": "each_target",
+            "inputs": {
+              "items": {
+                "from": "targets.clubs"
+              }
+            },
+            "operation": "FOR_EACH",
+            "parameters": {
+              "binding": "target",
+              "program": {
+                "nodes": [
+                  {
+                    "id": "apply_stat",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": "control"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:bag_loft_angle_10": {
       "complexity": null,
@@ -232,14 +309,91 @@
       "validation_status": "not_started"
     },
     "label:bag_spin_bonus": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value",
+        "resolved_targets"
+      ],
       "group_id": "label:bag_spin_bonus",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: All clubs in your bag gain +X Spin.",
+        "Uses the generic ordered bag-target pipeline with include_source=true and stat=spin."
+      ],
+      "priority": 6,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "targets",
+            "inputs": {
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ALL",
+            "parameters": {
+              "include_source": true
+            }
+          },
+          {
+            "id": "each_target",
+            "inputs": {
+              "items": {
+                "from": "targets.clubs"
+              }
+            },
+            "operation": "FOR_EACH",
+            "parameters": {
+              "binding": "target",
+              "program": {
+                "nodes": [
+                  {
+                    "id": "apply_stat",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": "spin"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:bag_tree_bonus": {
       "complexity": null,
@@ -994,14 +1148,107 @@
       "validation_status": "not_started"
     },
     "label:forester_power": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "club_brand",
+        "ability_level_value",
+        "resolved_targets"
+      ],
       "group_id": "label:forester_power",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: Forester clubs have +X Power.",
+        "Uses the generic ordered brand-target pipeline with stat=power."
+      ],
+      "priority": 6,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "bag",
+            "inputs": {
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ALL",
+            "parameters": {
+              "include_source": true
+            }
+          },
+          {
+            "id": "matching_brand",
+            "inputs": {
+              "clubs": {
+                "from": "bag.clubs"
+              },
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "MATCH_BRAND",
+            "parameters": {
+              "operator": "equals"
+            }
+          },
+          {
+            "id": "each_target",
+            "inputs": {
+              "items": {
+                "from": "matching_brand.clubs"
+              }
+            },
+            "operation": "FOR_EACH",
+            "parameters": {
+              "binding": "target",
+              "program": {
+                "nodes": [
+                  {
+                    "id": "apply_power",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": "power"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:forester_power_elite": {
       "complexity": null,
@@ -1244,14 +1491,107 @@
       "validation_status": "not_started"
     },
     "label:phoenix_power": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "club_brand",
+        "ability_level_value",
+        "resolved_targets"
+      ],
       "group_id": "label:phoenix_power",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: Phoenix clubs have +X Power.",
+        "Uses the generic ordered brand-target pipeline with stat=power."
+      ],
+      "priority": 6,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "bag",
+            "inputs": {
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ALL",
+            "parameters": {
+              "include_source": true
+            }
+          },
+          {
+            "id": "matching_brand",
+            "inputs": {
+              "clubs": {
+                "from": "bag.clubs"
+              },
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "MATCH_BRAND",
+            "parameters": {
+              "operator": "equals"
+            }
+          },
+          {
+            "id": "each_target",
+            "inputs": {
+              "items": {
+                "from": "matching_brand.clubs"
+              }
+            },
+            "operation": "FOR_EACH",
+            "parameters": {
+              "binding": "target",
+              "program": {
+                "nodes": [
+                  {
+                    "id": "apply_power",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": "power"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:plasma_arc_x": {
       "complexity": null,
@@ -1580,14 +1920,107 @@
       "validation_status": "official_text_validated"
     },
     "label:stanchion_power": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "club_brand",
+        "ability_level_value",
+        "resolved_targets"
+      ],
       "group_id": "label:stanchion_power",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: Stanchion clubs have +X Power.",
+        "Uses the generic ordered brand-target pipeline with stat=power."
+      ],
+      "priority": 6,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "bag",
+            "inputs": {
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ALL",
+            "parameters": {
+              "include_source": true
+            }
+          },
+          {
+            "id": "matching_brand",
+            "inputs": {
+              "clubs": {
+                "from": "bag.clubs"
+              },
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "MATCH_BRAND",
+            "parameters": {
+              "operator": "equals"
+            }
+          },
+          {
+            "id": "each_target",
+            "inputs": {
+              "items": {
+                "from": "matching_brand.clubs"
+              }
+            },
+            "operation": "FOR_EACH",
+            "parameters": {
+              "binding": "target",
+              "program": {
+                "nodes": [
+                  {
+                    "id": "apply_power",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": "power"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:stat_fusion": {
       "complexity": null,
