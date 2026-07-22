@@ -57,6 +57,29 @@ class BagComparisonTests(unittest.TestCase):
         self.assertTrue(comparison.right.applied_changes)
         self.assertNotIn("dsl_pipeline", {change.mechanism for change in comparison.right.applied_changes})
 
+    def test_exposes_machine_readable_contributions_for_every_ability(self):
+        comparison = self.compare()
+        contribution = next(
+            item
+            for item in comparison.left.ability_contributions
+            if item.ability_id == "steadfast__bag_rarity_boost"
+        )
+        self.assertEqual(contribution.source_club_id, "steadfast")
+        self.assertEqual(contribution.modification, {"power": 4.0, "control": 4.0, "spin": 4.0})
+        self.assertTrue(contribution.evaluated)
+        self.assertTrue(contribution.applied)
+        unresolved = next(
+            item for item in comparison.left.ability_contributions if item.ability_id == "divebomb__chains_into_putters"
+        )
+        self.assertTrue(unresolved.evaluated)
+        self.assertFalse(unresolved.applied)
+        self.assertTrue(unresolved.unresolved)
+
+    def test_exposes_structured_gained_and_lost_bonus_totals(self):
+        comparison = self.compare()
+        self.assertEqual(comparison.gained_ability_impact, {"spin": 6.0})
+        self.assertEqual(comparison.lost_ability_impact, {"power": -1.0, "control": -4.0})
+
     def test_new_tradeoff_is_reported_as_gained_and_lost_bonuses(self):
         with tempfile.TemporaryDirectory() as directory:
             user_dir = Path(directory) / "user"

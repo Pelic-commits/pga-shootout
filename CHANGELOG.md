@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Ajout du contrat d'évaluation pour un futur optimiseur, des contributions structurées par capacité et du pattern Fellowship sans nouvelle primitive.
 - Ajout du pattern déclaratif de bonus multi-statistiques filtré par rareté, de `MATCH_RARITY` et de golden tests produit sur les sacs par-3 de référence.
 - Implémentation déclarative du premier pipeline DSL, avec les sept primitives requises par Brand Loyalty et une trace Explain par étape.
 

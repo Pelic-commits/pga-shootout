@@ -22,11 +22,24 @@ class AppliedChange:
 
 
 @dataclass(frozen=True)
+class AbilityContribution:
+    source_club_id: str
+    ability_id: str
+    source: str
+    mechanism: str
+    modification: Mapping[str, float]
+    evaluated: bool
+    applied: bool
+    unresolved: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class ComparedBag:
     evaluation: BagEvaluation
     current_position: int
     applied_changes: tuple[AppliedChange, ...]
     ability_impact: Mapping[str, float]
+    ability_contributions: tuple[AbilityContribution, ...]
 
 
 @dataclass(frozen=True)
@@ -41,6 +54,14 @@ class BagComparison:
     @property
     def strict_failed(self) -> bool:
         return self.left.evaluation.strict_failed or self.right.evaluation.strict_failed
+
+    @property
+    def gained_ability_impact(self) -> Mapping[str, float]:
+        return {stat: value for stat, value in self.ability_impact_difference_right_minus_left.items() if value > 0}
+
+    @property
+    def lost_ability_impact(self) -> Mapping[str, float]:
+        return {stat: value for stat, value in self.ability_impact_difference_right_minus_left.items() if value < 0}
 
 
 def _applied_changes(evaluation: BagEvaluation) -> tuple[AppliedChange, ...]:
@@ -57,6 +78,44 @@ def _ability_impact(evaluation: BagEvaluation) -> dict[str, float]:
     base = evaluation.result.base_stats.as_dict()
     final = evaluation.result.final_stats.as_dict()
     return {stat: final[stat] - base[stat] for stat in ("power", "control", "spin")}
+
+
+def ability_contributions(evaluation: BagEvaluation) -> tuple[AbilityContribution, ...]:
+    """Return stable, machine-readable totals for every ability in bag order."""
+    contributions = []
+    for bag_entry in evaluation.state.bag.entries:
+        for ability in bag_entry.club.abilities:
+            for effect in ability.effects:
+                journal = tuple(entry for entry in evaluation.result.explain if entry.source == effect.source)
+                leaves = tuple(entry for entry in journal if entry.mechanism != "dsl_pipeline")
+                modification = {
+                    stat: sum(entry.modification.get(stat, 0.0) for entry in leaves if entry.applied)
+                    for stat in ("power", "control", "spin")
+                }
+                unresolved = tuple(entry.message for entry in journal if entry.message.startswith("Unresolved"))
+                contributions.append(
+                    AbilityContribution(
+                        source_club_id=bag_entry.club.identifier,
+                        ability_id=ability.identifier,
+                        source=effect.source,
+                        mechanism=effect.mechanism,
+                        modification=modification,
+                        evaluated=bool(journal),
+                        applied=any(entry.applied for entry in leaves),
+                        unresolved=unresolved,
+                    )
+                )
+    return tuple(contributions)
+
+
+def summarize_bag_evaluation(evaluation: BagEvaluation, current_position: int) -> ComparedBag:
+    return ComparedBag(
+        evaluation,
+        current_position,
+        _applied_changes(evaluation),
+        _ability_impact(evaluation),
+        ability_contributions(evaluation),
+    )
 
 
 def compare_saved_bags(
@@ -97,8 +156,8 @@ def compare_saved_bags(
     left_impact = _ability_impact(left)
     right_impact = _ability_impact(right)
     return BagComparison(
-        left=ComparedBag(left, current_position, _applied_changes(left), left_impact),
-        right=ComparedBag(right, current_position, _applied_changes(right), right_impact),
+        left=summarize_bag_evaluation(left, current_position),
+        right=summarize_bag_evaluation(right, current_position),
         level=level,
         mode=mode,
         final_difference_right_minus_left={
@@ -178,13 +237,11 @@ def render_bag_comparison(comparison: BagComparison) -> str:
     lines.extend(_change_lines(comparison.right))
     gained = [
         f"{stat} +{value:g}"
-        for stat, value in comparison.ability_impact_difference_right_minus_left.items()
-        if value > 0
+        for stat, value in comparison.gained_ability_impact.items()
     ]
     lost = [
         f"{stat} {value:g}"
-        for stat, value in comparison.ability_impact_difference_right_minus_left.items()
-        if value < 0
+        for stat, value in comparison.lost_ability_impact.items()
     ]
     lines.extend(
         [

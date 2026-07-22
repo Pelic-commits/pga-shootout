@@ -157,7 +157,7 @@ def _abilities_at_level(
 def build_game_state(
     saved_bag: SavedBag,
     catalog_path: str | Path,
-    level: int | str,
+    level: int | str | Mapping[str, int | str],
     current_club_id: str | None = None,
 ) -> GameState:
     catalog = load_raw_json(catalog_path)
@@ -178,20 +178,47 @@ def build_game_state(
             data = clubs_data[club_id]
         except KeyError as exc:
             raise BagEvaluationError(f"Unknown official club reference: {club_id}") from exc
+        club_level = level.get(club_id) if isinstance(level, Mapping) else level
+        if club_level is None:
+            raise BagEvaluationError(f"No level provided for club {club_id!r}")
         stats = _stats_by_level(data)
-        if club_id == current_id and level not in stats:
-            raise BagEvaluationError(f"No official stats for {club_id} at level {level}")
+        if club_id == current_id and club_level not in stats:
+            raise BagEvaluationError(f"No official stats for {club_id} at level {club_level}")
         club = Club(
             identifier=club_id,
             name=str(data["name"]),
             brand=str(data["brand"]["id"]),
             club_type=str(data["club_type"]["id"]),
             stats_by_level=stats,
-            abilities=_abilities_at_level(data, level, semantic_entries, semantic_patterns),
+            abilities=_abilities_at_level(data, club_level, semantic_entries, semantic_patterns),
             rarity=str(data["rarity"]["id"]),
         )
-        entries.append(BagEntry(club=club, level=level))
+        entries.append(BagEntry(club=club, level=club_level))
     return GameState(bag=Bag(tuple(entries)), current_club_id=current_id)
+
+
+def evaluate_bag(
+    saved_bag: SavedBag,
+    *,
+    level: int | str | Mapping[str, int | str],
+    mode: EvaluationMode,
+    catalog_path: str | Path = "data/normalized/clubs_official.json",
+    current_club_id: str | None = None,
+    engine: RuleEngine | None = None,
+) -> BagEvaluation:
+    """Evaluate any ordered bag description, including generated candidates."""
+    state = build_game_state(saved_bag, catalog_path, level, current_club_id)
+    rule_engine = engine or RuleEngine()
+    effects = [effect for entry in state.bag.entries for ability in entry.club.abilities for effect in ability.effects]
+    strict_failed = False
+    try:
+        result = rule_engine.evaluate(state, effects, mode=mode)
+    except EvaluationError as exc:
+        if exc.result is None:
+            raise
+        result = exc.result
+        strict_failed = True
+    return BagEvaluation(saved_bag, state, result, mode, strict_failed, rule_engine.mechanisms.names)
 
 
 def evaluate_saved_bag(
@@ -205,18 +232,14 @@ def evaluate_saved_bag(
     engine: RuleEngine | None = None,
 ) -> BagEvaluation:
     saved_bag = load_saved_bag(user_dir, bag_id)
-    state = build_game_state(saved_bag, catalog_path, level, current_club_id)
-    rule_engine = engine or RuleEngine()
-    effects = [effect for entry in state.bag.entries for ability in entry.club.abilities for effect in ability.effects]
-    strict_failed = False
-    try:
-        result = rule_engine.evaluate(state, effects, mode=mode)
-    except EvaluationError as exc:
-        if exc.result is None:
-            raise
-        result = exc.result
-        strict_failed = True
-    return BagEvaluation(saved_bag, state, result, mode, strict_failed, rule_engine.mechanisms.names)
+    return evaluate_bag(
+        saved_bag,
+        level=level,
+        mode=mode,
+        catalog_path=catalog_path,
+        current_club_id=current_club_id,
+        engine=engine,
+    )
 
 
 def render_bag_evaluation(evaluation: BagEvaluation) -> str:

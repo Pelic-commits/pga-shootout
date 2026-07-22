@@ -13,6 +13,7 @@ L'exécuteur couvre huit compositions génériques qualifiées dans les données
 - application globale filtrée par marque : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_ALL → MATCH_BRAND → FOR_EACH(ADD_STAT)`.
 - application par correspondance à la cible et à la source : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_ALL|SELECT_ADJACENT → MATCH_TYPE|MATCH_BRAND → FOR_EACH(ADD_STAT(target), ADD_STAT(source))`.
 - bonus sous condition d'absence de types : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_ALL → MATCH_TYPE(in) → EXISTS → SELECT_SELF|SELECT_ALL → UNLESS → FOR_EACH(ADD_STAT)`.
+- bonus adjacent avec multiplicateur de marque : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_ADJACENT → FOR_EACH(ADD_STAT) → MATCH_BRAND → FOR_EACH(ADD_STAT)`.
 - compromis multi-statistiques du sac : `SELECT_SELF → READ_LEVEL_VALUE(component) × 2 → SELECT_ALL → FOR_EACH(FOR_EACH(ADD_STAT), ADD_STAT)`.
 
 Cette dernière composition est stockée une seule fois comme pattern paramétré dans `semantic_map.json`. Les familles ne déclarent que la sélection, le filtre et la statistique ; le chargeur matérialise le programme sans connaître leurs noms.

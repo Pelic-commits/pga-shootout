@@ -14,6 +14,7 @@ Le catalogue officiel contient 125 groupes, 162 occurrences et 88 clubs. Les pou
 | Bonus sous condition d'absence de types | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `MATCH_TYPE`, `EXISTS`, `UNLESS`, `FOR_EACH`, `ADD_STAT` | `iron_wedge_exclusion`, `exclusion_zone` | aucune | 2 | 1,23 % |
 | Compromis multi-statistiques du sac | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `FOR_EACH`, `ADD_STAT` | `bag_recklessness` | aucune | 1 | 0,62 % |
 | Bonus multi-statistiques du sac filtré par rareté | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `MATCH_RARITY`, `FOR_EACH`, `ADD_STAT` | `bag_rarity_boost` | aucune | 1 | 0,62 % |
+| Bonus adjacent avec multiplicateur de marque | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ADJACENT`, `FOR_EACH`, `MATCH_BRAND`, `ADD_STAT` | `fellowship` | aucune | 1 | 0,62 % |
 
 ## Patterns paramétrés
 
@@ -35,22 +36,26 @@ Les groupes `smoke_x`, `steam_x` et `sparks_x` restent seulement des candidats. 
 
 `filtered_bag_multi_stat_bonus` sélectionne le sac, filtre les raretés configurées puis applique la valeur officielle aux statistiques configurées. `bag_rarity_boost` utilise les raretés `common` et `rare` et les trois statistiques, sans condition liée au nom de Steadfast.
 
+`adjacent_stat_bonus_with_brand_multiplier` applique une première fois la valeur à chaque voisin, puis une seconde fois aux voisins partageant la marque de la source. `fellowship` obtient ainsi exactement le double pour Willoughsby sans multiplication ni branche métier.
+
 ## Architecture Dashboard
 
 | Indicateur | État |
 |---|---:|
-| Couverture technique | 18 / 125 groupes ; 38 / 162 occurrences |
+| Couverture technique | 19 / 125 groupes ; 39 / 162 occurrences |
 | Couverture fonctionnelle | 5 / 8 fonctionnalités utilisateur de référence |
-| Groupes couverts | 18 / 125 (14,40 %) |
-| Occurrences couvertes | 38 / 162 (23,46 %) |
+| Groupes couverts | 19 / 125 (15,20 %) |
+| Occurrences couvertes | 39 / 162 (24,07 %) |
 | Clubs couverts | 31 / 88 (35,23 %) |
 | Primitives disponibles | 13 / 50 |
 | Primitives encore manquantes | 37 / 50 |
 | Familles qualifiées bloquées uniquement par une primitive absente | 0 |
 
-Les 107 groupes restants sont non qualifiés. Attribuer un nombre exact de primitives manquantes avant validation sémantique produirait une fausse précision ; ils ne sont pas comptés comme « bloqués par une seule primitive ».
+Les 106 groupes restants sont non qualifiés. Attribuer un nombre exact de primitives manquantes avant validation sémantique produirait une fausse précision ; ils ne sont pas comptés comme « bloqués par une seule primitive ».
 
-Précision fonctionnelle améliorée dans ce lot : la capacité `bag_rarity_boost` de Steadfast est résolue et ses bonus sur Divebomb, Jumpstart et Ember apparaissent dans `compare-bags`. Deux sacs de référence sont protégés par des golden tests de comparaison et d'Explain ; zéro régression a été détectée.
+Précision fonctionnelle améliorée dans ce lot : `compare-bags` expose désormais les contributions structurées par capacité et les bonus gagnés/perdus. `fellowship` est résolue, mais ne modifie aucun des deux sacs de référence car Steward en est absent. Les golden tests existants confirment zéro régression.
+
+Préparation de l'API optimiseur : 80 % (8 critères sur 10), détaillée dans `OPTIMIZER_API.md`.
 
 ## Couverture fonctionnelle
 

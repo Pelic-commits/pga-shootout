@@ -53,6 +53,7 @@ class NormalizationPipelineTests(unittest.TestCase):
             "label:control_boost",
             "label:driver_loyalty",
             "label:exclusion_zone",
+            "label:fellowship",
             "label:forester_power",
             "label:iron_wedge_exclusion",
             "label:nautilus_boost",
