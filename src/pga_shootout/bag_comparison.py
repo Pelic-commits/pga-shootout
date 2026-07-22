@@ -8,6 +8,7 @@ from typing import Mapping
 
 from .bag_evaluation import BagEvaluation, evaluate_saved_bag, load_saved_bag
 from .models import EvaluationMode
+from .value_api import ComparableMetric, MetricKind, metric_definition
 
 
 class BagComparisonError(ValueError):
@@ -52,6 +53,7 @@ class BagComparison:
     final_difference_right_minus_left: Mapping[str, float]
     ability_impact_difference_right_minus_left: Mapping[str, float]
     modifier_difference_right_minus_left: Mapping[str, float]
+    metrics: tuple[ComparableMetric, ...]
 
     @property
     def strict_failed(self) -> bool:
@@ -141,6 +143,43 @@ def summarize_bag_evaluation(evaluation: BagEvaluation, current_position: int) -
     )
 
 
+def _comparable_metrics(left: ComparedBag, right: ComparedBag) -> tuple[ComparableMetric, ...]:
+    metrics = []
+    left_base = left.evaluation.result.base_stats.as_dict()
+    right_base = right.evaluation.result.base_stats.as_dict()
+    left_final = left.evaluation.result.final_stats.as_dict()
+    right_final = right.evaluation.result.final_stats.as_dict()
+    for name in ("power", "control", "spin"):
+        metrics.append(
+            ComparableMetric(
+                metric_definition(name, MetricKind.STAT),
+                left_base[name],
+                left.ability_impact[name],
+                left_final[name],
+                right_base[name],
+                right.ability_impact[name],
+                right_final[name],
+                right_final[name] - left_final[name],
+            )
+        )
+    for name in sorted(left.modifier_impact.keys() | right.modifier_impact.keys()):
+        left_value = left.modifier_impact.get(name, 0.0)
+        right_value = right.modifier_impact.get(name, 0.0)
+        metrics.append(
+            ComparableMetric(
+                metric_definition(name, MetricKind.STATIC_MODIFIER),
+                0.0,
+                left_value,
+                left_value,
+                0.0,
+                right_value,
+                right_value,
+                right_value - left_value,
+            )
+        )
+    return tuple(metrics)
+
+
 def compare_saved_bags(
     left_bag_id: str,
     right_bag_id: str,
@@ -198,6 +237,7 @@ def compare_saved_bags(
             name: right_summary.modifier_impact.get(name, 0.0) - left_summary.modifier_impact.get(name, 0.0)
             for name in sorted(modifier_names)
         },
+        metrics=_comparable_metrics(left_summary, right_summary),
     )
 
 
@@ -261,12 +301,14 @@ def render_bag_comparison(comparison: BagComparison) -> str:
             f"  {comparison.final_difference_right_minus_left[stat]:>+10g}"
         )
 
-    if comparison.modifier_difference_right_minus_left:
-        lines.extend(["", "Static modifiers (difference = right - left)", "Modifier                 Left  Right  Diff"])
-        for name, difference in comparison.modifier_difference_right_minus_left.items():
+    modifier_metrics = tuple(metric for metric in comparison.metrics if metric.definition.kind is MetricKind.STATIC_MODIFIER)
+    if modifier_metrics:
+        lines.extend(["", "Static modifiers (difference = right - left)", "Metric                              Left  Right  Diff"])
+        for metric in modifier_metrics:
+            display_name = f"{metric.definition.label} ({metric.definition.unit})"
             lines.append(
-                f"{name:<24} {comparison.left.modifier_impact.get(name, 0.0):>5g}"
-                f"  {comparison.right.modifier_impact.get(name, 0.0):>5g}  {difference:>+5g}"
+                f"{display_name:<35} {metric.left_final:>5g}"
+                f"  {metric.right_final:>5g}  {metric.difference_right_minus_left:>+5g}"
             )
 
     lines.extend(["", "Applied ability changes - left"])

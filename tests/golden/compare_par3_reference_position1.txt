@@ -21,8 +21,8 @@ Control            6              +4          10          10               +0   
 Spin               6              +4          10           8              +10           18          +8
 
 Static modifiers (difference = right - left)
-Modifier                 Left  Right  Diff
-loft_angle_degrees           0      5     +5
+Metric                              Left  Right  Diff
+Launch angle adjustment (degrees)       0      5     +5
 
 Applied ability changes - left
   Jumpstart / jumpstart__power_boost / ADD_STAT: power +4

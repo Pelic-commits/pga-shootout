@@ -28,3 +28,5 @@ L'API est prête à **80 % (8 critères sur 10)**.
 | Classer les résultats avec un objectif et une politique d'agrégation validés | bloquée par les préférences produit |
 
 Avant de calculer automatiquement le meilleur sac, il reste également à augmenter la couverture des capacités Phase 1. Le mode `partial` permet d'explorer avant 100 %, mais tout résultat devra alors conserver son niveau d'incomplétude.
+
+La future valeur utilisateur consommera le contrat neutre décrit dans `VALUE_WEIGHTING_API.md`. Elle ne fait pas partie du Rule Engine.

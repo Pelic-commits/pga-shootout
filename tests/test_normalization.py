@@ -61,8 +61,10 @@ class NormalizationPipelineTests(unittest.TestCase):
             "label:nautilus_boost",
             "label:phoenix_power",
             "label:power_boost",
+            "label:sand_bounce",
             "label:spin_boost",
             "label:stanchion_power",
+            "label:water_bounce",
         }
         for group_id in qualified_ids:
             qualified = semantic["entries"][group_id]

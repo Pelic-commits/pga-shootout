@@ -1,0 +1,103 @@
+SELECT_SELF
+Inputs: {"source_club_id": "mirage"}
+Outputs: {"club": "Mirage"}
+Applied: yes
+Before: {"control": 7.0, "power": 12.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 7.0, "power": 12.0, "spin": 10.0}
+Detail: selected source club Mirage
+
+READ_LEVEL_VALUE
+Inputs: {"level": 12}
+Outputs: {"value": 2.0}
+Applied: yes
+Before: {"control": 7.0, "power": 12.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 7.0, "power": 12.0, "spin": 10.0}
+Detail: read value +2 at level 12
+
+SELECT_SELF
+Inputs: {"source_club_id": "mirage"}
+Outputs: {"club": "Mirage"}
+Applied: yes
+Before: {"control": 7.0, "power": 12.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 7.0, "power": 12.0, "spin": 10.0}
+Detail: selected source club Mirage
+
+FOR_EACH
+Inputs: {"binding": "target", "items": ["Mirage"]}
+Outputs: {"iterations": 1}
+Applied: yes
+Before: {"control": 7.0, "power": 12.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 7.0, "power": 12.0, "spin": 10.0}
+Detail: executing sub-pipeline for 1 item(s)
+
+ADD_MODIFIER
+Inputs: {"delta": 2.0, "modifier": "sand_bounce_count", "target": "Mirage"}
+Outputs: {"after": 2.0, "before": 0.0}
+Applied: yes
+Before: {"control": 7.0, "power": 12.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "sand_bounce_count": 2.0, "spin": 0.0}
+After: {"control": 7.0, "power": 12.0, "sand_bounce_count": 2.0, "spin": 10.0}
+Detail: SAND_BOUNCE_COUNT += 2
+
+dsl_pipeline
+Applied: yes
+Before: {"control": 7.0, "power": 12.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "sand_bounce_count": 2.0, "spin": 0.0}
+After: {"control": 7.0, "power": 12.0, "sand_bounce_count": 2.0, "spin": 10.0}
+Detail: applied
+
+SELECT_SELF
+Inputs: {"source_club_id": "mirage"}
+Outputs: {"club": "Mirage"}
+Applied: yes
+Before: {"control": 7.0, "power": 12.0, "sand_bounce_count": 2.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "sand_bounce_count": 0.0, "spin": 0.0}
+After: {"control": 7.0, "power": 12.0, "sand_bounce_count": 2.0, "spin": 10.0}
+Detail: selected source club Mirage
+
+READ_LEVEL_VALUE
+Inputs: {"level": 12}
+Outputs: {"value": 2.0}
+Applied: yes
+Before: {"control": 7.0, "power": 12.0, "sand_bounce_count": 2.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "sand_bounce_count": 0.0, "spin": 0.0}
+After: {"control": 7.0, "power": 12.0, "sand_bounce_count": 2.0, "spin": 10.0}
+Detail: read value +2 at level 12
+
+SELECT_SELF
+Inputs: {"source_club_id": "mirage"}
+Outputs: {"club": "Mirage"}
+Applied: yes
+Before: {"control": 7.0, "power": 12.0, "sand_bounce_count": 2.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "sand_bounce_count": 0.0, "spin": 0.0}
+After: {"control": 7.0, "power": 12.0, "sand_bounce_count": 2.0, "spin": 10.0}
+Detail: selected source club Mirage
+
+FOR_EACH
+Inputs: {"binding": "target", "items": ["Mirage"]}
+Outputs: {"iterations": 1}
+Applied: yes
+Before: {"control": 7.0, "power": 12.0, "sand_bounce_count": 2.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "sand_bounce_count": 0.0, "spin": 0.0}
+After: {"control": 7.0, "power": 12.0, "sand_bounce_count": 2.0, "spin": 10.0}
+Detail: executing sub-pipeline for 1 item(s)
+
+ADD_MODIFIER
+Inputs: {"delta": 2.0, "modifier": "water_bounce_count", "target": "Mirage"}
+Outputs: {"after": 2.0, "before": 0.0}
+Applied: yes
+Before: {"control": 7.0, "power": 12.0, "sand_bounce_count": 2.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "sand_bounce_count": 0.0, "spin": 0.0, "water_bounce_count": 2.0}
+After: {"control": 7.0, "power": 12.0, "sand_bounce_count": 2.0, "spin": 10.0, "water_bounce_count": 2.0}
+Detail: WATER_BOUNCE_COUNT += 2
+
+dsl_pipeline
+Applied: yes
+Before: {"control": 7.0, "power": 12.0, "sand_bounce_count": 2.0, "spin": 10.0}
+Change: {"control": 0.0, "power": 0.0, "sand_bounce_count": 0.0, "spin": 0.0, "water_bounce_count": 2.0}
+After: {"control": 7.0, "power": 12.0, "sand_bounce_count": 2.0, "spin": 10.0, "water_bounce_count": 2.0}
+Detail: applied

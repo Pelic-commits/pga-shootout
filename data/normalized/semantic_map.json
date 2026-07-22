@@ -1986,14 +1986,33 @@
       "validation_status": "not_started"
     },
     "label:sand_bounce": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "source_club",
+        "ability_level_value",
+        "resolved_targets",
+        "static_modifiers"
+      ],
       "group_id": "label:sand_bounce",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: Bounces up to X times off of sand.",
+        "The official value is exposed as the source club's maximum sand bounce count."
+      ],
+      "pattern_id": "static_modifier_targets",
+      "pattern_parameters": {
+        "modifier": "sand_bounce_count",
+        "selection_inputs": {
+          "source_club_id": {
+            "from": "effect.source_club_id"
+          }
+        },
+        "selection_operation": "SELECT_SELF",
+        "selection_parameters": {}
+      },
+      "priority": 6,
+      "validation_status": "validated_from_official_text"
     },
     "label:scottsdale_boosters": {
       "complexity": null,
@@ -2412,14 +2431,33 @@
       "validation_status": "not_started"
     },
     "label:water_bounce": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "source_club",
+        "ability_level_value",
+        "resolved_targets",
+        "static_modifiers"
+      ],
       "group_id": "label:water_bounce",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: Bounces up to 2 times off of water.",
+        "The official value is exposed as the source club's maximum water bounce count."
+      ],
+      "pattern_id": "static_modifier_targets",
+      "pattern_parameters": {
+        "modifier": "water_bounce_count",
+        "selection_inputs": {
+          "source_club_id": {
+            "from": "effect.source_club_id"
+          }
+        },
+        "selection_operation": "SELECT_SELF",
+        "selection_parameters": {}
+      },
+      "priority": 6,
+      "validation_status": "validated_from_official_text"
     },
     "label:water_rush": {
       "complexity": null,
