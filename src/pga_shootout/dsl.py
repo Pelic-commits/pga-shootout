@@ -194,10 +194,19 @@ def _scale(inputs: Mapping[str, Any], _parameters: Mapping[str, Any], stats: dic
 
 
 def _add_stat(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
-    target = _club_id(inputs["target"])
     stat = str(parameters["stat"])
     if stat not in stats:
         raise DslExecutionError(f"Unknown stat: {stat}")
+    if inputs.get("target") is None:
+        return PrimitiveResult(
+            {},
+            stats,
+            "no target selected; stat unchanged",
+            applied=False,
+            explain_inputs={"target": None, "stat": stat, "delta": float(inputs["delta"])},
+            explain_outputs={"value": stats[stat]},
+        )
+    target = _club_id(inputs["target"])
     if target != state.current_club_id:
         return PrimitiveResult(
             {},

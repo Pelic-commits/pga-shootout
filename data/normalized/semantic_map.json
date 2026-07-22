@@ -625,14 +625,77 @@
       "validation_status": "not_started"
     },
     "label:control_boost": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:control_boost",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: The club to the left of Galvanizer has +X control.",
+        "Uses the generic left-neighbor stat-bonus pipeline with stat=control."
+      ],
+      "priority": 3,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "left_neighbor",
+            "inputs": {
+              "origin": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ADJACENT",
+            "parameters": {
+              "directions": [
+                "left"
+              ],
+              "distance": 1
+            }
+          },
+          {
+            "id": "apply_stat",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "left_neighbor.left"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "control"
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:corvid_wind_resist": {
       "complexity": null,
@@ -1015,14 +1078,77 @@
       "validation_status": "not_started"
     },
     "label:power_boost": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:power_boost",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: The club to the left of Jumpstart has +X power.",
+        "Uses the generic left-neighbor stat-bonus pipeline with stat=power."
+      ],
+      "priority": 3,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "left_neighbor",
+            "inputs": {
+              "origin": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ADJACENT",
+            "parameters": {
+              "directions": [
+                "left"
+              ],
+              "distance": 1
+            }
+          },
+          {
+            "id": "apply_stat",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "left_neighbor.left"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "power"
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:power_shot": {
       "complexity": null,
@@ -1195,14 +1321,77 @@
       "validation_status": "not_started"
     },
     "label:spin_boost": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:spin_boost",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: The club to the left of Cyclotron has +X spin.",
+        "Uses the generic left-neighbor stat-bonus pipeline with stat=spin."
+      ],
+      "priority": 3,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "left_neighbor",
+            "inputs": {
+              "origin": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ADJACENT",
+            "parameters": {
+              "directions": [
+                "left"
+              ],
+              "distance": 1
+            }
+          },
+          {
+            "id": "apply_stat",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "left_neighbor.left"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "spin"
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:stanchion_power": {
       "complexity": null,

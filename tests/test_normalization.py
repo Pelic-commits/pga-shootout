@@ -41,7 +41,13 @@ class NormalizationPipelineTests(unittest.TestCase):
 
         self.assertEqual(len(catalog["groups"]), 125)
         self.assertTrue(all(group["mechanic_id"] is None for group in catalog["groups"].values()))
-        qualified_ids = {"label:brand_loyalty", "label:brand_loyalty_x"}
+        qualified_ids = {
+            "label:brand_loyalty",
+            "label:brand_loyalty_x",
+            "label:control_boost",
+            "label:power_boost",
+            "label:spin_boost",
+        }
         for group_id in qualified_ids:
             qualified = semantic["entries"][group_id]
             self.assertEqual(qualified["mechanic_id"], "dsl_pipeline")
