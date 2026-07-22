@@ -20,6 +20,8 @@ class PrimitiveResult:
     stats: dict[str, float]
     message: str
     applied: bool = True
+    explain_inputs: Mapping[str, Any] | None = None
+    explain_outputs: Mapping[str, Any] | None = None
 
 
 Primitive = Callable[[Mapping[str, Any], Mapping[str, Any], dict[str, float], GameState], PrimitiveResult]
@@ -59,10 +61,20 @@ def _club_id(value: Any) -> str:
     return value
 
 
+def _club_name(state: GameState, club_id: str) -> str:
+    return state.bag.get(club_id).club.name
+
+
 def _select_self(inputs: Mapping[str, Any], _parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
     club_id = _club_id(inputs["source_club_id"])
-    state.bag.get(club_id)
-    return PrimitiveResult({"club": club_id}, stats, f"selected source club {club_id}")
+    name = _club_name(state, club_id)
+    return PrimitiveResult(
+        {"club": club_id},
+        stats,
+        f"selected source club {name}",
+        explain_inputs={"source_club_id": club_id},
+        explain_outputs={"club": name},
+    )
 
 
 def _read_level_value(inputs: Mapping[str, Any], _parameters: Mapping[str, Any], stats: dict[str, float], _state: GameState) -> PrimitiveResult:
@@ -70,7 +82,13 @@ def _read_level_value(inputs: Mapping[str, Any], _parameters: Mapping[str, Any],
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise DslExecutionError(f"Expected a numeric level value, received {value!r}")
     numeric = float(value)
-    return PrimitiveResult({"value": numeric}, stats, f"read level value {numeric:g}")
+    return PrimitiveResult(
+        {"value": numeric},
+        stats,
+        f"read value {numeric:+g} at level {inputs.get('level', 'unknown')}",
+        explain_inputs={"level": inputs.get("level")},
+        explain_outputs={"value": numeric},
+    )
 
 
 def _select_adjacent(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
@@ -85,6 +103,7 @@ def _select_adjacent(inputs: Mapping[str, Any], parameters: Mapping[str, Any], s
     except ValueError as exc:
         raise DslExecutionError(f"Club {origin!r} is not in the ordered bag") from exc
     selected: list[str] = []
+    selected_by_direction: dict[str, str | None] = {}
     offsets = {"left": -distance, "right": distance}
     for direction in directions:
         if direction not in offsets:
@@ -92,7 +111,20 @@ def _select_adjacent(inputs: Mapping[str, Any], parameters: Mapping[str, Any], s
         candidate = index + offsets[direction]
         if 0 <= candidate < len(ordered):
             selected.append(ordered[candidate])
-    return PrimitiveResult({"clubs": tuple(selected)}, stats, f"selected adjacent clubs {selected}")
+            selected_by_direction[direction] = ordered[candidate]
+        else:
+            selected_by_direction[direction] = None
+    named_directions = {
+        direction: _club_name(state, club_id) if club_id is not None else None
+        for direction, club_id in selected_by_direction.items()
+    }
+    return PrimitiveResult(
+        {"clubs": tuple(selected), **selected_by_direction},
+        stats,
+        f"selected adjacent clubs {list(value for value in named_directions.values() if value is not None)}",
+        explain_inputs={"origin": _club_name(state, origin), "directions": list(directions), "distance": distance},
+        explain_outputs=named_directions,
+    )
 
 
 def _match_brand(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
@@ -101,22 +133,64 @@ def _match_brand(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats
     source = state.bag.get(_club_id(inputs["source"])).club
     clubs = tuple(_club_id(value) for value in inputs.get("clubs", ()))
     matches = tuple(club_id for club_id in clubs if state.bag.get(club_id).club.brand == source.brand)
-    return PrimitiveResult({"clubs": matches}, stats, f"matched brand {source.brand}: {list(matches)}")
+    evaluations = [
+        {"club": _club_name(state, club_id), "matches": club_id in matches}
+        for club_id in clubs
+    ]
+    directional = {
+        direction: (
+            None
+            if inputs.get(direction) is None
+            else {
+                "club": _club_name(state, _club_id(inputs[direction])),
+                "matches": _club_id(inputs[direction]) in matches,
+            }
+        )
+        for direction in ("left", "right")
+    }
+    return PrimitiveResult(
+        {"clubs": matches},
+        stats,
+        f"matched {len(matches)} club(s) against brand {source.brand}",
+        explain_inputs={"source": source.name, "brand": source.brand, "candidates": [item["club"] for item in evaluations]},
+        explain_outputs=directional,
+    )
 
 
-def _count(inputs: Mapping[str, Any], _parameters: Mapping[str, Any], stats: dict[str, float], _state: GameState) -> PrimitiveResult:
+def _count(inputs: Mapping[str, Any], _parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
     items = inputs.get("items", ())
     if not isinstance(items, Sequence) or isinstance(items, (str, bytes)):
         raise DslExecutionError("COUNT requires a sequence")
     count = len(items)
-    return PrimitiveResult({"value": count}, stats, f"counted {count} item(s)")
+    displayed_items = []
+    for item in items:
+        if isinstance(item, str):
+            try:
+                displayed_items.append(_club_name(state, item))
+                continue
+            except KeyError:
+                pass
+        displayed_items.append(item)
+    return PrimitiveResult(
+        {"value": count},
+        stats,
+        f"counted {count} item(s)",
+        explain_inputs={"items": displayed_items},
+        explain_outputs={"count": count},
+    )
 
 
 def _scale(inputs: Mapping[str, Any], _parameters: Mapping[str, Any], stats: dict[str, float], _state: GameState) -> PrimitiveResult:
     amount = float(inputs["amount"])
     factor = float(inputs["factor"])
     value = amount * factor
-    return PrimitiveResult({"value": value}, stats, f"scaled {amount:g} by {factor:g} = {value:g}")
+    return PrimitiveResult(
+        {"value": value},
+        stats,
+        f"{amount:g} × {factor:g} = {value:g}",
+        explain_inputs={"amount": amount, "factor": factor},
+        explain_outputs={"value": value},
+    )
 
 
 def _add_stat(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
@@ -125,10 +199,24 @@ def _add_stat(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: d
     if stat not in stats:
         raise DslExecutionError(f"Unknown stat: {stat}")
     if target != state.current_club_id:
-        return PrimitiveResult({}, stats, f"target {target} is not the current club; stat unchanged", applied=False)
+        return PrimitiveResult(
+            {},
+            stats,
+            f"target {_club_name(state, target)} is not the current club; stat unchanged",
+            applied=False,
+            explain_inputs={"target": _club_name(state, target), "stat": stat, "delta": float(inputs["delta"])},
+            explain_outputs={"value": stats[stat]},
+        )
     delta = float(inputs["delta"])
+    before = stats[stat]
     stats[stat] += delta
-    return PrimitiveResult({"value": stats[stat]}, stats, f"added {delta:g} to {stat} on {target}")
+    return PrimitiveResult(
+        {"value": stats[stat]},
+        stats,
+        f"{stat.upper()} += {delta:g}",
+        explain_inputs={"target": _club_name(state, target), "stat": stat, "delta": delta},
+        explain_outputs={"before": before, "after": stats[stat]},
+    )
 
 
 def default_dsl_registry() -> DslPrimitiveRegistry:
@@ -197,6 +285,8 @@ def execute_dsl_pipeline(stats: dict[str, float], effect: Effect, state: GameSta
                 modification={name: current[name] - before[name] for name in before},
                 after=dict(current),
                 message=result.message,
+                inputs=dict(result.explain_inputs if result.explain_inputs is not None else inputs),
+                outputs=dict(result.explain_outputs if result.explain_outputs is not None else result.outputs),
             )
         )
     return MechanismExecution(current, tuple(journal))

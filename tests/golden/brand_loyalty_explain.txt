@@ -1,0 +1,62 @@
+SELECT_SELF
+Inputs: {"source_club_id": "steadfast"}
+Outputs: {"club": "Steadfast"}
+Applied: yes
+Before: {"control": 5, "power": 10, "spin": 3}
+Change: {"control": 0, "power": 0, "spin": 0}
+After: {"control": 5, "power": 10, "spin": 3}
+Detail: selected source club Steadfast
+
+READ_LEVEL_VALUE
+Inputs: {"level": 11}
+Outputs: {"value": 2.0}
+Applied: yes
+Before: {"control": 5, "power": 10, "spin": 3}
+Change: {"control": 0, "power": 0, "spin": 0}
+After: {"control": 5, "power": 10, "spin": 3}
+Detail: read value +2 at level 11
+
+SELECT_ADJACENT
+Inputs: {"directions": ["left", "right"], "distance": 1, "origin": "Steadfast"}
+Outputs: {"left": "Groundskeep", "right": "Homestead"}
+Applied: yes
+Before: {"control": 5, "power": 10, "spin": 3}
+Change: {"control": 0, "power": 0, "spin": 0}
+After: {"control": 5, "power": 10, "spin": 3}
+Detail: selected adjacent clubs ['Groundskeep', 'Homestead']
+
+MATCH_BRAND
+Inputs: {"brand": "willoughsby", "candidates": ["Groundskeep", "Homestead"], "source": "Steadfast"}
+Outputs: {"left": {"club": "Groundskeep", "matches": true}, "right": {"club": "Homestead", "matches": true}}
+Applied: yes
+Before: {"control": 5, "power": 10, "spin": 3}
+Change: {"control": 0, "power": 0, "spin": 0}
+After: {"control": 5, "power": 10, "spin": 3}
+Detail: matched 2 club(s) against brand willoughsby
+
+COUNT
+Inputs: {"items": ["Groundskeep", "Homestead"]}
+Outputs: {"count": 2}
+Applied: yes
+Before: {"control": 5, "power": 10, "spin": 3}
+Change: {"control": 0, "power": 0, "spin": 0}
+After: {"control": 5, "power": 10, "spin": 3}
+Detail: counted 2 item(s)
+
+SCALE
+Inputs: {"amount": 2.0, "factor": 2.0}
+Outputs: {"value": 4.0}
+Applied: yes
+Before: {"control": 5, "power": 10, "spin": 3}
+Change: {"control": 0, "power": 0, "spin": 0}
+After: {"control": 5, "power": 10, "spin": 3}
+Detail: 2 × 2 = 4
+
+ADD_STAT
+Inputs: {"delta": 4.0, "stat": "power", "target": "Steadfast"}
+Outputs: {"after": 14.0, "before": 10}
+Applied: yes
+Before: {"control": 5, "power": 10, "spin": 3}
+Change: {"control": 0, "power": 4.0, "spin": 0}
+After: {"control": 5, "power": 14.0, "spin": 3}
+Detail: POWER += 4

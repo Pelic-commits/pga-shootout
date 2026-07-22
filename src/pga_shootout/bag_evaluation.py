@@ -79,6 +79,7 @@ def _abilities_at_level(
                 parameters = {
                     "program": semantic["program"],
                     "source_club_id": str(club_data["id"]),
+                    "ability_level": level,
                     "level_value": level_value,
                 }
         if not mechanism:
@@ -178,6 +179,8 @@ def render_bag_evaluation(evaluation: BagEvaluation) -> str:
                 f"Condition: {entry.condition}",
                 f"Status: {'APPLIED' if entry.applied else 'UNSUPPORTED' if entry.message.startswith('Unresolved') else 'SKIPPED'}",
                 f"Effect: {entry.mechanism}",
+                f"Inputs: {dict(entry.inputs)}" if entry.inputs else "Inputs: {}",
+                f"Outputs: {dict(entry.outputs)}" if entry.outputs else "Outputs: {}",
                 f"Before: {dict(entry.before)}",
                 f"Change: {dict(entry.modification)}",
                 f"After: {dict(entry.after)}",

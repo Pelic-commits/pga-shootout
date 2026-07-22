@@ -107,6 +107,8 @@ class ExplainEntry:
     modification: Mapping[str, float]
     after: Mapping[str, float]
     message: str = ""
+    inputs: Mapping[str, Any] = field(default_factory=dict)
+    outputs: Mapping[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

@@ -340,6 +340,9 @@
           {
             "id": "level_value",
             "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
               "level_value": {
                 "from": "effect.level_value"
               }
@@ -367,6 +370,12 @@
             "inputs": {
               "clubs": {
                 "from": "neighbors.clubs"
+              },
+              "left": {
+                "from": "neighbors.left"
+              },
+              "right": {
+                "from": "neighbors.right"
               },
               "source": {
                 "from": "source.club"
