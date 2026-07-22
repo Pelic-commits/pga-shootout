@@ -4,13 +4,16 @@
 
 ## Sous-ensemble implémenté
 
-L'exécuteur couvre cinq compositions génériques qualifiées dans les données :
+L'exécuteur couvre six compositions génériques qualifiées dans les données :
 
 - marque : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_ADJACENT → MATCH_BRAND → COUNT → SCALE → ADD_STAT` ;
 - type : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_ADJACENT → MATCH_TYPE → COUNT → SCALE → ADD_STAT` ;
 - application à chaque cible adjacente : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_ADJACENT → FOR_EACH(ADD_STAT)` ;
 - application globale au sac : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_ALL → FOR_EACH(ADD_STAT)` ;
 - application globale filtrée par marque : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_ALL → MATCH_BRAND → FOR_EACH(ADD_STAT)`.
+- application par correspondance à la cible et à la source : `SELECT_SELF → READ_LEVEL_VALUE → SELECT_ALL|SELECT_ADJACENT → MATCH_TYPE|MATCH_BRAND → FOR_EACH(ADD_STAT(target), ADD_STAT(source))`.
+
+Cette dernière composition est stockée une seule fois comme pattern paramétré dans `semantic_map.json`. Les familles ne déclarent que la sélection, le filtre et la statistique ; le chargeur matérialise le programme sans connaître leurs noms.
 
 Le registre contient dix primitives : `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `SELECT_ADJACENT`, `MATCH_BRAND`, `MATCH_TYPE`, `COUNT`, `SCALE`, `FOR_EACH` et `ADD_STAT`. Le Rule Engine ne connaît ni le nom de la famille ni les noms des clubs : il reçoit le programme depuis `semantic_map.json`, le transmet à `dsl_pipeline` et ajoute une entrée Explain pour chaque nœud, y compris chaque sous-exécution ordonnée. Toutes les autres primitives de ce document restent des éléments d'architecture non implémentés.
 

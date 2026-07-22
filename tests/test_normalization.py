@@ -43,6 +43,7 @@ class NormalizationPipelineTests(unittest.TestCase):
         self.assertTrue(all(group["mechanic_id"] is None for group in catalog["groups"].values()))
         qualified_ids = {
             "label:adjacent_power",
+            "label:alloy",
             "label:bag_control",
             "label:bag_spin_bonus",
             "label:brand_loyalty",
@@ -50,6 +51,7 @@ class NormalizationPipelineTests(unittest.TestCase):
             "label:control_boost",
             "label:driver_loyalty",
             "label:forester_power",
+            "label:nautilus_boost",
             "label:phoenix_power",
             "label:power_boost",
             "label:spin_boost",
@@ -83,6 +85,23 @@ class NormalizationPipelineTests(unittest.TestCase):
 
         self.assertEqual(regenerated["entries"][group_id]["mechanic_id"], "example_pipeline")
         self.assertEqual(regenerated["entries"][group_id]["program"], {"version": "test", "nodes": []})
+
+    def test_regeneration_preserves_declarative_pattern_templates(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory)
+            normalize_catalog(SOURCE, target)
+            semantic_path = target / "semantic_map.json"
+            semantic = json.loads(semantic_path.read_text(encoding="utf-8"))
+            semantic["patterns"]["fixture"] = {
+                "program": {"version": "test", "nodes": []},
+                "parameters": ["stat"],
+            }
+            semantic_path.write_text(json.dumps(semantic), encoding="utf-8")
+
+            normalize_catalog(SOURCE, target)
+            regenerated = json.loads(semantic_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(regenerated["patterns"], semantic["patterns"])
 
     def test_report_counts_are_reproducible(self):
         report = json.loads((NORMALIZED / "normalization_report.json").read_text(encoding="utf-8"))

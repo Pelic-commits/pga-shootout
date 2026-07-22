@@ -55,11 +55,14 @@ def normalize_catalog(source_path: str | Path, output_dir: str | Path) -> Normal
     source = Path(source_path)
     destination = Path(output_dir)
     existing_semantic_entries: dict[str, Any] = {}
+    existing_semantic_patterns: dict[str, Any] = {}
     semantic_path = destination / "semantic_map.json"
     if semantic_path.exists():
         existing_semantic = load_raw_json(semantic_path)
         if isinstance(existing_semantic, dict) and isinstance(existing_semantic.get("entries"), dict):
             existing_semantic_entries = existing_semantic["entries"]
+            if isinstance(existing_semantic.get("patterns"), dict):
+                existing_semantic_patterns = existing_semantic["patterns"]
     catalog = load_raw_json(source)
     if not isinstance(catalog, dict) or not isinstance(catalog.get("clubs"), dict):
         raise NormalizationError("clubs_official.json must contain clubs keyed by stable identifier")
@@ -208,6 +211,7 @@ def normalize_catalog(source_path: str | Path, output_dir: str | Path) -> Normal
             "schema_version": "1.0.0",
             "layer": "semantic_interpretation_placeholders",
             "source": source_info,
+            "patterns": existing_semantic_patterns,
             "entries": semantic_entries,
         },
     )

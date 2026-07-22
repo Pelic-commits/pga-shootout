@@ -56,10 +56,52 @@ def _official_level_scalar(value: Mapping[str, Any]) -> float | None:
     return float(scalar)
 
 
+def _materialize_pattern(value: Any, parameters: Mapping[str, Any]) -> Any:
+    """Resolve declarative pattern parameters without knowing any ability family."""
+    if isinstance(value, Mapping) and set(value) == {"pattern_parameter"}:
+        name = str(value["pattern_parameter"])
+        try:
+            replacement = parameters[name]
+        except KeyError as exc:
+            raise BagEvaluationError(f"Missing semantic pattern parameter: {name}") from exc
+        return _materialize_pattern(replacement, parameters)
+    if isinstance(value, list):
+        return [_materialize_pattern(item, parameters) for item in value]
+    if isinstance(value, Mapping):
+        return {key: _materialize_pattern(item, parameters) for key, item in value.items()}
+    return value
+
+
+def _semantic_program(
+    semantic: Mapping[str, Any],
+    semantic_patterns: Mapping[str, Any],
+) -> Mapping[str, Any] | None:
+    inline = semantic.get("program")
+    if isinstance(inline, Mapping):
+        return inline
+    pattern_id = semantic.get("pattern_id")
+    if not pattern_id:
+        return None
+    try:
+        pattern = semantic_patterns[str(pattern_id)]
+    except KeyError as exc:
+        raise BagEvaluationError(f"Unknown semantic pattern: {pattern_id}") from exc
+    if not isinstance(pattern, Mapping) or not isinstance(pattern.get("program"), Mapping):
+        raise BagEvaluationError(f"Semantic pattern {pattern_id!r} has no valid program")
+    parameters = semantic.get("pattern_parameters", {})
+    if not isinstance(parameters, Mapping):
+        raise BagEvaluationError(f"Semantic pattern parameters for {pattern_id!r} must be an object")
+    materialized = _materialize_pattern(pattern["program"], parameters)
+    if not isinstance(materialized, Mapping):
+        raise BagEvaluationError(f"Semantic pattern {pattern_id!r} did not produce a program")
+    return materialized
+
+
 def _abilities_at_level(
     club_data: Mapping[str, Any],
     level: int | str,
     semantic_entries: Mapping[str, Any] | None = None,
+    semantic_patterns: Mapping[str, Any] | None = None,
 ) -> tuple[Ability, ...]:
     abilities = []
     level_key = str(level)
@@ -72,12 +114,13 @@ def _abilities_at_level(
         mechanism = item.get("mechanism")
         parameters = dict(item.get("effect_parameters", {}))
         semantic = (semantic_entries or {}).get(f"label:{label_id}", {})
-        if not mechanism and isinstance(semantic, Mapping) and semantic.get("mechanic_id") and semantic.get("program"):
+        program = _semantic_program(semantic, semantic_patterns or {}) if isinstance(semantic, Mapping) else None
+        if not mechanism and isinstance(semantic, Mapping) and semantic.get("mechanic_id") and program is not None:
             level_value = _official_level_scalar(value) if isinstance(value, Mapping) else None
             if level_value is not None:
                 mechanism = str(semantic["mechanic_id"])
                 parameters = {
-                    "program": semantic["program"],
+                    "program": program,
                     "source_club_id": str(club_data["id"]),
                     "ability_level": level,
                     "level_value": level_value,
@@ -107,6 +150,7 @@ def build_game_state(
     semantic_path = Path(catalog_path).with_name("semantic_map.json")
     semantic_data = load_raw_json(semantic_path) if semantic_path.exists() else {}
     semantic_entries = semantic_data.get("entries", {}) if isinstance(semantic_data, Mapping) else {}
+    semantic_patterns = semantic_data.get("patterns", {}) if isinstance(semantic_data, Mapping) else {}
     current_id = current_club_id or saved_bag.club_ids[0]
     if current_id not in saved_bag.club_ids:
         raise BagEvaluationError(f"Current club {current_id!r} is not in bag {saved_bag.identifier!r}")
@@ -126,7 +170,7 @@ def build_game_state(
             brand=str(data["brand"]["id"]),
             club_type=str(data["club_type"]["id"]),
             stats_by_level=stats,
-            abilities=_abilities_at_level(data, level, semantic_entries),
+            abilities=_abilities_at_level(data, level, semantic_entries, semantic_patterns),
         )
         entries.append(BagEntry(club=club, level=level))
     return GameState(bag=Bag(tuple(entries)), current_club_id=current_id)

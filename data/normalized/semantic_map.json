@@ -142,14 +142,45 @@
       "validation_status": "not_started"
     },
     "label:alloy": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value",
+        "resolved_targets"
+      ],
       "group_id": "label:alloy",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: For each Hybrid club in your bag, that club and Ember each gain +X Power.",
+        "Uses the shared matching_targets_and_source_per_match pattern; only selection and filtering are configured."
+      ],
+      "pattern_id": "matching_targets_and_source_per_match",
+      "pattern_parameters": {
+        "filter_inputs": {
+          "clubs": {
+            "from": "candidates.clubs"
+          }
+        },
+        "filter_operation": "MATCH_TYPE",
+        "filter_parameters": {
+          "expected": "hybrid",
+          "operator": "equals"
+        },
+        "selection_inputs": {
+          "source": {
+            "from": "source.club"
+          }
+        },
+        "selection_operation": "SELECT_ALL",
+        "selection_parameters": {
+          "include_source": true
+        },
+        "stat": "power"
+      },
+      "priority": 5,
+      "validation_status": "validated_from_official_text"
     },
     "label:aura_of_death": {
       "complexity": null,
@@ -1421,14 +1452,57 @@
       "validation_status": "not_started"
     },
     "label:nautilus_boost": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value",
+        "resolved_targets"
+      ],
       "group_id": "label:nautilus_boost",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: For each Nautilus club next to Wave, that club and Wave each gain +X Power.",
+        "Uses the shared matching_targets_and_source_per_match pattern; only selection and filtering are configured."
+      ],
+      "pattern_id": "matching_targets_and_source_per_match",
+      "pattern_parameters": {
+        "filter_inputs": {
+          "clubs": {
+            "from": "candidates.clubs"
+          },
+          "left": {
+            "from": "candidates.left"
+          },
+          "right": {
+            "from": "candidates.right"
+          },
+          "source": {
+            "from": "source.club"
+          }
+        },
+        "filter_operation": "MATCH_BRAND",
+        "filter_parameters": {
+          "operator": "equals"
+        },
+        "selection_inputs": {
+          "origin": {
+            "from": "source.club"
+          }
+        },
+        "selection_operation": "SELECT_ADJACENT",
+        "selection_parameters": {
+          "directions": [
+            "left",
+            "right"
+          ],
+          "distance": 1
+        },
+        "stat": "power"
+      },
+      "priority": 5,
+      "validation_status": "validated_from_official_text"
     },
     "label:off_green_power": {
       "complexity": null,
@@ -2274,6 +2348,120 @@
     }
   },
   "layer": "semantic_interpretation_placeholders",
+  "patterns": {
+    "matching_targets_and_source_per_match": {
+      "description": "For every matching target, apply the same level-scaled stat bonus once to that target and once to the source club.",
+      "parameters": [
+        "selection_operation",
+        "selection_inputs",
+        "selection_parameters",
+        "filter_operation",
+        "filter_inputs",
+        "filter_parameters",
+        "stat"
+      ],
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "candidates",
+            "inputs": {
+              "pattern_parameter": "selection_inputs"
+            },
+            "operation": {
+              "pattern_parameter": "selection_operation"
+            },
+            "parameters": {
+              "pattern_parameter": "selection_parameters"
+            }
+          },
+          {
+            "id": "matches",
+            "inputs": {
+              "pattern_parameter": "filter_inputs"
+            },
+            "operation": {
+              "pattern_parameter": "filter_operation"
+            },
+            "parameters": {
+              "pattern_parameter": "filter_parameters"
+            }
+          },
+          {
+            "id": "apply_per_match",
+            "inputs": {
+              "items": {
+                "from": "matches.clubs"
+              }
+            },
+            "operation": "FOR_EACH",
+            "parameters": {
+              "binding": "target",
+              "program": {
+                "nodes": [
+                  {
+                    "id": "add_target",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": {
+                        "pattern_parameter": "stat"
+                      }
+                    }
+                  },
+                  {
+                    "id": "add_source",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "source.club"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": {
+                        "pattern_parameter": "stat"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      }
+    }
+  },
   "schema_version": "1.0.0",
   "source": {
     "filename": "clubs_official.json",
