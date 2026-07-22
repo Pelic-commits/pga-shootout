@@ -13,6 +13,7 @@ from .data_validation import validate_official_data
 from .loader import load_raw_json, summarize_raw_json
 from .models import EvaluationMode
 from .normalization import normalize_catalog
+from .reference_gap_report import generate_reference_gap_report
 from .user_data import ClubCatalogIndex, load_user_data, validate_user_data
 from .user_gap_report import generate_user_gap_report
 
@@ -70,6 +71,11 @@ def build_parser() -> argparse.ArgumentParser:
     gaps_parser.add_argument("--normalized-dir", default="data/normalized")
     gaps_parser.add_argument("--raw-catalog", default="data/raw/pga_club_stats_extract_v2_2026-07-21.json")
     gaps_parser.add_argument("--output", default="docs/USER_GAPS.md")
+    reference_parser = subparsers.add_parser("reference-gaps", help="regenerate the saved-bag ability matrix")
+    reference_parser.add_argument("--user-dir", default="data/user")
+    reference_parser.add_argument("--normalized-dir", default="data/normalized")
+    reference_parser.add_argument("--raw-catalog", default="data/raw/pga_club_stats_extract_v2_2026-07-21.json")
+    reference_parser.add_argument("--output", default="docs/REFERENCE_BAG_GAPS.md")
     return parser
 
 
@@ -105,6 +111,27 @@ def main(argv: Sequence[str] | None = None) -> int:
             "implemented_occurrences": report.implemented_occurrences,
             "occurrence_coverage_percent": report.occurrence_coverage_percent,
             "fully_implemented_clubs": report.fully_implemented_clubs,
+            "report": args.output,
+        }, indent=2, ensure_ascii=False))
+    elif args.command == "reference-gaps":
+        report = generate_reference_gap_report(
+            args.output,
+            user_dir=args.user_dir,
+            normalized_dir=args.normalized_dir,
+            raw_catalog_path=args.raw_catalog,
+        )
+        print(json.dumps({
+            "unique_clubs": report.unique_clubs,
+            "unique_ability_occurrences": report.unique_ability_occurrences,
+            "bag_coverage": [
+                {
+                    "bag_id": item.bag_id,
+                    "implemented": item.implemented_occurrences,
+                    "total": item.ability_occurrences,
+                    "coverage_percent": item.coverage_percent,
+                }
+                for item in report.bag_coverage
+            ],
             "report": args.output,
         }, indent=2, ensure_ascii=False))
     elif args.command == "evaluate-bag":

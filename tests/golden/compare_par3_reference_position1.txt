@@ -22,6 +22,7 @@ Spin               6              +4          10           8              +10   
 
 Static modifiers (difference = right - left)
 Metric                              Left  Right  Diff
+Bounce reduction (percent)              0     20    +20
 Launch angle adjustment (degrees)       0      5     +5
 
 Applied ability changes - left
@@ -33,6 +34,7 @@ Applied ability changes - right
   High Flight / high_flight__loft_angle_5 / ADD_MODIFIER: loft_angle_degrees +5
   Cyclotron / cyclotron__spin_boost / ADD_STAT: spin +6
   Ember / ember__alloy / ADD_STAT: power +7
+  Maelstrom / maelstrom__bag_bounce_reduction / ADD_MODIFIER: bounce_reduction_percent +20
   Maelstrom / maelstrom__bag_spin_bonus / ADD_STAT: spin +4
 
 Bonuses gained by right vs left: spin +6
@@ -43,11 +45,10 @@ Unresolved bonuses - left (4):
   Unresolved UnknownMechanismError: unsupported:corvid_wind_resist
   Unresolved UnknownMechanismError: unsupported:power_shot
   Unresolved UnknownMechanismError: unsupported:plasma_arc_x
-Unresolved bonuses - right (5):
+Unresolved bonuses - right (4):
   Unresolved UnknownMechanismError: unsupported:wind_resist_75
   Unresolved UnknownMechanismError: unsupported:bounce_reduction_boost
   Unresolved UnknownMechanismError: unsupported:power_shot
-  Unresolved UnknownMechanismError: unsupported:bag_bounce_reduction
   Unresolved UnknownMechanismError: unsupported:plasma_arc_x
 Strict status: NOT REQUESTED
 No aggregate score: user preference weights and real club levels are not yet validated.

@@ -16,6 +16,7 @@ Le catalogue officiel contient 125 groupes, 162 occurrences et 88 clubs. Les pou
 | Bonus multi-statistiques du sac filtré par rareté | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `MATCH_RARITY`, `FOR_EACH`, `ADD_STAT` | `bag_rarity_boost` | aucune | 1 | 0,62 % |
 | Bonus adjacent avec multiplicateur de marque | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ADJACENT`, `FOR_EACH`, `MATCH_BRAND`, `ADD_STAT` | `fellowship` | aucune | 1 | 0,62 % |
 | Modificateur statique ciblé | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_SELF` ou `SELECT_ALL`, `FOR_EACH`, `ADD_MODIFIER` | `loft_angle_5`, `bag_loft_angle_10`, `bounce_reduction`, `sand_bounce`, `water_bounce` | aucune | 5 | 3,09 % |
+| Modificateur statique du sac filtré par type | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `MATCH_TYPE`, `FOR_EACH`, `ADD_MODIFIER` | `bag_bounce_reduction` | aucune | 1 | 0,62 % |
 
 ## Priorisation orientée inventaire
 
@@ -52,22 +53,26 @@ Les groupes `smoke_x`, `steam_x` et `sparks_x` restent seulement des candidats. 
 
 `static_modifier_targets` conserve les propriétés déterministes qui ne sont pas des statistiques Power/Control/Spin. High Flight configure une cible source à `+5°`, Cloudcatcher tout le sac à `+10°`, sa propre réduction de rebond en pourcentage, et Mirage expose séparément ses nombres maximaux de rebonds sur sable et sur eau.
 
+`filtered_static_modifier_targets` applique le même contrat de modificateur aux clubs du sac dont le type appartient à une liste déclarative. Maelstrom le configure pour Driver, Wood et Hybrid ; aucun nom de club n'intervient dans le pipeline.
+
 ## Architecture Dashboard
 
 | Indicateur | État |
 |---|---:|
-| Couverture technique | 24 / 125 groupes ; 44 / 162 occurrences |
+| Couverture technique | 25 / 125 groupes ; 45 / 162 occurrences |
 | Couverture fonctionnelle | 5 / 8 fonctionnalités utilisateur de référence |
-| Groupes couverts | 24 / 125 (19,20 %) |
-| Occurrences couvertes | 44 / 162 (27,16 %) |
+| Groupes couverts | 25 / 125 (20,00 %) |
+| Occurrences couvertes | 45 / 162 (27,78 %) |
 | Clubs couverts | 33 / 88 (37,50 %) |
 | Primitives disponibles | 14 / 50 |
 | Primitives encore manquantes | 36 / 50 |
 | Familles qualifiées bloquées uniquement par une primitive absente | 0 |
 
-Les 101 groupes restants sont non qualifiés. Attribuer un nombre exact de primitives manquantes avant validation sémantique produirait une fausse précision ; ils ne sont pas comptés comme « bloqués par une seule primitive ».
+Les 100 groupes restants sont non qualifiés. Attribuer un nombre exact de primitives manquantes avant validation sémantique produirait une fausse précision ; ils ne sont pas comptés comme « bloqués par une seule primitive ».
 
 Précision fonctionnelle améliorée dans ce lot : Cloudcatcher expose désormais sa réduction de rebond comme mesure objective distincte. La couverture des capacités de l'inventaire passe de 20/35 à 21/35, soit de 57,14 % à 60,00 % (+2,86 points), et 8 clubs possédés sont entièrement simulés.
+
+Fidélité des sacs de référence : le sac Divebomb reste à 4/8 capacités (50,00 %) ; le sac High Flight passe de 4/9 à 5/9 capacités (44,44 % à 55,56 %). Sa comparaison expose désormais la réduction de rebond de Maelstrom à 20 % dans le scénario de test explicite de niveau 12.
 
 La préparation de l'optimiseur est suivie par la checklist objective `ready` / `partial` / `missing` détaillée dans `OPTIMIZER_API.md`.
 

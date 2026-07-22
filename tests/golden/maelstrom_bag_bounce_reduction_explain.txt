@@ -1,0 +1,78 @@
+SELECT_SELF
+Inputs: {"source_club_id": "maelstrom"}
+Outputs: {"club": "Maelstrom"}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: selected source club Maelstrom
+
+READ_LEVEL_VALUE
+Inputs: {"level": 12}
+Outputs: {"value": 20.0}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: read value +20 at level 12
+
+SELECT_ALL
+Inputs: {"include_source": true, "source": "Maelstrom"}
+Outputs: {"clubs": ["High Flight", "Cyclotron", "Ember", "Maelstrom", "Sunstorm"]}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: selected 5 club(s) from the ordered bag
+
+MATCH_TYPE
+Inputs: {"candidates": ["High Flight", "Cyclotron", "Ember", "Maelstrom", "Sunstorm"], "operator": "in", "type": ["driver", "wood", "hybrid"]}
+Outputs: {"left": null, "right": null}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: matched 3 club(s) against type filter ['driver', 'wood', 'hybrid']
+
+FOR_EACH
+Inputs: {"binding": "target", "items": ["High Flight", "Cyclotron", "Sunstorm"]}
+Outputs: {"iterations": 3}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: executing sub-pipeline for 3 item(s)
+
+ADD_MODIFIER
+Inputs: {"delta": 20.0, "modifier": "bounce_reduction_percent", "target": "High Flight"}
+Outputs: {"after": 20.0, "before": 0.0}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"bounce_reduction_percent": 20.0, "control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"bounce_reduction_percent": 20.0, "control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: BOUNCE_REDUCTION_PERCENT += 20
+
+ADD_MODIFIER
+Inputs: {"delta": 20.0, "modifier": "bounce_reduction_percent", "target": "Cyclotron"}
+Outputs: {"value": 20.0}
+Applied: no
+Before: {"bounce_reduction_percent": 20.0, "control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"bounce_reduction_percent": 0.0, "control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"bounce_reduction_percent": 20.0, "control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: target Cyclotron is not the current club; modifier unchanged
+
+ADD_MODIFIER
+Inputs: {"delta": 20.0, "modifier": "bounce_reduction_percent", "target": "Sunstorm"}
+Outputs: {"value": 20.0}
+Applied: no
+Before: {"bounce_reduction_percent": 20.0, "control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"bounce_reduction_percent": 0.0, "control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"bounce_reduction_percent": 20.0, "control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: target Sunstorm is not the current club; modifier unchanged
+
+dsl_pipeline
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"bounce_reduction_percent": 20.0, "control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"bounce_reduction_percent": 20.0, "control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: applied

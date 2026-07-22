@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Ajout de la matrice automatique des capacités des sacs de référence et de la réduction de rebond de Maelstrom filtrée par type de club.
 - Ajout du rapport automatique des lacunes de l'inventaire, de la réduction de rebond de Cloudcatcher comme métrique objective et d'une checklist factuelle pour l'optimiseur.
 
 - Ajout d'une API neutre de métriques et pondération, ainsi que des rebonds sable/eau de Mirage via le pattern de modificateurs statiques.

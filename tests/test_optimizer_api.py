@@ -63,9 +63,17 @@ class OptimizerApiTests(unittest.TestCase):
         candidate = BagCandidate("high-flight", club_ids, {club_id: 12 for club_id in club_ids})
         result = RuleEngineBagEvaluator(CATALOG).evaluate(BagEvaluationRequest(candidate, 1))
 
-        self.assertEqual(result.modifier_impact, {"loft_angle_degrees": 5.0})
+        self.assertEqual(
+            result.modifier_impact,
+            {"loft_angle_degrees": 5.0, "bounce_reduction_percent": 20.0},
+        )
         contribution = next(item for item in result.ability_contributions if item.ability_id == "high_flight__loft_angle_5")
         self.assertEqual(contribution.modification["loft_angle_degrees"], 5.0)
+        bounce = next(
+            item for item in result.ability_contributions
+            if item.ability_id == "maelstrom__bag_bounce_reduction"
+        )
+        self.assertEqual(bounce.modification["bounce_reduction_percent"], 20.0)
 
     def test_readiness_is_an_objective_eight_item_checklist(self):
         checklist = {item.identifier: item.status for item in optimizer_readiness_checklist()}

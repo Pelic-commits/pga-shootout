@@ -28,11 +28,16 @@ class ValueApiTests(unittest.TestCase):
 
     def test_compare_bags_exposes_every_metric_independently(self):
         metrics = {metric.definition.identifier: metric for metric in self.comparison().metrics}
-        self.assertEqual(set(metrics), {"power", "control", "spin", "loft_angle_degrees"})
+        self.assertEqual(
+            set(metrics),
+            {"power", "control", "spin", "loft_angle_degrees", "bounce_reduction_percent"},
+        )
         self.assertEqual(metrics["power"].definition.kind, MetricKind.STAT)
         self.assertEqual(metrics["loft_angle_degrees"].definition.unit, "degrees")
         self.assertEqual(metrics["loft_angle_degrees"].right_final, 5.0)
         self.assertEqual(metrics["loft_angle_degrees"].difference_right_minus_left, 5.0)
+        self.assertEqual(metrics["bounce_reduction_percent"].definition.unit, "percent")
+        self.assertEqual(metrics["bounce_reduction_percent"].right_final, 20.0)
         self.assertIn("Launch angle adjustment (degrees)", render_bag_comparison(self.comparison()))
 
     def test_every_loaded_ability_has_a_stable_contribution_identity(self):
