@@ -133,6 +133,8 @@ Inventaire connu au 21 juillet 2026, à stocker hors catalogue officiel :
 
 La liste peut être incomplète. Progression connue : niveau joueur 35, objectif FedEx 50, palier maximal 5, hésitation sur le palier 6, Meteor prioritaire. Ces éléments concernent la stratégie de compte, jamais les règles du simulateur.
 
+État implémenté au 22 juillet 2026 : `data/user/` contient cinq fichiers distincts pour le compte, l'inventaire partiel, les préférences sans poids inventés, les sacs observés et les observations personnelles. Les modèles et validateurs vivent dans `user_data.py`, sans dépendance au Rule Engine. Toute référence structurée utilise l'identifiant officiel ; une note ambiguë reste non résolue.
+
 ## 10. Catalogue sémantique préparatoire
 
 Familles identifiées : `adjacency_scaling`, `trajectory`, `terrain_bonus`, `stat_modifier`, `terrain_interaction`, `wind`, `chain`, `position`, `ability_modification`, `shot_control`, `stateful_growth`, `random`, `adjacency`, `stat_copy`, `bag_position`, `composition_scaling`, `course_condition`, `previous_shot`, `composition_condition`, `transform`, `identity`.
@@ -187,8 +189,8 @@ Le dépôt contient un socle Python minimal :
 - `MechanismRegistry` avec les seuls handlers génériques `add_stat` et `add_all_stats` ;
 - `RuleEngine` séquentiel, modes strict/partial et Explain élémentaire ;
 - chargeur JSON brut sans hypothèse de schéma ;
-- CLI `inspect` ;
-- 9 tests `unittest`.
+- CLI pour les données officielles et les rapports utilisateur ;
+- 23 tests `unittest`.
 
 Conforme aujourd'hui : aucune logique de nom de club, séparation conditions/effets, registres extensibles, erreurs de mécanique inconnue, journal avant/modification/après et données brutes non interprétées.
 
@@ -231,12 +233,13 @@ Le brut est immuable. Chaque normalisation déclare version de schéma et hash S
 
 - Phase 0 — fondations : initialisée et auditée, encore incomplète.
 - Phase 1 — données officielles : importer, vérifier les hashes et compteurs, exposer club+niveau et produire la couverture.
+- Couche utilisateur — compte, inventaire partiel, préférences, sacs et observations : implémentée et validée.
 - Phase 2 — mécaniques déterministes validées : statistiques, sac, rareté, marque, type, adjacence et composition.
 - Phase 3 — sac de référence et validation de l'ordre.
 - Phases 4 à 6 — environnement, historique, transformations et hasard.
 - Phase 7 — optimiseur, seulement après validation.
 
-La capture brute, `clubs_official.json` et `ABILITY_AUDIT.md` sont désormais importés avec hashes et invariants testés. Prochaine tâche recommandée : modéliser séparément l'inventaire utilisateur réel, puis exposer la consultation club+niveau sans encore exécuter les capacités sémantiques non validées.
+La capture brute, `clubs_official.json` et `ABILITY_AUDIT.md` sont importés avec hashes et invariants testés. La couche utilisateur est séparée et son inventaire reste explicitement incomplet. Prochaine tâche recommandée : compléter les niveaux actuels et les clubs possédés manquants à partir d'une nouvelle observation utilisateur, puis exposer la consultation club+niveau sans exécuter les capacités sémantiques non validées.
 
 ## 15. Définition de terminé et règle de travail
 

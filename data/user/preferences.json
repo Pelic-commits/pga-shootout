@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "observed_at": "2026-07-21",
+  "source": "user_report_from_meteor_conversation",
+  "priorities": [
+    {"criterion":"control","preference":"high","weight":null},
+    {"criterion":"predictability","preference":"high","weight":null},
+    {"criterion":"safe_trajectory","preference":"preferred","weight":null},
+    {"criterion":"proximity_over_extra_distance","preference":"preferred","weight":null},
+    {"criterion":"par_3_specialization","preference":"appreciated","weight":null},
+    {"criterion":"low_bounce","preference":"preferred","weight":null},
+    {"criterion":"reproducible_behavior","preference":"preferred","weight":null}
+  ],
+  "constraints": {
+    "free_to_play_required": true,
+    "paid_special_balls_allowed": false
+  }
+}

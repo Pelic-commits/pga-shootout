@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Ajout d'une couche utilisateur séparée pour le compte, l'inventaire partiel, les préférences, les sacs et les observations.
+- Ajout des modèles, validateurs et commandes CLI de consultation utilisateur.
+- Ajout de tests de résolution, de non-inférence, d'ordre des sacs et d'améliorations disponibles.
 - Import immuable de la capture officielle, du catalogue normalisé et de l'audit des capacités.
 - Ajout d'une validation automatisée de la provenance, de la structure et des compteurs officiels.
 - Fusion du contexte durable et ajout du manifeste des données.

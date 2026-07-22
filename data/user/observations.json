@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0.0",
+  "observed_at": "2026-07-21",
+  "source": "user_report_from_meteor_conversation",
+  "observations": [
+    {"id":"outset_over_conqueror","status":"preference","club_ids":["outset","conqueror"],"text":"Outset est préféré à Conqueror, notamment pour sa simplicité et sa prévisibilité."},
+    {"id":"conqueror_power","status":"negative_observation","club_ids":["conqueror"],"text":"Conqueror peut offrir davantage de puissance, mais est moins apprécié."},
+    {"id":"windstrike_too_short","status":"negative_observation","club_ids":["windstrike"],"text":"Windstrike est jugé trop court."},
+    {"id":"skyfury_unpredictable","status":"negative_observation","club_ids":["skyfury"],"text":"Skyfury est jugé peu prévisible."},
+    {"id":"divebomb_par3","status":"positive_observation","club_ids":["divebomb"],"text":"Divebomb est très apprécié pour les par-3."},
+    {"id":"high_flight_alternative","status":"positive_observation","club_ids":["high_flight"],"text":"High Flight est apprécié comme alternative de par-3."},
+    {"id":"maelstrom_wedge","status":"positive_observation","club_ids":["maelstrom"],"text":"Maelstrom est apprécié comme wedge."},
+    {"id":"ember_hybrids","status":"positive_observation","club_ids":["ember"],"text":"Ember est jugé utile grâce à ses interactions avec les hybrides."},
+    {"id":"lodestar_palo","status":"negative_observation","club_ids":["lodestar"],"text":"Lodestar est jugé trop faible pour la synergie PALO envisagée."},
+    {"id":"palo_sand_wedge","status":"unresolved_note","club_ids":[],"unresolved_reference":"un sand wedge PALO","text":"Un sand wedge PALO est apprécié ; l'identité précise n'est pas confirmée."}
+  ]
+}

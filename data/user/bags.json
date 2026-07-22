@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0.0",
+  "observed_at": "2026-07-21",
+  "source": "user_report_from_meteor_conversation",
+  "bags": [
+    {
+      "id": "reference_par3_divebomb",
+      "name": "Sac de référence / par-3 Divebomb",
+      "status": "user_observed",
+      "club_ids": ["divebomb","jumpstart","steadfast","ember","sunstorm"],
+      "display_names": ["Divebomb","Jumpstart","Steadfast","Ember","Sunstorm"],
+      "observed_context": {"wind_percent":25},
+      "notes": [
+        "Divebomb utilisé comme club principal par-3.",
+        "Jumpstart intervient dans la chaîne de putters.",
+        "Steadfast apporte un bonus à Divebomb dans le scénario observé.",
+        "Ember est utilisé pour son interaction avec les hybrides.",
+        "Sunstorm apporte un effet lié au club le plus éloigné.",
+        "Ces observations de scénario ne sont pas des règles validées."
+      ]
+    },
+    {
+      "id": "par3_high_flight",
+      "name": "Sac par-3 High Flight",
+      "status": "user_observed",
+      "club_ids": ["high_flight","cyclotron","ember","maelstrom","sunstorm"],
+      "display_names": ["High Flight","Cyclotron","Ember","Maelstrom","Sunstorm"],
+      "observed_context": {},
+      "notes": ["Alternative pour les par-3 plus longs.","Portée supérieure.","Gestion du vent.","Recherche d'un faible rebond."]
+    }
+  ]
+}

@@ -68,3 +68,7 @@ Artefacts importés sans transformation :
 Contrôles automatisés présents : lien SHA-256 entre le normalisé et le brut, compteurs de clubs et marques, unicité des identifiants, occurrences de capacités et valeurs converties.
 
 Artefacts encore absents : `ability_occurrences.json`, `ability_labels.json`, `mechanics_catalog.json`, `semantic_map.json`, `assets.json` et `normalization_report.json`.
+
+## Couche utilisateur
+
+`data/user/` est indépendante des données officielles et contient `account.json`, `inventory.json`, `preferences.json`, `bags.json` et `observations.json`. Son inventaire est partiel (`inventory_complete: false`) et l'absence d'un identifiant ne signifie jamais que le club est verrouillé.

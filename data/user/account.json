@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "observed_at": "2026-07-21",
+  "source": "user_report_from_meteor_conversation",
+  "player_name": "Pierre",
+  "player_level": 35,
+  "fedex_reward_target_level": 50,
+  "current_tier": 5,
+  "tier_6_decision": "undecided",
+  "tier_6_decision_note": "Risque de dilution des clubs mythiques.",
+  "mythics_available_by_tier": {"5": 2, "6": 3},
+  "priority_club_goal": {"club_id": "meteor", "display_name": "Meteor"},
+  "available_bag_slots": 5,
+  "free_to_play": true,
+  "real_money_spending": false,
+  "opens_all_available_ad_funded_packs": true,
+  "uses_special_balls": false
+}

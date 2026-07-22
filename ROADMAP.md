@@ -21,6 +21,14 @@ Statut : initialisé et audité ; les phases Explain, la provenance et plusieurs
 - Ajouter les mécaniques déterministes confirmées
 - Créer des fixtures issues des données officielles
 
+## 2 bis. Données utilisateur
+
+- [x] Séparer compte, inventaire, préférences, sacs et observations
+- [x] Résoudre les références contre les identifiants officiels
+- [x] Conserver l'inventaire partiel et les niveaux inconnus sans inférence
+- [x] Fournir validation, rapports CLI et détection des améliorations
+- Compléter progressivement les clubs et niveaux depuis des observations datées
+
 ## 3. Fidélité du simulateur
 
 - Tests de régression par club et par sac

@@ -32,3 +32,17 @@ pga-shootout inspect data/raw/pga_club_stats_extract_v2_2026-07-21.json
 ```
 
 Le mode `strict` échoue sur une mécanique inconnue. Le mode `partial` conserve le résultat calculable et signale explicitement chaque élément non évalué.
+
+## Données utilisateur
+
+Les informations du joueur vivent exclusivement dans `data/user/` et ne modifient ni le catalogue officiel ni les règles du simulateur.
+
+```powershell
+pga-shootout user-validate
+pga-shootout user-account
+pga-shootout user-inventory
+pga-shootout user-upgrades
+pga-shootout user-bags
+```
+
+L'inventaire est explicitement partiel : un club absent reste de statut inconnu et n'est pas considéré comme verrouillé.

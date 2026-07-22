@@ -29,6 +29,27 @@ class CliTests(unittest.TestCase):
         self.assertEqual(result, 0)
         self.assertIn('"clubs": 88', output.getvalue())
 
+    def test_user_validation_and_reports_cli(self):
+        root = Path(__file__).resolve().parents[1]
+        common = [
+            "--user-dir", str(root / "data" / "user"),
+            "--catalog", str(root / "data" / "normalized" / "clubs_official.json"),
+        ]
+        expected = {
+            "user-validate": '"valid": true',
+            "user-account": '"player_name": "Pierre"',
+            "user-inventory": '"club_id": "homestead"',
+            "user-upgrades": '"club_id": "groundskeep"',
+            "user-bags": '"reference_par3_divebomb"',
+        }
+        for command, marker in expected.items():
+            with self.subTest(command=command):
+                output = io.StringIO()
+                with contextlib.redirect_stdout(output):
+                    result = main([command, *common])
+                self.assertEqual(result, 0)
+                self.assertIn(marker, output.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()

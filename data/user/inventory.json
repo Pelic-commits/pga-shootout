@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0.0",
+  "inventory_complete": false,
+  "observed_at": "2026-07-21",
+  "source": "user_report_from_meteor_conversation",
+  "entries": [
+    {"club_id":"homestead","display_name":"Homestead","unlocked":true,"current_level":null,"cards_owned":438,"cards_required_for_next_upgrade":500,"upgrade_available":false,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"commonlaw","display_name":"Commonlaw","unlocked":true,"current_level":null,"cards_owned":8,"cards_required_for_next_upgrade":25,"upgrade_available":false,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"kinship","display_name":"Kinship","unlocked":true,"current_level":null,"cards_owned":15,"cards_required_for_next_upgrade":50,"upgrade_available":false,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"groundskeep","display_name":"Groundskeep","unlocked":true,"current_level":null,"cards_owned":33,"cards_required_for_next_upgrade":25,"upgrade_available":true,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"sandsend","display_name":"Sandsend","unlocked":true,"current_level":null,"cards_owned":533,"cards_required_for_next_upgrade":50,"upgrade_available":true,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"steadfast","display_name":"Steadfast","unlocked":true,"current_level":null,"cards_owned":4,"cards_required_for_next_upgrade":5,"upgrade_available":false,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"jumpstart","display_name":"Jumpstart","unlocked":true,"current_level":null,"cards_owned":19,"cards_required_for_next_upgrade":100,"upgrade_available":false,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"cyclotron","display_name":"Cyclotron","unlocked":true,"current_level":null,"cards_owned":46,"cards_required_for_next_upgrade":50,"upgrade_available":false,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"neon_impulse","display_name":"Neon Impulse","unlocked":true,"current_level":null,"cards_owned":315,"cards_required_for_next_upgrade":100,"upgrade_available":true,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"color_theory","display_name":"Color Theory","unlocked":true,"current_level":null,"cards_owned":1,"cards_required_for_next_upgrade":25,"upgrade_available":false,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"high_flight","display_name":"High Flight","unlocked":true,"current_level":null,"cards_owned":185,"cards_required_for_next_upgrade":250,"upgrade_available":false,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"cloudcatcher","display_name":"Cloudcatcher","unlocked":true,"current_level":null,"cards_owned":2,"cards_required_for_next_upgrade":25,"upgrade_available":false,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"skyfury","display_name":"Skyfury","unlocked":true,"current_level":null,"cards_owned":2,"cards_required_for_next_upgrade":25,"upgrade_available":false,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"rook","display_name":"Rook","unlocked":true,"current_level":null,"cards_owned":714,"cards_required_for_next_upgrade":100,"upgrade_available":true,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"mirage","display_name":"Mirage","unlocked":true,"current_level":null,"cards_owned":539,"cards_required_for_next_upgrade":100,"upgrade_available":true,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"lodestar","display_name":"Lodestar","unlocked":true,"current_level":null,"cards_owned":13,"cards_required_for_next_upgrade":25,"upgrade_available":false,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"green_demon","display_name":"Green Demon","unlocked":true,"current_level":null,"cards_owned":3,"cards_required_for_next_upgrade":2,"upgrade_available":true,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"outset","display_name":"Outset","unlocked":true,"current_level":null,"cards_owned":59,"cards_required_for_next_upgrade":50,"upgrade_available":true,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"into_the_breach","display_name":"Into the Breach","unlocked":true,"current_level":null,"cards_owned":7,"cards_required_for_next_upgrade":25,"upgrade_available":false,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"conqueror","display_name":"Conqueror","unlocked":true,"current_level":null,"cards_owned":88,"cards_required_for_next_upgrade":50,"upgrade_available":true,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"}
+  ]
+}
