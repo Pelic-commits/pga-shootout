@@ -1109,14 +1109,39 @@
       "validation_status": "not_started"
     },
     "label:exclusion_zone": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value",
+        "official_club_types"
+      ],
       "group_id": "label:exclusion_zone",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: Your other clubs have +X Power if you have no Irons or Wedges.",
+        "Uses the shared absent_types_stat_bonus pattern with all non-source clubs as targets."
+      ],
+      "pattern_id": "absent_types_stat_bonus",
+      "pattern_parameters": {
+        "excluded_types": [
+          "iron",
+          "wedge"
+        ],
+        "stat": "power",
+        "target_selection_inputs": {
+          "source": {
+            "from": "source.club"
+          }
+        },
+        "target_selection_operation": "SELECT_ALL",
+        "target_selection_parameters": {
+          "include_source": false
+        }
+      },
+      "priority": 5,
+      "validation_status": "validated_from_official_text"
     },
     "label:fade_draw_x2": {
       "complexity": null,
@@ -1382,14 +1407,37 @@
       "validation_status": "not_started"
     },
     "label:iron_wedge_exclusion": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value",
+        "official_club_types"
+      ],
       "group_id": "label:iron_wedge_exclusion",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: This club gains +X Power if there are no Irons or Wedges in the bag.",
+        "Uses the shared absent_types_stat_bonus pattern with the source club as the sole target."
+      ],
+      "pattern_id": "absent_types_stat_bonus",
+      "pattern_parameters": {
+        "excluded_types": [
+          "iron",
+          "wedge"
+        ],
+        "stat": "power",
+        "target_selection_inputs": {
+          "source_club_id": {
+            "from": "source.club"
+          }
+        },
+        "target_selection_operation": "SELECT_SELF",
+        "target_selection_parameters": {}
+      },
+      "priority": 5,
+      "validation_status": "validated_from_official_text"
     },
     "label:loft_angle_10": {
       "complexity": null,
@@ -2349,6 +2397,138 @@
   },
   "layer": "semantic_interpretation_placeholders",
   "patterns": {
+    "absent_types_stat_bonus": {
+      "description": "Apply a level-scaled stat bonus to configured targets only when the ordered bag contains none of the configured club types.",
+      "parameters": [
+        "excluded_types",
+        "target_selection_operation",
+        "target_selection_inputs",
+        "target_selection_parameters",
+        "stat"
+      ],
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "bag",
+            "inputs": {
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ALL",
+            "parameters": {
+              "include_source": true
+            }
+          },
+          {
+            "id": "excluded_clubs",
+            "inputs": {
+              "clubs": {
+                "from": "bag.clubs"
+              }
+            },
+            "operation": "MATCH_TYPE",
+            "parameters": {
+              "expected": {
+                "pattern_parameter": "excluded_types"
+              },
+              "operator": "in"
+            }
+          },
+          {
+            "id": "excluded_types_exist",
+            "inputs": {
+              "items": {
+                "from": "excluded_clubs.clubs"
+              }
+            },
+            "operation": "EXISTS"
+          },
+          {
+            "id": "targets",
+            "inputs": {
+              "pattern_parameter": "target_selection_inputs"
+            },
+            "operation": {
+              "pattern_parameter": "target_selection_operation"
+            },
+            "parameters": {
+              "pattern_parameter": "target_selection_parameters"
+            }
+          },
+          {
+            "id": "apply_if_absent",
+            "inputs": {
+              "condition": {
+                "from": "excluded_types_exist.value"
+              }
+            },
+            "operation": "UNLESS",
+            "parameters": {
+              "program": {
+                "nodes": [
+                  {
+                    "id": "apply_to_targets",
+                    "inputs": {
+                      "items": {
+                        "from": "targets.clubs"
+                      }
+                    },
+                    "operation": "FOR_EACH",
+                    "parameters": {
+                      "binding": "target",
+                      "program": {
+                        "nodes": [
+                          {
+                            "id": "add_stat",
+                            "inputs": {
+                              "delta": {
+                                "from": "level_value.value"
+                              },
+                              "target": {
+                                "from": "iteration.target"
+                              }
+                            },
+                            "operation": "ADD_STAT",
+                            "parameters": {
+                              "stat": {
+                                "pattern_parameter": "stat"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      }
+    },
     "matching_targets_and_source_per_match": {
       "description": "For every matching target, apply the same level-scaled stat bonus once to that target and once to the source club.",
       "parameters": [

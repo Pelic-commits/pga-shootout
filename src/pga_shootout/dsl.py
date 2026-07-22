@@ -77,7 +77,7 @@ def _select_self(inputs: Mapping[str, Any], _parameters: Mapping[str, Any], stat
     club_id = _club_id(inputs["source_club_id"])
     name = _club_name(state, club_id)
     return PrimitiveResult(
-        {"club": club_id},
+        {"club": club_id, "clubs": (club_id,)},
         stats,
         f"selected source club {name}",
         explain_inputs={"source_club_id": club_id},
@@ -198,20 +198,47 @@ def _match_club_attribute(
 
 
 def _match_type(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
-    if parameters.get("operator", "equals") != "equals":
-        raise DslExecutionError("MATCH_TYPE currently requires the equals operator")
-    expected = str(parameters["expected"])
-    matches, evaluations, directional = _match_club_attribute(
-        inputs,
-        state,
-        lambda club_id: state.bag.get(club_id).club.club_type,
-        expected,
+    operator = str(parameters.get("operator", "equals"))
+    expected_value = parameters["expected"]
+    if operator == "equals":
+        expected = (str(expected_value),)
+    elif operator == "in":
+        if not isinstance(expected_value, Sequence) or isinstance(expected_value, (str, bytes)):
+            raise DslExecutionError("MATCH_TYPE with the in operator requires a sequence")
+        expected = tuple(str(value) for value in expected_value)
+    else:
+        raise DslExecutionError(f"Unknown MATCH_TYPE operator: {operator}")
+    clubs = tuple(_club_id(value) for value in inputs.get("clubs", ()))
+    matches = tuple(
+        club_id for club_id in clubs if state.bag.get(club_id).club.club_type in expected
     )
+    evaluations = [
+        {"club": _club_name(state, club_id), "matches": club_id in matches}
+        for club_id in clubs
+    ]
+    directional = {
+        direction: (
+            None
+            if inputs.get(direction) is None
+            else {
+                "club": _club_name(state, _club_id(inputs[direction])),
+                "matches": _club_id(inputs[direction]) in matches,
+            }
+        )
+        for direction in ("left", "right")
+    }
+    displayed_expected: str | list[str] = expected[0] if operator == "equals" else list(expected)
+    explain_inputs: dict[str, Any] = {
+        "type": displayed_expected,
+        "candidates": [item["club"] for item in evaluations],
+    }
+    if operator != "equals":
+        explain_inputs["operator"] = operator
     return PrimitiveResult(
         {"clubs": matches},
         stats,
-        f"matched {len(matches)} club(s) against type {expected}",
-        explain_inputs={"type": expected, "candidates": [item["club"] for item in evaluations]},
+        f"matched {len(matches)} club(s) against type filter {displayed_expected}",
+        explain_inputs=explain_inputs,
         explain_outputs=directional,
     )
 
@@ -236,6 +263,29 @@ def _count(inputs: Mapping[str, Any], _parameters: Mapping[str, Any], stats: dic
         f"counted {count} item(s)",
         explain_inputs={"items": displayed_items},
         explain_outputs={"count": count},
+    )
+
+
+def _exists(inputs: Mapping[str, Any], _parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
+    items = inputs.get("items", ())
+    if not isinstance(items, Sequence) or isinstance(items, (str, bytes)):
+        raise DslExecutionError("EXISTS requires a sequence")
+    exists = len(items) > 0
+    displayed_items = []
+    for item in items:
+        if isinstance(item, str):
+            try:
+                displayed_items.append(_club_name(state, item))
+                continue
+            except KeyError:
+                pass
+        displayed_items.append(item)
+    return PrimitiveResult(
+        {"value": exists},
+        stats,
+        f"collection is {'not empty' if exists else 'empty'}",
+        explain_inputs={"items": displayed_items},
+        explain_outputs={"exists": exists},
     )
 
 
@@ -286,6 +336,33 @@ def _for_each(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: d
     )
 
 
+def _unless(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: dict[str, float], _state: GameState) -> PrimitiveResult:
+    condition = inputs.get("condition")
+    if not isinstance(condition, bool):
+        raise DslExecutionError("UNLESS requires a Boolean condition")
+    program = parameters.get("program")
+    nodes = program.get("nodes") if isinstance(program, Mapping) else None
+    if not isinstance(nodes, list) or not all(isinstance(node, Mapping) for node in nodes):
+        raise DslExecutionError("UNLESS requires a program containing a nodes list")
+    if condition:
+        return PrimitiveResult(
+            {"executed": False},
+            stats,
+            "condition is true; sub-pipeline skipped",
+            applied=False,
+            explain_inputs={"condition": True},
+            explain_outputs={"executed": False},
+        )
+    return PrimitiveResult(
+        {"executed": True},
+        stats,
+        "condition is false; executing sub-pipeline",
+        explain_inputs={"condition": False},
+        explain_outputs={"executed": True},
+        continuations=(PrimitiveContinuation("branch", {}, tuple(nodes)),),
+    )
+
+
 def _add_stat(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
     stat = str(parameters["stat"])
     if stat not in stats:
@@ -330,8 +407,10 @@ def default_dsl_registry() -> DslPrimitiveRegistry:
     registry.register("MATCH_BRAND", _match_brand)
     registry.register("MATCH_TYPE", _match_type)
     registry.register("COUNT", _count)
+    registry.register("EXISTS", _exists)
     registry.register("SCALE", _scale)
     registry.register("FOR_EACH", _for_each)
+    registry.register("UNLESS", _unless)
     registry.register("ADD_STAT", _add_stat)
     return registry
 
