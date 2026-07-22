@@ -35,16 +35,18 @@ class NormalizationPipelineTests(unittest.TestCase):
         self.assertEqual(len(grouped), 162)
         self.assertEqual(set(grouped), set(occurrences["occurrences"]))
 
-    def test_only_the_explicitly_qualified_group_has_an_interpretation(self):
+    def test_only_explicitly_qualified_groups_have_interpretations(self):
         catalog = json.loads((NORMALIZED / "mechanics_catalog.json").read_text(encoding="utf-8"))
         semantic = json.loads((NORMALIZED / "semantic_map.json").read_text(encoding="utf-8"))
 
         self.assertEqual(len(catalog["groups"]), 125)
         self.assertTrue(all(group["mechanic_id"] is None for group in catalog["groups"].values()))
-        qualified = semantic["entries"]["label:brand_loyalty_x"]
-        self.assertEqual(qualified["mechanic_id"], "dsl_pipeline")
-        self.assertEqual(qualified["complexity"], "parameterized")
-        placeholders = [entry for group_id, entry in semantic["entries"].items() if group_id != "label:brand_loyalty_x"]
+        qualified_ids = {"label:brand_loyalty", "label:brand_loyalty_x"}
+        for group_id in qualified_ids:
+            qualified = semantic["entries"][group_id]
+            self.assertEqual(qualified["mechanic_id"], "dsl_pipeline")
+            self.assertEqual(qualified["complexity"], "parameterized")
+        placeholders = [entry for group_id, entry in semantic["entries"].items() if group_id not in qualified_ids]
         self.assertTrue(all(entry["complexity"] is None for entry in placeholders))
         self.assertTrue(all(entry["dependencies"] is None for entry in placeholders))
 

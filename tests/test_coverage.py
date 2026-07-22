@@ -28,20 +28,24 @@ class MechanicCoverageTests(unittest.TestCase):
     def test_current_coverage_reflects_qualified_pipeline(self):
         report = analyze_coverage(NORMALIZED)
         self.assertEqual(report.registered_handlers, ("add_stat", "add_all_stats", "dsl_pipeline"))
-        self.assertEqual(report.implemented_groups, 1)
-        self.assertEqual(report.occurrence_coverage_percent, 12.35)
-        self.assertEqual(report.club_coverage_percent, 22.73)
-        self.assertEqual(report.unclassified_groups, 124)
+        self.assertEqual(report.implemented_groups, 2)
+        self.assertEqual(report.occurrence_coverage_percent, 12.96)
+        self.assertEqual(report.club_coverage_percent, 23.86)
+        self.assertEqual(report.unclassified_groups, 123)
 
     def test_ranking_is_reproducible_and_uses_real_gain(self):
         first = analyze_coverage(NORMALIZED)
         second = analyze_coverage(NORMALIZED)
         self.assertEqual(first, second)
         self.assertEqual(first.groups[0].source_label_id, "terrain_resist_50")
-        implemented = next(group for group in first.groups if group.source_label_id == "brand_loyalty_x")
-        self.assertTrue(implemented.handler_exists)
-        self.assertEqual(implemented.estimated_gain_occurrences, 0)
-        self.assertEqual(implemented.estimated_gain_clubs, 0)
+        implemented = {
+            group.source_label_id: group
+            for group in first.groups
+            if group.source_label_id in {"brand_loyalty", "brand_loyalty_x"}
+        }
+        self.assertEqual(set(implemented), {"brand_loyalty", "brand_loyalty_x"})
+        self.assertTrue(all(group.handler_exists for group in implemented.values()))
+        self.assertTrue(all(group.estimated_gain_occurrences == 0 for group in implemented.values()))
 
     def test_handler_detection_comes_from_semantic_map_and_registry(self):
         with tempfile.TemporaryDirectory() as directory:
