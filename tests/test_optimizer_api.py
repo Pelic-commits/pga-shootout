@@ -2,7 +2,14 @@ import unittest
 from pathlib import Path
 
 from pga_shootout.models import EvaluationMode
-from pga_shootout.optimizer_api import BagCandidate, BagEvaluationRequest, BagEvaluator, RuleEngineBagEvaluator
+from pga_shootout.optimizer_api import (
+    BagCandidate,
+    BagEvaluationRequest,
+    BagEvaluator,
+    ReadinessStatus,
+    RuleEngineBagEvaluator,
+    optimizer_readiness_checklist,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -59,6 +66,22 @@ class OptimizerApiTests(unittest.TestCase):
         self.assertEqual(result.modifier_impact, {"loft_angle_degrees": 5.0})
         contribution = next(item for item in result.ability_contributions if item.ability_id == "high_flight__loft_angle_5")
         self.assertEqual(contribution.modification["loft_angle_degrees"], 5.0)
+
+    def test_readiness_is_an_objective_eight_item_checklist(self):
+        checklist = {item.identifier: item.status for item in optimizer_readiness_checklist()}
+        self.assertEqual(
+            checklist,
+            {
+                "separate_metrics": ReadinessStatus.READY,
+                "ability_contributions": ReadinessStatus.READY,
+                "normalization": ReadinessStatus.MISSING,
+                "configurable_weights": ReadinessStatus.PARTIAL,
+                "objective_profiles": ReadinessStatus.PARTIAL,
+                "multi_club_aggregation": ReadinessStatus.PARTIAL,
+                "ranking": ReadinessStatus.MISSING,
+                "inventory_constraints": ReadinessStatus.PARTIAL,
+            },
+        )
 
 
 if __name__ == "__main__":

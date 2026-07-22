@@ -14,6 +14,7 @@ from .loader import load_raw_json, summarize_raw_json
 from .models import EvaluationMode
 from .normalization import normalize_catalog
 from .user_data import ClubCatalogIndex, load_user_data, validate_user_data
+from .user_gap_report import generate_user_gap_report
 
 
 def _add_user_paths(parser: argparse.ArgumentParser) -> None:
@@ -64,6 +65,11 @@ def build_parser() -> argparse.ArgumentParser:
     coverage_parser = subparsers.add_parser("coverage", help="regenerate mechanic coverage report")
     coverage_parser.add_argument("--normalized-dir", default="data/normalized")
     coverage_parser.add_argument("--output", default="docs/MECHANIC_COVERAGE.md")
+    gaps_parser = subparsers.add_parser("user-gaps", help="regenerate the owned-club ability gap report")
+    gaps_parser.add_argument("--user-dir", default="data/user")
+    gaps_parser.add_argument("--normalized-dir", default="data/normalized")
+    gaps_parser.add_argument("--raw-catalog", default="data/raw/pga_club_stats_extract_v2_2026-07-21.json")
+    gaps_parser.add_argument("--output", default="docs/USER_GAPS.md")
     return parser
 
 
@@ -86,6 +92,21 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif args.command == "normalize":
         summary = normalize_catalog(args.source, args.output_dir)
         print(json.dumps(summary.__dict__, indent=2, ensure_ascii=False))
+    elif args.command == "user-gaps":
+        report = generate_user_gap_report(
+            args.output,
+            user_dir=args.user_dir,
+            normalized_dir=args.normalized_dir,
+            raw_catalog_path=args.raw_catalog,
+        )
+        print(json.dumps({
+            "inventory_clubs": report.inventory_clubs,
+            "ability_occurrences": report.ability_occurrences,
+            "implemented_occurrences": report.implemented_occurrences,
+            "occurrence_coverage_percent": report.occurrence_coverage_percent,
+            "fully_implemented_clubs": report.fully_implemented_clubs,
+            "report": args.output,
+        }, indent=2, ensure_ascii=False))
     elif args.command == "evaluate-bag":
         mode = EvaluationMode.STRICT if args.strict else EvaluationMode.PARTIAL
         evaluation = evaluate_saved_bag(

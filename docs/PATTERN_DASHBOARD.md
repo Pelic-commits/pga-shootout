@@ -15,14 +15,14 @@ Le catalogue officiel contient 125 groupes, 162 occurrences et 88 clubs. Les pou
 | Compromis multi-statistiques du sac | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `FOR_EACH`, `ADD_STAT` | `bag_recklessness` | aucune | 1 | 0,62 % |
 | Bonus multi-statistiques du sac filtré par rareté | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `MATCH_RARITY`, `FOR_EACH`, `ADD_STAT` | `bag_rarity_boost` | aucune | 1 | 0,62 % |
 | Bonus adjacent avec multiplicateur de marque | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ADJACENT`, `FOR_EACH`, `MATCH_BRAND`, `ADD_STAT` | `fellowship` | aucune | 1 | 0,62 % |
-| Modificateur statique ciblé | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_SELF` ou `SELECT_ALL`, `FOR_EACH`, `ADD_MODIFIER` | `loft_angle_5`, `bag_loft_angle_10`, `sand_bounce`, `water_bounce` | aucune | 4 | 2,47 % |
+| Modificateur statique ciblé | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_SELF` ou `SELECT_ALL`, `FOR_EACH`, `ADD_MODIFIER` | `loft_angle_5`, `bag_loft_angle_10`, `bounce_reduction`, `sand_bounce`, `water_bounce` | aucune | 5 | 3,09 % |
 
 ## Priorisation orientée inventaire
 
 | Rang | Pattern candidat | Clubs possédés concernés | Impact comparateur | Réutilisabilité | Difficulté / décision |
 |---:|---|---:|---|---|---|
 | 1 | Comptes de rebond par terrain | 1 (`mirage`) | élevée, deux mesures objectives | élevée | faible — implémenté |
-| 2 | Réduction statique du rebond | 3 (`cyclotron`, `cloudcatcher`, `maelstrom`) | élevée, dont un sac de référence | élevée | élevée — cibles et cumul à valider |
+| 2 | Réduction statique du rebond | 2 (`cyclotron`, `cloudcatcher`) ; Maelstrom apparaît dans un sac enregistré mais pas dans l'inventaire partiel | élevée, dont un sac de référence | élevée | partielle — Cloudcatcher implémenté ; Cyclotron et Maelstrom restent à qualifier séparément |
 | 3 | Chaînes vers filtres de clubs | 3 (`conqueror`, `kinship`, `outset`) | élevée sur les statistiques | élevée | stateful — différé après la Phase 1 |
 | 4 | Multiplicateur fade/draw | 1 (`lodestar`) | moyenne | moyenne | métrique de base absente |
 
@@ -50,26 +50,26 @@ Les groupes `smoke_x`, `steam_x` et `sparks_x` restent seulement des candidats. 
 
 `adjacent_stat_bonus_with_brand_multiplier` applique une première fois la valeur à chaque voisin, puis une seconde fois aux voisins partageant la marque de la source. `fellowship` obtient ainsi exactement le double pour Willoughsby sans multiplication ni branche métier.
 
-`static_modifier_targets` conserve les propriétés déterministes qui ne sont pas des statistiques Power/Control/Spin. High Flight configure une cible source à `+5°`, Cloudcatcher tout le sac à `+10°`, et Mirage expose séparément ses nombres maximaux de rebonds sur sable et sur eau.
+`static_modifier_targets` conserve les propriétés déterministes qui ne sont pas des statistiques Power/Control/Spin. High Flight configure une cible source à `+5°`, Cloudcatcher tout le sac à `+10°`, sa propre réduction de rebond en pourcentage, et Mirage expose séparément ses nombres maximaux de rebonds sur sable et sur eau.
 
 ## Architecture Dashboard
 
 | Indicateur | État |
 |---|---:|
-| Couverture technique | 23 / 125 groupes ; 43 / 162 occurrences |
+| Couverture technique | 24 / 125 groupes ; 44 / 162 occurrences |
 | Couverture fonctionnelle | 5 / 8 fonctionnalités utilisateur de référence |
-| Groupes couverts | 23 / 125 (18,40 %) |
-| Occurrences couvertes | 43 / 162 (26,54 %) |
+| Groupes couverts | 24 / 125 (19,20 %) |
+| Occurrences couvertes | 44 / 162 (27,16 %) |
 | Clubs couverts | 33 / 88 (37,50 %) |
 | Primitives disponibles | 14 / 50 |
 | Primitives encore manquantes | 36 / 50 |
 | Familles qualifiées bloquées uniquement par une primitive absente | 0 |
 
-Les 102 groupes restants sont non qualifiés. Attribuer un nombre exact de primitives manquantes avant validation sémantique produirait une fausse précision ; ils ne sont pas comptés comme « bloqués par une seule primitive ».
+Les 101 groupes restants sont non qualifiés. Attribuer un nombre exact de primitives manquantes avant validation sémantique produirait une fausse précision ; ils ne sont pas comptés comme « bloqués par une seule primitive ».
 
-Précision fonctionnelle améliorée dans ce lot : Mirage expose désormais deux mesures objectives supplémentaires. La couverture des capacités de l'inventaire passe de 18/35 à 20/35, soit de 51,43 % à 57,14 % (+5,71 points). L'API neutre de pondération est prête à 70 % sans score global.
+Précision fonctionnelle améliorée dans ce lot : Cloudcatcher expose désormais sa réduction de rebond comme mesure objective distincte. La couverture des capacités de l'inventaire passe de 20/35 à 21/35, soit de 57,14 % à 60,00 % (+2,86 points), et 8 clubs possédés sont entièrement simulés.
 
-Préparation de l'API optimiseur : 80 % (8 critères sur 10), détaillée dans `OPTIMIZER_API.md`.
+La préparation de l'optimiseur est suivie par la checklist objective `ready` / `partial` / `missing` détaillée dans `OPTIMIZER_API.md`.
 
 ## Couverture fonctionnelle
 

@@ -10,23 +10,10 @@ La couche de valeur utilisateur est strictement séparée du moteur. Le moteur e
 - `MetricWeightProvider` est le point d'extension d'une future politique de pondération.
 - `MetricWeightingRequest` transporte le contexte et les métriques sans calculer de somme ni de score.
 
-Les métriques actuellement définies sont Power, Control, Spin, ajustement d'angle de lancement, nombre maximal de rebonds sur sable et nombre maximal de rebonds sur eau.
+Les métriques définies couvrent Power, Control, Spin, ajustement d'angle de lancement, réduction de rebond, nombre maximal de rebonds sur sable et nombre maximal de rebonds sur eau.
 
 ## Progression
 
-L'API de pondération est prête à **70 % (7 critères sur 10)**.
+La progression est suivie par la checklist objective de `OPTIMIZER_API.md`. Elle distingue les contrats disponibles des politiques produit encore absentes et ne produit aucun pourcentage.
 
-| Critère | État |
-|---|---|
-| Mesures indépendantes et typées | prêt |
-| Unités explicites | prêt |
-| Base, contribution et valeur finale séparées | prêt |
-| Différences gauche/droite séparées | prêt |
-| Contributions rattachées à un club et une capacité | prêt |
-| Contexte profil/parcours/objectif | prêt |
-| Protocole de fournisseur de poids | prêt |
-| Profil réel et préférences chiffrées de Pierre | manquant |
-| Taxonomie validée des parcours et objectifs | manquante |
-| Politiques de poids validées par cas d'usage | manquantes |
-
-L'absence volontaire de score global n'est pas un manque : l'agrégation restera hors du moteur et ne sera ajoutée qu'après validation produit.
+L'absence volontaire de score global est une limite explicite du produit actuel : l'agrégation restera hors du moteur et ne sera ajoutée qu'après validation.

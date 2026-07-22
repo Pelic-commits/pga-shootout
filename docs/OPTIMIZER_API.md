@@ -1,32 +1,30 @@
 # Optimizer API
 
-L'optimiseur futur doit dépendre de `BagEvaluator`, pas du CLI ni des sacs sauvegardés. `RuleEngineBagEvaluator` adapte aujourd'hui ce contrat au Rule Engine sans effectuer de recherche, de classement ou de recommandation.
+Le futur optimiseur dépend de `BagEvaluator`, jamais du CLI ni des sacs sauvegardés. `RuleEngineBagEvaluator` adapte ce contrat au Rule Engine sans effectuer de recherche, de classement ou de recommandation.
 
 ## Contrat
 
 - `BagCandidate` décrit un identifiant, un ordre de clubs et le niveau réel de chaque club.
 - `BagEvaluationRequest` choisit une position courante et le mode `strict` ou `partial`.
 - `BagEvaluator.evaluate()` retourne un `ComparedBag` contenant l'évaluation complète.
-- `ComparedBag` expose les statistiques de base et finales via `evaluation.result`, les modificateurs statiques, l'impact total des capacités, l'Explain, les éléments non résolus et une contribution structurée pour chaque capacité.
-- `BagComparison` expose les différences finales, les différences d'impact des capacités et les statistiques ou modificateurs gagnés/perdus sous forme de mappings numériques.
+- `ComparedBag` expose statistiques, modificateurs statiques, Explain, éléments non résolus et contributions identifiées par capacité.
+- `BagComparison` expose les différences finales et les bonus gagnés ou perdus sous forme de mesures distinctes.
 
-## Préparation
+## Checklist objective
 
-L'API est prête à **80 % (8 critères sur 10)**.
+Cette checklist est exposée par `optimizer_readiness_checklist()` ; aucun pourcentage subjectif n'en est déduit.
 
 | Capacité requise | État |
 |---|---|
-| Évaluer une composition générée non sauvegardée | prête |
-| Préserver l'ordre du sac | prête |
-| Utiliser un niveau propre à chaque club | prête |
-| Choisir le club ou la position évaluée | prête |
-| Lire statistiques de base, finales et impact total | prête |
-| Lire les contributions par capacité | prête |
-| Lire Explain, statut complet et bonus non résolus | prête |
-| Lire les bonus gagnés et perdus d'une comparaison | prête |
-| Construire l'espace de recherche depuis un inventaire complet et ses niveaux | bloquée par les données utilisateur |
-| Classer les résultats avec un objectif et une politique d'agrégation validés | bloquée par les préférences produit |
+| Métriques séparées disponibles | `ready` |
+| Contributions par capacité disponibles | `ready` |
+| Normalisation disponible | `missing` |
+| Pondérations configurables | `partial` |
+| Profils d'objectif disponibles | `partial` |
+| Agrégation multi-clubs disponible | `partial` |
+| Classement disponible | `missing` |
+| Contraintes d'inventaire disponibles | `partial` |
 
-Avant de calculer automatiquement le meilleur sac, il reste également à augmenter la couverture des capacités Phase 1. Le mode `partial` permet d'explorer avant 100 %, mais tout résultat devra alors conserver son niveau d'incomplétude.
+Avant de calculer automatiquement le meilleur sac, il reste à compléter les politiques produit et la couverture des capacités Phase 1. Le mode `partial` permet une exploration anticipée, mais conserve explicitement chaque résultat non résolu.
 
 La future valeur utilisateur consommera le contrat neutre décrit dans `VALUE_WEIGHTING_API.md`. Elle ne fait pas partie du Rule Engine.

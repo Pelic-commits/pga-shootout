@@ -62,6 +62,9 @@ METRIC_DEFINITIONS: Mapping[str, MetricDefinition] = {
     "water_bounce_count": MetricDefinition(
         "water_bounce_count", "Maximum water bounces", MetricKind.STATIC_MODIFIER, "bounces"
     ),
+    "bounce_reduction_percent": MetricDefinition(
+        "bounce_reduction_percent", "Bounce reduction", MetricKind.STATIC_MODIFIER, "percent"
+    ),
 }
 
 

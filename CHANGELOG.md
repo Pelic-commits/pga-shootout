@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Ajout du rapport automatique des lacunes de l'inventaire, de la réduction de rebond de Cloudcatcher comme métrique objective et d'une checklist factuelle pour l'optimiseur.
+
 - Ajout d'une API neutre de métriques et pondération, ainsi que des rebonds sable/eau de Mirage via le pattern de modificateurs statiques.
 - Ajout des modificateurs statiques génériques et des angles de lancement de High Flight et Cloudcatcher dans le comparateur et l'API optimiseur.
 - Ajout du contrat d'évaluation pour un futur optimiseur, des contributions structurées par capacité et du pattern Fellowship sans nouvelle primitive.

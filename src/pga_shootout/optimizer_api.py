@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path
 from typing import Mapping, Protocol
 
@@ -13,6 +14,33 @@ from .user_data import SavedBag
 
 
 ClubLevel = int | str
+
+
+class ReadinessStatus(StrEnum):
+    READY = "ready"
+    PARTIAL = "partial"
+    MISSING = "missing"
+
+
+@dataclass(frozen=True)
+class OptimizerReadinessItem:
+    identifier: str
+    status: ReadinessStatus
+    evidence: str
+
+
+def optimizer_readiness_checklist() -> tuple[OptimizerReadinessItem, ...]:
+    """Return factual capabilities; no percentage or subjective score."""
+    return (
+        OptimizerReadinessItem("separate_metrics", ReadinessStatus.READY, "ComparableMetric exposes each metric separately."),
+        OptimizerReadinessItem("ability_contributions", ReadinessStatus.READY, "AbilityContribution identifies every source ability."),
+        OptimizerReadinessItem("normalization", ReadinessStatus.MISSING, "No cross-unit metric normalization policy exists."),
+        OptimizerReadinessItem("configurable_weights", ReadinessStatus.PARTIAL, "MetricWeightProvider is a protocol without a validated provider."),
+        OptimizerReadinessItem("objective_profiles", ReadinessStatus.PARTIAL, "WeightingContext accepts an objective but no validated profiles exist."),
+        OptimizerReadinessItem("multi_club_aggregation", ReadinessStatus.PARTIAL, "Candidates are evaluable by position; bag-wide aggregation is undefined."),
+        OptimizerReadinessItem("ranking", ReadinessStatus.MISSING, "No aggregate score or ranking algorithm exists."),
+        OptimizerReadinessItem("inventory_constraints", ReadinessStatus.PARTIAL, "Inventory data exists but candidate generation does not enforce it."),
+    )
 
 
 @dataclass(frozen=True)

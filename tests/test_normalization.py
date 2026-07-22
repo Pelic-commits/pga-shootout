@@ -51,6 +51,7 @@ class NormalizationPipelineTests(unittest.TestCase):
             "label:bag_spin_bonus",
             "label:brand_loyalty",
             "label:brand_loyalty_x",
+            "label:bounce_reduction",
             "label:control_boost",
             "label:driver_loyalty",
             "label:exclusion_zone",

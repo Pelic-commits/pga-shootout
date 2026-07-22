@@ -572,14 +572,35 @@
       "validation_status": "not_started"
     },
     "label:bounce_reduction": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value",
+        "resolved_targets",
+        "static_modifiers"
+      ],
       "group_id": "label:bounce_reduction",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: Your ball bounces X% less against all terrain.",
+        "The official per-level value is exposed as the source club's additive bounce_reduction_percent modifier.",
+        "This representation does not model trajectory or infer how multiple reduction effects stack."
+      ],
+      "pattern_id": "static_modifier_targets",
+      "pattern_parameters": {
+        "modifier": "bounce_reduction_percent",
+        "selection_inputs": {
+          "source_club_id": {
+            "from": "effect.source_club_id"
+          }
+        },
+        "selection_operation": "SELECT_SELF",
+        "selection_parameters": {}
+      },
+      "priority": 8,
+      "validation_status": "validated_from_official_text"
     },
     "label:bounce_reduction_boost": {
       "complexity": null,
