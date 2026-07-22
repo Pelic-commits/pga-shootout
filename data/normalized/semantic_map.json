@@ -311,14 +311,112 @@
       "validation_status": "not_started"
     },
     "label:brand_loyalty_x": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "club_brand",
+        "ability_level_value"
+      ],
       "group_id": "label:brand_loyalty_x",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_qualified_analysis",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "The source club receives power equal to its official level value multiplied by the number of adjacent clubs with the same brand.",
+        "The semantic interpretation still requires final in-game validation."
+      ],
+      "priority": 1,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "neighbors",
+            "inputs": {
+              "origin": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ADJACENT",
+            "parameters": {
+              "directions": [
+                "left",
+                "right"
+              ],
+              "distance": 1
+            }
+          },
+          {
+            "id": "matching_neighbors",
+            "inputs": {
+              "clubs": {
+                "from": "neighbors.clubs"
+              },
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "MATCH_BRAND",
+            "parameters": {
+              "operator": "equals"
+            }
+          },
+          {
+            "id": "matching_count",
+            "inputs": {
+              "items": {
+                "from": "matching_neighbors.clubs"
+              }
+            },
+            "operation": "COUNT"
+          },
+          {
+            "id": "bonus",
+            "inputs": {
+              "amount": {
+                "from": "level_value.value"
+              },
+              "factor": {
+                "from": "matching_count.value"
+              }
+            },
+            "operation": "SCALE"
+          },
+          {
+            "id": "apply_power",
+            "inputs": {
+              "delta": {
+                "from": "bonus.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "power"
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "needs_in_game_validation"
     },
     "label:chains_into_corvid": {
       "complexity": null,

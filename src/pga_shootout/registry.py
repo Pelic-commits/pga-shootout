@@ -3,14 +3,26 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
-from .models import Effect, GameState
+from .models import Effect, ExplainEntry, GameState
 
-Mechanism = Callable[[dict[str, float], Effect, GameState], dict[str, float]]
+
+@dataclass(frozen=True)
+class MechanismExecution:
+    stats: dict[str, float]
+    explain: tuple[ExplainEntry, ...] = ()
+
+
+Mechanism = Callable[[dict[str, float], Effect, GameState], dict[str, float] | MechanismExecution]
 
 
 class UnknownMechanismError(LookupError):
+    pass
+
+
+class MechanismExecutionError(ValueError):
     pass
 
 
@@ -23,12 +35,13 @@ class MechanismRegistry:
             raise ValueError(f"Mechanism already registered: {name}")
         self._mechanisms[name] = mechanism
 
-    def execute(self, effect: Effect, stats: dict[str, float], state: GameState) -> dict[str, float]:
+    def execute(self, effect: Effect, stats: dict[str, float], state: GameState) -> MechanismExecution:
         try:
             mechanism = self._mechanisms[effect.mechanism]
         except KeyError as exc:
             raise UnknownMechanismError(effect.mechanism) from exc
-        return mechanism(dict(stats), effect, state)
+        result = mechanism(dict(stats), effect, state)
+        return result if isinstance(result, MechanismExecution) else MechanismExecution(result)
 
     @property
     def names(self) -> tuple[str, ...]:
@@ -49,7 +62,10 @@ def _add_all_stats(stats: dict[str, float], effect: Effect, _state: GameState) -
 
 
 def default_mechanism_registry() -> MechanismRegistry:
+    from .dsl import execute_dsl_pipeline
+
     registry = MechanismRegistry()
     registry.register("add_stat", _add_stat)
     registry.register("add_all_stats", _add_all_stats)
+    registry.register("dsl_pipeline", execute_dsl_pipeline)
     return registry

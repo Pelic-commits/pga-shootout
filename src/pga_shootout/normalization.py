@@ -54,6 +54,12 @@ def _write_json(path: Path, data: Any) -> None:
 def normalize_catalog(source_path: str | Path, output_dir: str | Path) -> NormalizationSummary:
     source = Path(source_path)
     destination = Path(output_dir)
+    existing_semantic_entries: dict[str, Any] = {}
+    semantic_path = destination / "semantic_map.json"
+    if semantic_path.exists():
+        existing_semantic = load_raw_json(semantic_path)
+        if isinstance(existing_semantic, dict) and isinstance(existing_semantic.get("entries"), dict):
+            existing_semantic_entries = existing_semantic["entries"]
     catalog = load_raw_json(source)
     if not isinstance(catalog, dict) or not isinstance(catalog.get("clubs"), dict):
         raise NormalizationError("clubs_official.json must contain clubs keyed by stable identifier")
@@ -133,7 +139,7 @@ def normalize_catalog(source_path: str | Path, output_dir: str | Path) -> Normal
             "mechanic_id": None,
             "interpretation_status": "uninterpreted",
         }
-        semantic_entries[group_id] = {
+        placeholder = {
             "group_id": group_id,
             "mechanic_id": None,
             "complexity": None,
@@ -143,6 +149,11 @@ def normalize_catalog(source_path: str | Path, output_dir: str | Path) -> Normal
             "validation_status": "not_started",
             "notes": [],
         }
+        existing = existing_semantic_entries.get(group_id)
+        if isinstance(existing, dict):
+            placeholder.update(copy.deepcopy(existing))
+            placeholder["group_id"] = group_id
+        semantic_entries[group_id] = placeholder
 
     source_info = {
         "filename": source.name,

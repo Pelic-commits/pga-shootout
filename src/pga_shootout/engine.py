@@ -5,7 +5,7 @@ from __future__ import annotations
 from .conditions import ConditionRegistry, UnknownConditionError, default_condition_registry
 from .explain import explain_entry
 from .models import Effect, EvaluationMode, EvaluationResult, GameState, Stats
-from .registry import MechanismRegistry, UnknownMechanismError, default_mechanism_registry
+from .registry import MechanismExecutionError, MechanismRegistry, UnknownMechanismError, default_mechanism_registry
 
 
 class EvaluationError(RuntimeError):
@@ -41,7 +41,9 @@ class RuleEngine:
             try:
                 applies = self.conditions.evaluate(effect.condition, state, current)
                 if applies:
-                    current = self.mechanisms.execute(effect, current, state)
+                    execution = self.mechanisms.execute(effect, current, state)
+                    current = execution.stats
+                    journal.extend(execution.explain)
                 journal.append(
                     explain_entry(
                         effect,
@@ -51,7 +53,7 @@ class RuleEngine:
                         message="applied" if applies else "condition not satisfied",
                     )
                 )
-            except (UnknownConditionError, UnknownMechanismError) as exc:
+            except (UnknownConditionError, UnknownMechanismError, MechanismExecutionError) as exc:
                 message = f"Unresolved {exc.__class__.__name__}: {exc}"
                 unresolved.append(message)
                 journal.append(

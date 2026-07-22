@@ -35,14 +35,39 @@ class NormalizationPipelineTests(unittest.TestCase):
         self.assertEqual(len(grouped), 162)
         self.assertEqual(set(grouped), set(occurrences["occurrences"]))
 
-    def test_semantic_placeholders_do_not_invent_interpretations(self):
+    def test_only_the_explicitly_qualified_group_has_an_interpretation(self):
         catalog = json.loads((NORMALIZED / "mechanics_catalog.json").read_text(encoding="utf-8"))
         semantic = json.loads((NORMALIZED / "semantic_map.json").read_text(encoding="utf-8"))
 
         self.assertEqual(len(catalog["groups"]), 125)
         self.assertTrue(all(group["mechanic_id"] is None for group in catalog["groups"].values()))
-        self.assertTrue(all(entry["complexity"] is None for entry in semantic["entries"].values()))
-        self.assertTrue(all(entry["dependencies"] is None for entry in semantic["entries"].values()))
+        qualified = semantic["entries"]["label:brand_loyalty_x"]
+        self.assertEqual(qualified["mechanic_id"], "dsl_pipeline")
+        self.assertEqual(qualified["complexity"], "parameterized")
+        placeholders = [entry for group_id, entry in semantic["entries"].items() if group_id != "label:brand_loyalty_x"]
+        self.assertTrue(all(entry["complexity"] is None for entry in placeholders))
+        self.assertTrue(all(entry["dependencies"] is None for entry in placeholders))
+
+    def test_regeneration_preserves_existing_semantic_qualification(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory)
+            normalize_catalog(SOURCE, target)
+            semantic_path = target / "semantic_map.json"
+            semantic = json.loads(semantic_path.read_text(encoding="utf-8"))
+            group_id = next(iter(semantic["entries"]))
+            semantic["entries"][group_id].update(
+                mechanic_id="example_pipeline",
+                complexity="parameterized",
+                dependencies=["ordered_bag"],
+                program={"version": "test", "nodes": []},
+            )
+            semantic_path.write_text(json.dumps(semantic), encoding="utf-8")
+
+            normalize_catalog(SOURCE, target)
+            regenerated = json.loads(semantic_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(regenerated["entries"][group_id]["mechanic_id"], "example_pipeline")
+        self.assertEqual(regenerated["entries"][group_id]["program"], {"version": "test", "nodes": []})
 
     def test_report_counts_are_reproducible(self):
         report = json.loads((NORMALIZED / "normalization_report.json").read_text(encoding="utf-8"))

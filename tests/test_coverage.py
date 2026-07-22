@@ -25,21 +25,23 @@ class MechanicCoverageTests(unittest.TestCase):
         self.assertEqual(report.total_groups, 125)
         self.assertEqual(report.total_occurrences, 162)
 
-    def test_current_coverage_reflects_uninterpreted_semantic_map(self):
+    def test_current_coverage_reflects_qualified_pipeline(self):
         report = analyze_coverage(NORMALIZED)
-        self.assertEqual(report.registered_handlers, ("add_stat", "add_all_stats"))
-        self.assertEqual(report.implemented_groups, 0)
-        self.assertEqual(report.occurrence_coverage_percent, 0.0)
-        self.assertEqual(report.club_coverage_percent, 0.0)
-        self.assertEqual(report.unclassified_groups, 125)
+        self.assertEqual(report.registered_handlers, ("add_stat", "add_all_stats", "dsl_pipeline"))
+        self.assertEqual(report.implemented_groups, 1)
+        self.assertEqual(report.occurrence_coverage_percent, 12.35)
+        self.assertEqual(report.club_coverage_percent, 22.73)
+        self.assertEqual(report.unclassified_groups, 124)
 
     def test_ranking_is_reproducible_and_uses_real_gain(self):
         first = analyze_coverage(NORMALIZED)
         second = analyze_coverage(NORMALIZED)
         self.assertEqual(first, second)
-        self.assertEqual(first.groups[0].source_label_id, "brand_loyalty_x")
-        self.assertEqual(first.groups[0].estimated_gain_occurrences, 20)
-        self.assertEqual(first.groups[0].estimated_gain_clubs, 20)
+        self.assertEqual(first.groups[0].source_label_id, "terrain_resist_50")
+        implemented = next(group for group in first.groups if group.source_label_id == "brand_loyalty_x")
+        self.assertTrue(implemented.handler_exists)
+        self.assertEqual(implemented.estimated_gain_occurrences, 0)
+        self.assertEqual(implemented.estimated_gain_clubs, 0)
 
     def test_handler_detection_comes_from_semantic_map_and_registry(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -62,7 +64,7 @@ class MechanicCoverageTests(unittest.TestCase):
             )
             semantic_path.write_text(json.dumps(semantic), encoding="utf-8")
 
-            report = analyze_coverage(target)
+            report = analyze_coverage(target, handler_names=("add_stat",))
 
         implemented = [group for group in report.groups if group.handler_exists]
         self.assertEqual(len(implemented), 1)

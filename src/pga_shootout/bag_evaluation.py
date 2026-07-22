@@ -45,7 +45,22 @@ def _stats_by_level(club_data: Mapping[str, Any]) -> dict[int | str, Stats]:
     return stats
 
 
-def _abilities_at_level(club_data: Mapping[str, Any], level: int | str) -> tuple[Ability, ...]:
+def _official_level_scalar(value: Mapping[str, Any]) -> float | None:
+    notation = value.get("official_notation")
+    components = notation.get("components") if isinstance(notation, Mapping) else None
+    if not isinstance(components, list) or len(components) != 1:
+        return None
+    scalar = components[0].get("value") if isinstance(components[0], Mapping) else None
+    if isinstance(scalar, bool) or not isinstance(scalar, (int, float)):
+        return None
+    return float(scalar)
+
+
+def _abilities_at_level(
+    club_data: Mapping[str, Any],
+    level: int | str,
+    semantic_entries: Mapping[str, Any] | None = None,
+) -> tuple[Ability, ...]:
     abilities = []
     level_key = str(level)
     for item in club_data.get("abilities", []):
@@ -55,7 +70,17 @@ def _abilities_at_level(club_data: Mapping[str, Any], level: int | str) -> tuple
         occurrence_id = str(item["occurrence_id"])
         label_id = str(item.get("label_id", occurrence_id))
         mechanism = item.get("mechanism")
-        parameters = item.get("effect_parameters", {})
+        parameters = dict(item.get("effect_parameters", {}))
+        semantic = (semantic_entries or {}).get(f"label:{label_id}", {})
+        if not mechanism and isinstance(semantic, Mapping) and semantic.get("mechanic_id") and semantic.get("program"):
+            level_value = _official_level_scalar(value) if isinstance(value, Mapping) else None
+            if level_value is not None:
+                mechanism = str(semantic["mechanic_id"])
+                parameters = {
+                    "program": semantic["program"],
+                    "source_club_id": str(club_data["id"]),
+                    "level_value": level_value,
+                }
         if not mechanism:
             mechanism = f"unsupported:{label_id}"
         effect = Effect(
@@ -78,6 +103,9 @@ def build_game_state(
     clubs_data = catalog.get("clubs") if isinstance(catalog, dict) else None
     if not isinstance(clubs_data, dict):
         raise BagEvaluationError("Official catalog clubs must be keyed by stable identifier")
+    semantic_path = Path(catalog_path).with_name("semantic_map.json")
+    semantic_data = load_raw_json(semantic_path) if semantic_path.exists() else {}
+    semantic_entries = semantic_data.get("entries", {}) if isinstance(semantic_data, Mapping) else {}
     current_id = current_club_id or saved_bag.club_ids[0]
     if current_id not in saved_bag.club_ids:
         raise BagEvaluationError(f"Current club {current_id!r} is not in bag {saved_bag.identifier!r}")
@@ -97,7 +125,7 @@ def build_game_state(
             brand=str(data["brand"]["id"]),
             club_type=str(data["club_type"]["id"]),
             stats_by_level=stats,
-            abilities=_abilities_at_level(data, level),
+            abilities=_abilities_at_level(data, level, semantic_entries),
         )
         entries.append(BagEntry(club=club, level=level))
     return GameState(bag=Bag(tuple(entries)), current_club_id=current_id)
