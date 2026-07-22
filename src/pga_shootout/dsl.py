@@ -22,6 +22,14 @@ class PrimitiveResult:
     applied: bool = True
     explain_inputs: Mapping[str, Any] | None = None
     explain_outputs: Mapping[str, Any] | None = None
+    continuations: tuple["PrimitiveContinuation", ...] = ()
+
+
+@dataclass(frozen=True)
+class PrimitiveContinuation:
+    label: str
+    bindings: Mapping[str, Any]
+    nodes: tuple[Mapping[str, Any], ...]
 
 
 Primitive = Callable[[Mapping[str, Any], Mapping[str, Any], dict[str, float], GameState], PrimitiveResult]
@@ -222,6 +230,40 @@ def _scale(inputs: Mapping[str, Any], _parameters: Mapping[str, Any], stats: dic
     )
 
 
+def _for_each(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
+    items = inputs.get("items", ())
+    if not isinstance(items, Sequence) or isinstance(items, (str, bytes)):
+        raise DslExecutionError("FOR_EACH requires a sequence")
+    program = parameters.get("program")
+    nodes = program.get("nodes") if isinstance(program, Mapping) else None
+    if not isinstance(nodes, list) or not all(isinstance(node, Mapping) for node in nodes):
+        raise DslExecutionError("FOR_EACH requires a program containing a nodes list")
+    binding = str(parameters.get("binding", "item"))
+    if not binding:
+        raise DslExecutionError("FOR_EACH binding cannot be empty")
+    displayed_items = []
+    for item in items:
+        if isinstance(item, str):
+            try:
+                displayed_items.append(_club_name(state, item))
+                continue
+            except KeyError:
+                pass
+        displayed_items.append(item)
+    continuations = tuple(
+        PrimitiveContinuation(str(index), {binding: item}, tuple(nodes))
+        for index, item in enumerate(items)
+    )
+    return PrimitiveResult(
+        {"count": len(items)},
+        stats,
+        f"executing sub-pipeline for {len(items)} item(s)",
+        explain_inputs={"items": displayed_items, "binding": binding},
+        explain_outputs={"iterations": len(items)},
+        continuations=continuations,
+    )
+
+
 def _add_stat(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: dict[str, float], state: GameState) -> PrimitiveResult:
     stat = str(parameters["stat"])
     if stat not in stats:
@@ -266,11 +308,17 @@ def default_dsl_registry() -> DslPrimitiveRegistry:
     registry.register("MATCH_TYPE", _match_type)
     registry.register("COUNT", _count)
     registry.register("SCALE", _scale)
+    registry.register("FOR_EACH", _for_each)
     registry.register("ADD_STAT", _add_stat)
     return registry
 
 
-def _resolve(value: Any, outputs: Mapping[str, Mapping[str, Any]], effect: Effect) -> Any:
+def _resolve(
+    value: Any,
+    outputs: Mapping[str, Mapping[str, Any]],
+    effect: Effect,
+    bindings: Mapping[str, Any] | None = None,
+) -> Any:
     if isinstance(value, Mapping) and set(value) == {"from"}:
         reference = str(value["from"])
         if reference.startswith("effect."):
@@ -279,46 +327,56 @@ def _resolve(value: Any, outputs: Mapping[str, Mapping[str, Any]], effect: Effec
                 return effect.parameters[key]
             except KeyError as exc:
                 raise DslExecutionError(f"Missing effect input: {key}") from exc
+        if reference.startswith("iteration."):
+            key = reference.removeprefix("iteration.")
+            if bindings is None or key not in bindings:
+                return value
+            return bindings[key]
         try:
             node_id, output_name = reference.split(".", 1)
             return outputs[node_id][output_name]
         except (KeyError, ValueError) as exc:
             raise DslExecutionError(f"Unknown DSL output reference: {reference}") from exc
     if isinstance(value, list):
-        return [_resolve(item, outputs, effect) for item in value]
+        return [_resolve(item, outputs, effect, bindings) for item in value]
     if isinstance(value, Mapping):
-        return {key: _resolve(item, outputs, effect) for key, item in value.items()}
+        return {key: _resolve(item, outputs, effect, bindings) for key, item in value.items()}
     return value
 
 
-def execute_dsl_pipeline(stats: dict[str, float], effect: Effect, state: GameState) -> MechanismExecution:
-    program = effect.parameters.get("program")
-    nodes = program.get("nodes") if isinstance(program, Mapping) else None
-    if not isinstance(nodes, list):
-        raise DslExecutionError("dsl_pipeline requires a program containing a nodes list")
-
-    registry = default_dsl_registry()
-    outputs: dict[str, Mapping[str, Any]] = {}
+def _execute_nodes(
+    nodes: Sequence[Mapping[str, Any]],
+    stats: dict[str, float],
+    effect: Effect,
+    state: GameState,
+    registry: DslPrimitiveRegistry,
+    *,
+    outputs: Mapping[str, Mapping[str, Any]] | None = None,
+    bindings: Mapping[str, Any] | None = None,
+    scope: str = "",
+) -> tuple[dict[str, float], list[ExplainEntry], dict[str, Mapping[str, Any]]]:
+    resolved_outputs = dict(outputs or {})
     journal: list[ExplainEntry] = []
-    current = dict(stats)
+    current = stats
     for node in nodes:
         if not isinstance(node, Mapping):
             raise DslExecutionError("Every DSL node must be an object")
         node_id = str(node["id"])
         operation = str(node["operation"])
-        if node_id in outputs:
+        if node_id in resolved_outputs:
             raise DslExecutionError(f"Duplicate DSL node id: {node_id}")
-        inputs = _resolve(node.get("inputs", {}), outputs, effect)
-        parameters = _resolve(node.get("parameters", {}), outputs, effect)
+        inputs = _resolve(node.get("inputs", {}), resolved_outputs, effect, bindings)
+        parameters = _resolve(node.get("parameters", {}), resolved_outputs, effect, bindings)
         before = dict(current)
         result = registry.execute(operation, inputs, parameters, current, state)
         current = result.stats
-        outputs[node_id] = dict(result.outputs)
+        resolved_outputs[node_id] = dict(result.outputs)
+        scoped_node_id = f"{scope}.{node_id}" if scope else node_id
         journal.append(
             ExplainEntry(
                 source=effect.source,
                 mechanism=operation,
-                condition=f"DSL node {node_id}",
+                condition=f"DSL node {scoped_node_id}",
                 applied=result.applied,
                 before=before,
                 modification={name: current[name] - before[name] for name in before},
@@ -328,4 +386,26 @@ def execute_dsl_pipeline(stats: dict[str, float], effect: Effect, state: GameSta
                 outputs=dict(result.explain_outputs if result.explain_outputs is not None else result.outputs),
             )
         )
+        for continuation in result.continuations:
+            current, nested_journal, _ = _execute_nodes(
+                continuation.nodes,
+                current,
+                effect,
+                state,
+                registry,
+                outputs=resolved_outputs,
+                bindings=continuation.bindings,
+                scope=f"{scoped_node_id}[{continuation.label}]",
+            )
+            journal.extend(nested_journal)
+    return current, journal, resolved_outputs
+
+
+def execute_dsl_pipeline(stats: dict[str, float], effect: Effect, state: GameState) -> MechanismExecution:
+    program = effect.parameters.get("program")
+    nodes = program.get("nodes") if isinstance(program, Mapping) else None
+    if not isinstance(nodes, list):
+        raise DslExecutionError("dsl_pipeline requires a program containing a nodes list")
+
+    current, journal, _ = _execute_nodes(nodes, dict(stats), effect, state, default_dsl_registry())
     return MechanismExecution(current, tuple(journal))

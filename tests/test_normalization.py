@@ -42,6 +42,7 @@ class NormalizationPipelineTests(unittest.TestCase):
         self.assertEqual(len(catalog["groups"]), 125)
         self.assertTrue(all(group["mechanic_id"] is None for group in catalog["groups"].values()))
         qualified_ids = {
+            "label:adjacent_power",
             "label:brand_loyalty",
             "label:brand_loyalty_x",
             "label:control_boost",

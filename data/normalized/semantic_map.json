@@ -11,14 +11,95 @@
       "validation_status": "not_started"
     },
     "label:adjacent_power": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value",
+        "resolved_targets"
+      ],
       "group_id": "label:adjacent_power",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official texts: Clubs next to Rampart have +X Power; The clubs next to Outlaw have +X Power.",
+        "Uses one generic ordered FOR_EACH sub-pipeline over SELECT_ADJACENT output."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "neighbors",
+            "inputs": {
+              "origin": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ADJACENT",
+            "parameters": {
+              "directions": [
+                "left",
+                "right"
+              ],
+              "distance": 1
+            }
+          },
+          {
+            "id": "each_neighbor",
+            "inputs": {
+              "items": {
+                "from": "neighbors.clubs"
+              }
+            },
+            "operation": "FOR_EACH",
+            "parameters": {
+              "binding": "target",
+              "program": {
+                "nodes": [
+                  {
+                    "id": "apply_power",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": "power"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:adventure": {
       "complexity": null,
