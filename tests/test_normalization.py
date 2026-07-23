@@ -55,6 +55,9 @@ class NormalizationPipelineTests(unittest.TestCase):
             "label:brand_loyalty",
             "label:brand_loyalty_x",
             "label:bounce_reduction",
+            "label:chains_into_putters",
+            "label:chains_into_wedges",
+            "label:chains_into_willoughsby",
             "label:control_boost",
             "label:driver_loyalty",
             "label:fade_draw_x2",
@@ -76,7 +79,8 @@ class NormalizationPipelineTests(unittest.TestCase):
         for group_id in qualified_ids:
             qualified = semantic["entries"][group_id]
             self.assertEqual(qualified["mechanic_id"], "dsl_pipeline")
-            self.assertEqual(qualified["complexity"], "parameterized")
+            expected_complexity = "stateful" if group_id.startswith("label:chains_into_") else "parameterized"
+            self.assertEqual(qualified["complexity"], expected_complexity)
         placeholders = [entry for group_id, entry in semantic["entries"].items() if group_id not in qualified_ids]
         self.assertTrue(all(entry["complexity"] is None for entry in placeholders))
         self.assertTrue(all(entry["dependencies"] is None for entry in placeholders))

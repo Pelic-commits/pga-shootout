@@ -71,12 +71,13 @@ class BagComparisonTests(unittest.TestCase):
         self.assertEqual(contribution.modification, {"power": 4.0, "control": 4.0, "spin": 4.0})
         self.assertTrue(contribution.evaluated)
         self.assertTrue(contribution.applied)
-        unresolved = next(
+        delayed = next(
             item for item in comparison.left.ability_contributions if item.ability_id == "divebomb__chains_into_putters"
         )
-        self.assertTrue(unresolved.evaluated)
-        self.assertFalse(unresolved.applied)
-        self.assertTrue(unresolved.unresolved)
+        self.assertTrue(delayed.evaluated)
+        self.assertTrue(delayed.applied)
+        self.assertFalse(delayed.unresolved)
+        self.assertEqual(delayed.scheduled_effect_ids, ("divebomb__chains_into_putters:next-compatible-shot",))
 
     def test_exposes_structured_gained_and_lost_bonus_totals(self):
         comparison = self.compare()

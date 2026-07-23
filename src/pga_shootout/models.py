@@ -23,7 +23,12 @@ class Stats:
 
     @classmethod
     def from_mapping(cls, value: Mapping[str, Any]) -> "Stats":
-        return cls(**{name: float(value.get(name, 0.0)) for name in ("power", "control", "spin")})
+        return cls(
+            **{
+                name: 0.0 if value.get(name) is None else float(value.get(name, 0.0))
+                for name in ("power", "control", "spin")
+            }
+        )
 
 
 @dataclass(frozen=True)
@@ -42,6 +47,18 @@ class Effect:
 
 
 @dataclass(frozen=True)
+class DelayedEffect:
+    """One planned effect waiting for a compatible future evaluation."""
+
+    identifier: str
+    source: str
+    source_club_id: str
+    trigger: Condition
+    effect: Effect
+    consume_on_trigger: bool = True
+
+
+@dataclass(frozen=True)
 class Ability:
     identifier: str
     text: str = ""
@@ -57,12 +74,16 @@ class Club:
     stats_by_level: Mapping[int, Stats]
     abilities: tuple[Ability, ...] = ()
     rarity: str | None = None
+    available_stats_by_level: Mapping[int | str, frozenset[str]] = field(default_factory=dict)
 
-    def stats_at(self, level: int) -> Stats:
+    def stats_at(self, level: int | str) -> Stats:
         try:
             return self.stats_by_level[level]
         except KeyError as exc:
             raise ValueError(f"No stats for club {self.identifier!r} at level {level}") from exc
+
+    def available_stats_at(self, level: int | str) -> frozenset[str]:
+        return self.available_stats_by_level.get(level, frozenset(("power", "control", "spin")))
 
 
 @dataclass(frozen=True)
@@ -92,6 +113,7 @@ class GameState:
     distance: float | None = None
     shot_history: list[Mapping[str, Any]] = field(default_factory=list)
     active_bonuses: list[Effect] = field(default_factory=list)
+    pending_effects: list[DelayedEffect] = field(default_factory=list)
 
     @property
     def current_entry(self) -> BagEntry:
@@ -120,3 +142,6 @@ class EvaluationResult:
     modifiers: Mapping[str, float] = field(default_factory=dict)
     unresolved: tuple[str, ...] = ()
     complete: bool = True
+    scheduled_effects: tuple[DelayedEffect, ...] = ()
+    pending_effects: tuple[DelayedEffect, ...] = ()
+    consumed_effect_ids: tuple[str, ...] = ()

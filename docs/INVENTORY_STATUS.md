@@ -10,10 +10,10 @@
 | Inventory declared complete | no |
 | Known user levels | 0/20 |
 | Official owned-club abilities | 35 |
-| Engine-supported owned-club abilities | 25 |
-| Unresolved owned-club abilities | 10 |
-| Owned-ability coverage | 71.43% |
-| Fully simulated owned clubs | 12/20 |
+| Engine-supported owned-club abilities | 28 |
+| Unresolved owned-club abilities | 7 |
+| Owned-ability coverage | 80.00% |
+| Fully simulated owned clubs | 14/20 |
 
 ## Clubs
 
@@ -21,7 +21,7 @@
 |---|---|---|---|---:|---:|---|---|---|
 | Homestead (`homestead`) | Willoughsby | Putter | Common | unknown | 1/1 | yes | yes | partially |
 | Commonlaw (`commonlaw`) | Willoughsby | Iron | Epic | unknown | 2/2 | yes | yes | partially |
-| Kinship (`kinship`) | Willoughsby | Iron | Rare | unknown | 1/2 | no | partially | partially |
+| Kinship (`kinship`) | Willoughsby | Iron | Rare | unknown | 2/2 | yes | yes | partially |
 | Groundskeep (`groundskeep`) | Willoughsby | Wood | Rare | unknown | 1/2 | no | partially | partially |
 | Sandsend (`sandsend`) | Willoughsby | Wedge | Common | unknown | 1/1 | yes | yes | partially |
 | Steadfast (`steadfast`) | Willoughsby | Wedge | Epic | unknown | 2/2 | yes | yes | partially |
@@ -36,9 +36,9 @@
 | Mirage (`mirage`) | PALO | Hybrid | Common | unknown | 2/2 | yes | yes | partially |
 | Lodestar (`lodestar`) | PALO | Iron | Epic | unknown | 2/2 | yes | yes | partially |
 | Green Demon (`green_demon`) | PALO | Driver | Legendary | unknown | 0/1 | no | partially | partially |
-| Outset (`outset`) | Forester | Driver | Rare | unknown | 0/2 | no | partially | partially |
+| Outset (`outset`) | Forester | Driver | Rare | unknown | 1/2 | no | partially | partially |
 | Into the Breach (`into_the_breach`) | Stanchion | Iron | Epic | unknown | 2/2 | yes | yes | partially |
-| Conqueror (`conqueror`) | Stanchion | Driver | Rare | unknown | 1/2 | no | partially | partially |
+| Conqueror (`conqueror`) | Stanchion | Driver | Rare | unknown | 2/2 | yes | yes | partially |
 
 ### Homestead
 
@@ -57,7 +57,7 @@
 
 | Official ability | Official text | Activates | Status | Metrics | Reason | Needed | Technical family |
 |---|---|---:|---|---|---|---|---|
-| Chains into Willoughsby (`kinship__chains_into_willoughsby`) | Chains into Willoughsby. (On your next shot, Willoughsby clubs have +X to all stats.) | 3 | `history_required` | none | The ability depends on a previous or future shot and the history scheduler is not implemented. | `shot_history`, `trigger_and_consumption_validation` | `chain_next_shot` |
+| Chains into Willoughsby (`kinship__chains_into_willoughsby`) | Chains into Willoughsby. (On your next shot, Willoughsby clubs have +X to all stats.) | 3 | `missing_user_level` | `control`, `power`, `spin` | The engine supports this ability, but the user's current club level is unknown. | `current_level` | `delayed_all_stats_by_club_attribute` |
 | Brand Loyalty +X (`kinship__brand_loyalty_x`) | Has +X power per Willoughsby club next to Kinship. | 5 | `missing_user_level` | `power` | The engine supports this ability, but the user's current club level is unknown. | `current_level` | `dsl_pipeline` |
 
 ### Groundskeep
@@ -158,7 +158,7 @@
 
 | Official ability | Official text | Activates | Status | Metrics | Reason | Needed | Technical family |
 |---|---|---:|---|---|---|---|---|
-| Chains into Wedges (`outset__chains_into_wedges`) | Chains into wedges. (On your next shot, wedges have +X to all stats.) | 3 | `history_required` | none | The ability depends on a previous or future shot and the history scheduler is not implemented. | `shot_history`, `trigger_and_consumption_validation` | `chain_next_shot` |
+| Chains into Wedges (`outset__chains_into_wedges`) | Chains into wedges. (On your next shot, wedges have +X to all stats.) | 3 | `missing_user_level` | `control`, `power`, `spin` | The engine supports this ability, but the user's current club level is unknown. | `current_level` | `delayed_all_stats_by_club_attribute` |
 | Tree Bonus (`outset__tree_bonus`) | Gains up to +X to all stats depending on how many trees are within 25 feet. | 5 | `ambiguous` | none | The distance-to-tree formula behind the official 'up to' value is not specified. | `in_game_validation`, `terrain_proximity` | `terrain_proximity_bonus` |
 
 ### Into the Breach
@@ -172,14 +172,14 @@
 
 | Official ability | Official text | Activates | Status | Metrics | Reason | Needed | Technical family |
 |---|---|---:|---|---|---|---|---|
-| Chains into Putters (`conqueror__chains_into_putters`) | Chains into putters. (On your next shot, putters have +X to all stats.) | 3 | `history_required` | none | The ability depends on a previous or future shot and the history scheduler is not implemented. | `shot_history`, `trigger_and_consumption_validation` | `chain_next_shot` |
+| Chains into Putters (`conqueror__chains_into_putters`) | Chains into putters. (On your next shot, putters have +X to all stats.) | 3 | `missing_user_level` | `control`, `power`, `spin` | The engine supports this ability, but the user's current club level is unknown. | `current_level` | `delayed_all_stats_by_club_attribute` |
 | Brand Loyalty +X (`conqueror__brand_loyalty_x`) | Has +X power per Stanchion club next to Conqueror. | 5 | `missing_user_level` | `power` | The engine supports this ability, but the user's current club level is unknown. | `current_level` | `dsl_pipeline` |
 
 ## Reference bags (regression only)
 
 | Bag | Supported abilities | Coverage |
 |---|---:|---:|
-| `par3_divebomb` | 5/8 | 62.50% |
+| `par3_divebomb` | 6/8 | 75.00% |
 | `par3_high_flight` | 8/9 | 88.89% |
 
 ## Missing user data
@@ -189,17 +189,7 @@
 
 ## Recommended next lots
 
-### 1. Implement next-shot chains
-
-- Abilities: Chains into Willoughsby, Chains into Wedges, Chains into Putters.
-- Owned clubs: Kinship, Outset, Conqueror.
-- Expected ability coverage gain: +3.
-- Clubs becoming fully simulated: Kinship, Conqueror.
-- Difficulty: medium-high.
-- Required: history trigger validation, duration and consumption validation.
-- Priority: Covers the largest remaining owned-club cluster after deterministic static modifiers.
-
-### 2. Implement simple terrain conditions
+### 1. Implement simple terrain conditions
 
 - Abilities: Fairway Affinity, Terrain Bonus.
 - Owned clubs: Groundskeep, Color Theory.
@@ -209,7 +199,7 @@
 - Required: optional terrain context, official condition validation.
 - Priority: Adds the next reusable scenario contract after the static comparator patterns.
 
-### 3. Qualify deterministic trajectory modifiers
+### 2. Qualify deterministic trajectory modifiers
 
 - Abilities: Power Shot, Boundary Rush 75%, Emerald Rush 75%.
 - Owned clubs: Neon Impulse, Skyfury, Green Demon.
@@ -218,3 +208,13 @@
 - Difficulty: high.
 - Required: validated physics contract, in-game measurements.
 - Priority: Covers the remaining owned deterministic trajectory abilities once their physical meaning is validated.
+
+### 3. Qualify tree-proximity bonuses
+
+- Abilities: Tree Bonus.
+- Owned clubs: Outset.
+- Expected ability coverage gain: +1.
+- Clubs becoming fully simulated: Outset.
+- Difficulty: high.
+- Required: in-game distance formula validation, optional tree-proximity context.
+- Priority: Completes the remaining Outset ability once the official up-to formula is measured.

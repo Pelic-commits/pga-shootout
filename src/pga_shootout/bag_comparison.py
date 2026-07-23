@@ -8,7 +8,7 @@ from typing import Mapping
 
 from .bag_evaluation import BagEvaluation, evaluate_saved_bag, load_saved_bag
 from .comparison_diagnostic import ComparisonDiagnostic, build_comparison_diagnostic, render_comparison_diagnostic
-from .models import EvaluationMode
+from .models import DelayedEffect, EvaluationMode
 from .value_api import ComparableMetric, MetricKind, metric_definition
 
 
@@ -33,6 +33,7 @@ class AbilityContribution:
     evaluated: bool
     applied: bool
     unresolved: tuple[str, ...]
+    scheduled_effect_ids: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -43,6 +44,7 @@ class ComparedBag:
     ability_impact: Mapping[str, float]
     modifier_impact: Mapping[str, float]
     ability_contributions: tuple[AbilityContribution, ...]
+    scheduled_effects: tuple[DelayedEffect, ...]
 
 
 @dataclass(frozen=True)
@@ -119,6 +121,11 @@ def ability_contributions(evaluation: BagEvaluation) -> tuple[AbilityContributio
                     }
                 )
                 unresolved = tuple(entry.message for entry in journal if entry.message.startswith("Unresolved"))
+                scheduled = tuple(
+                    item.identifier
+                    for item in evaluation.result.scheduled_effects
+                    if item.source == effect.source
+                )
                 contributions.append(
                     AbilityContribution(
                         source_club_id=bag_entry.club.identifier,
@@ -127,8 +134,12 @@ def ability_contributions(evaluation: BagEvaluation) -> tuple[AbilityContributio
                         mechanism=effect.mechanism,
                         modification=modification,
                         evaluated=bool(journal),
-                        applied=any(entry.applied for entry in leaves),
+                        applied=bool(scheduled) or any(
+                            entry.applied and any(value != 0 for value in entry.modification.values())
+                            for entry in leaves
+                        ),
                         unresolved=unresolved,
+                        scheduled_effect_ids=scheduled,
                     )
                 )
     return tuple(contributions)
@@ -142,6 +153,7 @@ def summarize_bag_evaluation(evaluation: BagEvaluation, current_position: int) -
         _ability_impact(evaluation),
         dict(evaluation.result.modifiers),
         ability_contributions(evaluation),
+        evaluation.result.scheduled_effects,
     )
 
 
@@ -270,6 +282,20 @@ def _unresolved_lines(evaluation: BagEvaluation) -> list[str]:
     return [f"  {item}" for item in evaluation.result.unresolved]
 
 
+def _scheduled_lines(side: ComparedBag) -> list[str]:
+    if not side.scheduled_effects:
+        return ["  none"]
+    lines = []
+    for delayed in side.scheduled_effects:
+        parameters = delayed.trigger.parameters
+        amount = delayed.effect.parameters.get("amount", 0)
+        lines.append(
+            f"  {delayed.source}: +{float(amount):g} all stats when current club "
+            f"{parameters.get('field')}={parameters.get('value')} ({delayed.identifier})"
+        )
+    return lines
+
+
 def render_bag_comparison(comparison: BagComparison) -> str:
     left = comparison.left.evaluation
     right = comparison.right.evaluation
@@ -326,6 +352,10 @@ def render_bag_comparison(comparison: BagComparison) -> str:
     lines.extend(_change_lines(comparison.left))
     lines.append("Applied ability changes - right")
     lines.extend(_change_lines(comparison.right))
+    lines.extend(["", f"Scheduled effects - left ({len(comparison.left.scheduled_effects)}):"])
+    lines.extend(_scheduled_lines(comparison.left))
+    lines.append(f"Scheduled effects - right ({len(comparison.right.scheduled_effects)}):")
+    lines.extend(_scheduled_lines(comparison.right))
     gained = [
         f"{stat} +{value:g}"
         for stat, value in comparison.gained_ability_impact.items()

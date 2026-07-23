@@ -1,0 +1,24 @@
+DELAYED_TRIGGER
+Inputs: {"current_club": "Ember", "effect_id": "divebomb__chains_into_putters:next-compatible-shot", "filter_field": "club_type", "filter_value": "putter"}
+Outputs: {"consumed": false, "matched": true}
+Applied: yes
+Before: {"control": 13.0, "power": 5.0, "spin": 0.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 13.0, "power": 5.0, "spin": 0.0}
+Detail: compatible club matched
+
+add_all_stats
+Applied: yes
+Before: {"control": 13.0, "power": 5.0, "spin": 0.0}
+Change: {"control": 6.0, "power": 6.0, "spin": 0.0}
+After: {"control": 19.0, "power": 11.0, "spin": 0.0}
+Detail: delayed effect resolved
+
+CONSUME_DELAYED_EFFECT
+Inputs: {"effect_id": "divebomb__chains_into_putters:next-compatible-shot"}
+Outputs: {"consumed": true}
+Applied: yes
+Before: {"control": 19.0, "power": 11.0, "spin": 0.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 19.0, "power": 11.0, "spin": 0.0}
+Detail: delayed effect consumed

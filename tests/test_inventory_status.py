@@ -30,13 +30,13 @@ class InventoryStatusTests(unittest.TestCase):
         self.assertEqual(report.inventory_clubs, 20)
         self.assertFalse(report.inventory_complete)
         self.assertEqual(report.official_abilities, 35)
-        self.assertEqual(report.simulated_abilities, 25)
-        self.assertEqual(report.unresolved_abilities, 10)
-        self.assertEqual(report.fully_simulated_clubs, 12)
+        self.assertEqual(report.simulated_abilities, 28)
+        self.assertEqual(report.unresolved_abilities, 7)
+        self.assertEqual(report.fully_simulated_clubs, 14)
         self.assertEqual(report.known_user_levels, 0)
         self.assertEqual((report.global_clubs, report.global_abilities), (88, 162))
-        self.assertEqual((report.global_simulated_groups, report.global_simulated_abilities), (30, 51))
-        self.assertEqual(report.global_simulated_clubs, 35)
+        self.assertEqual((report.global_simulated_groups, report.global_simulated_abilities), (33, 55))
+        self.assertEqual(report.global_simulated_clubs, 37)
 
     def test_every_owned_ability_occurs_exactly_once(self):
         report = self.report()
@@ -56,7 +56,7 @@ class InventoryStatusTests(unittest.TestCase):
         self.assertEqual(abilities["homestead__brand_loyalty_x"].status, "missing_user_level")
         self.assertTrue(abilities["homestead__brand_loyalty_x"].engine_supported)
         self.assertEqual(abilities["high_flight__wind_resist_75"].status, "missing_user_level")
-        self.assertEqual(abilities["kinship__chains_into_willoughsby"].status, "history_required")
+        self.assertEqual(abilities["kinship__chains_into_willoughsby"].status, "missing_user_level")
         self.assertEqual(abilities["neon_impulse__power_shot"].status, "physics_required")
         self.assertEqual(abilities["cyclotron__bounce_reduction_boost"].status, "missing_user_level")
         self.assertLessEqual({ability.status for ability in abilities.values()}, ABILITY_STATUSES)
@@ -89,6 +89,10 @@ class InventoryStatusTests(unittest.TestCase):
             abilities["rook__bag_wind_resist"].metrics,
             ("wind_resistance_percent",),
         )
+        self.assertEqual(
+            abilities["kinship__chains_into_willoughsby"].metrics,
+            ("control", "power", "spin"),
+        )
 
     def test_current_incomplete_inventory_is_supported_without_treating_absence_as_locked(self):
         report = self.report()
@@ -102,7 +106,7 @@ class InventoryStatusTests(unittest.TestCase):
             item.bag_id: (item.simulated_abilities, item.official_abilities)
             for item in report.reference_bags
         }
-        self.assertEqual(coverage["par3_divebomb"], (5, 8))
+        self.assertEqual(coverage["par3_divebomb"], (6, 8))
         self.assertEqual(coverage["par3_high_flight"], (8, 9))
 
     def test_recommendations_are_inventory_driven_and_exclude_meteor(self):
@@ -110,10 +114,10 @@ class InventoryStatusTests(unittest.TestCase):
         self.assertEqual(len(report.next_lots), 3)
         self.assertEqual(
             tuple(item.identifier for item in report.next_lots),
-            ("chains", "terrain_conditions", "trajectory_physics"),
+            ("terrain_conditions", "trajectory_physics", "tree_proximity"),
         )
         self.assertNotIn("meteor", {club_id for lot in report.next_lots for club_id in lot.club_ids})
-        self.assertEqual(tuple(item.expected_ability_gain for item in report.next_lots), (3, 2, 3))
+        self.assertEqual(tuple(item.expected_ability_gain for item in report.next_lots), (2, 3, 1))
 
     def test_human_json_and_markdown_outputs_are_stable(self):
         first = self.report()

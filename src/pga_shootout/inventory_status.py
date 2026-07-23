@@ -154,6 +154,9 @@ def _program_metrics(program: Mapping[str, Any] | None, semantic: Mapping[str, A
                 modifier = parameters.get("modifier")
                 if isinstance(modifier, str):
                     metrics.add(modifier)
+            if operation == "SCHEDULE_EFFECT" and isinstance(parameters, Mapping):
+                if parameters.get("effect_mechanism") == "add_all_stats":
+                    metrics.update(("power", "control", "spin"))
             for item in value.values():
                 visit(item)
         elif isinstance(value, list):
@@ -317,6 +320,14 @@ def _roadmap_lots(clubs: tuple[InventoryClubStatus, ...]) -> tuple[DevelopmentLo
             "high",
             ("validated physics contract", "in-game measurements"),
             "Covers the remaining owned deterministic trajectory abilities once their physical meaning is validated.",
+        ),
+        (
+            "tree_proximity",
+            "Qualify tree-proximity bonuses",
+            {"terrain_proximity_bonus"},
+            "high",
+            ("in-game distance formula validation", "optional tree-proximity context"),
+            "Completes the remaining Outset ability once the official up-to formula is measured.",
         ),
     )
     result: list[DevelopmentLot] = []

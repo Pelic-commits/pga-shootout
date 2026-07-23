@@ -6,13 +6,14 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from .models import Effect, ExplainEntry, GameState
+from .models import DelayedEffect, Effect, ExplainEntry, GameState
 
 
 @dataclass(frozen=True)
 class MechanismExecution:
     stats: dict[str, float]
     explain: tuple[ExplainEntry, ...] = ()
+    scheduled_effects: tuple[DelayedEffect, ...] = ()
 
 
 Mechanism = Callable[[dict[str, float], Effect, GameState], dict[str, float] | MechanismExecution]
@@ -48,17 +49,19 @@ class MechanismRegistry:
         return tuple(self._mechanisms)
 
 
-def _add_stat(stats: dict[str, float], effect: Effect, _state: GameState) -> dict[str, float]:
+def _add_stat(stats: dict[str, float], effect: Effect, state: GameState) -> dict[str, float]:
     stat = str(effect.parameters["stat"])
     if stat not in stats:
         raise ValueError(f"Unknown stat: {stat}")
-    stats[stat] += float(effect.parameters["amount"])
+    if stat in state.current_entry.club.available_stats_at(state.current_entry.level):
+        stats[stat] += float(effect.parameters["amount"])
     return stats
 
 
-def _add_all_stats(stats: dict[str, float], effect: Effect, _state: GameState) -> dict[str, float]:
+def _add_all_stats(stats: dict[str, float], effect: Effect, state: GameState) -> dict[str, float]:
     amount = float(effect.parameters["amount"])
-    return {name: value + amount for name, value in stats.items()}
+    available = state.current_entry.club.available_stats_at(state.current_entry.level)
+    return {name: value + amount if name in available else value for name, value in stats.items()}
 
 
 def default_mechanism_registry() -> MechanismRegistry:

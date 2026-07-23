@@ -46,11 +46,15 @@ Applied ability changes - right
   Sunstorm / sunstorm__plasma_arc_x / ADD_STAT: control +4
   Sunstorm / sunstorm__plasma_arc_x / ADD_STAT: spin +4
 
+Scheduled effects - left (1):
+  Divebomb / divebomb__chains_into_putters: +6 all stats when current club club_type=putter (divebomb__chains_into_putters:next-compatible-shot)
+Scheduled effects - right (0):
+  none
+
 Bonuses gained by right vs left: spin +6
 Bonuses lost by right vs left: power -1, control -4
 
-Unresolved bonuses - left (3):
-  Unresolved UnknownMechanismError: unsupported:chains_into_putters
+Unresolved bonuses - left (2):
   Unresolved UnknownMechanismError: unsupported:corvid_wind_resist
   Unresolved UnknownMechanismError: unsupported:power_shot
 Unresolved bonuses - right (1):
@@ -61,10 +65,10 @@ No aggregate score: user preference weights and real club levels are not yet val
 Confidence diagnostic (objective facts; no score)
 Metrics compared: power, control, spin, bounce_reduction_percent, loft_angle_degrees, wind_resistance_percent
 Left bag (par3_divebomb):
-  Simulated abilities: 5/8
-  Non-simulated abilities: 3
-  Classified gaps: ambiguous=0, scenario_required=2, unsupported=1, partial=0
-  Contributions: resolved=5, effective=3, ignored=2, unresolved=3
+  Simulated abilities: 6/8
+  Non-simulated abilities: 2
+  Classified gaps: ambiguous=0, scenario_required=1, unsupported=1, partial=0
+  Contributions: resolved=6, effective=3, ignored=3, unresolved=2
   Unknown user levels: divebomb, jumpstart, steadfast, ember, sunstorm
 Right bag (par3_high_flight):
   Simulated abilities: 8/9

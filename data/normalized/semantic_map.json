@@ -986,34 +986,76 @@
       "validation_status": "not_started"
     },
     "label:chains_into_putters": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "stateful",
+      "dependencies": [
+        "source_club",
+        "ability_level_value",
+        "pending_effects",
+        "current_club_type"
+      ],
       "group_id": "label:chains_into_putters",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: Chains into putters. (On your next shot, putters have +X to all stats.)",
+        "The source schedules one +X all-stats effect filtered by club type putter.",
+        "The minimal delayed layer consumes the effect after one compatible trigger and retains it across incompatible evaluations; no broader shot history or expiry model is inferred."
+      ],
+      "pattern_id": "delayed_all_stats_by_club_attribute",
+      "pattern_parameters": {
+        "filter_field": "club_type",
+        "filter_value": "putter"
+      },
+      "priority": 10,
+      "validation_status": "implemented_with_minimal_delayed_policy"
     },
     "label:chains_into_wedges": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "stateful",
+      "dependencies": [
+        "source_club",
+        "ability_level_value",
+        "pending_effects",
+        "current_club_type"
+      ],
       "group_id": "label:chains_into_wedges",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: Chains into wedges. (On your next shot, wedges have +X to all stats.)",
+        "The source schedules one +X all-stats effect filtered by club type wedge.",
+        "The minimal delayed layer consumes the effect after one compatible trigger and retains it across incompatible evaluations; no broader shot history or expiry model is inferred."
+      ],
+      "pattern_id": "delayed_all_stats_by_club_attribute",
+      "pattern_parameters": {
+        "filter_field": "club_type",
+        "filter_value": "wedge"
+      },
+      "priority": 10,
+      "validation_status": "implemented_with_minimal_delayed_policy"
     },
     "label:chains_into_willoughsby": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "stateful",
+      "dependencies": [
+        "source_club",
+        "ability_level_value",
+        "pending_effects",
+        "current_club_brand"
+      ],
       "group_id": "label:chains_into_willoughsby",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: Chains into Willoughsby. (On your next shot, Willoughsby clubs have +X to all stats.)",
+        "The source schedules one +X all-stats effect filtered by brand Willoughsby.",
+        "The minimal delayed layer consumes the effect after one compatible trigger and retains it across incompatible evaluations; no broader shot history or expiry model is inferred."
+      ],
+      "pattern_id": "delayed_all_stats_by_club_attribute",
+      "pattern_parameters": {
+        "filter_field": "brand",
+        "filter_value": "willoughsby"
+      },
+      "priority": 10,
+      "validation_status": "implemented_with_minimal_delayed_policy"
     },
     "label:chains_into_woods_hybrids": {
       "complexity": null,
@@ -2683,6 +2725,66 @@
   },
   "layer": "semantic_interpretation_placeholders",
   "patterns": {
+    "delayed_all_stats_by_club_attribute": {
+      "description": "Schedule one level-scaled all-stats effect for the next compatible club selected by an official club attribute.",
+      "parameters": [
+        "filter_field",
+        "filter_value"
+      ],
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "schedule",
+            "inputs": {
+              "ability_id": {
+                "from": "effect.ability_id"
+              },
+              "ability_source": {
+                "from": "effect.ability_source"
+              },
+              "amount": {
+                "from": "level_value.value"
+              },
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SCHEDULE_EFFECT",
+            "parameters": {
+              "effect_mechanism": "add_all_stats",
+              "filter_field": {
+                "pattern_parameter": "filter_field"
+              },
+              "filter_value": {
+                "pattern_parameter": "filter_value"
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      }
+    },
     "absent_types_stat_bonus": {
       "description": "Apply a level-scaled stat bonus to configured targets only when the ordered bag contains none of the configured club types.",
       "parameters": [

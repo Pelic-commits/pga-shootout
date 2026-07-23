@@ -65,6 +65,7 @@ class BrandLoyaltyPipelineTests(unittest.TestCase):
                 "UNLESS",
                 "ADD_STAT",
                 "ADD_MODIFIER",
+                "SCHEDULE_EFFECT",
             ),
         )
 

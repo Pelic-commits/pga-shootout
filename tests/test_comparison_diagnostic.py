@@ -40,7 +40,7 @@ class ComparisonDiagnosticTests(unittest.TestCase):
                 diagnostic.right.simulated_abilities,
                 diagnostic.right.non_simulated_abilities,
             ),
-            (5, 3, 8, 1),
+            (6, 2, 8, 1),
         )
         self.assertEqual(diagnostic.left.unknown_user_level_club_ids, ("divebomb", "jumpstart", "steadfast", "ember", "sunstorm"))
         self.assertEqual(diagnostic.right.ambiguous_abilities, 0)
@@ -50,7 +50,7 @@ class ComparisonDiagnosticTests(unittest.TestCase):
     def test_rendered_diagnostic_has_no_score_or_weight(self):
         rendered = render_bag_comparison(self.comparison())
         self.assertIn("Confidence diagnostic (objective facts; no score)", rendered)
-        self.assertIn("Simulated abilities: 5/8", rendered)
+        self.assertIn("Simulated abilities: 6/8", rendered)
         self.assertIn("Simulated abilities: 8/9", rendered)
         self.assertNotIn("Confidence score", rendered)
         self.assertNotIn("confidence weight", rendered.casefold())

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Ajout d'une couche minimale d'effets différés, de la primitive DSL `SCHEDULE_EFFECT` et du pattern générique Chains filtré par marque ou type de club.
 - Ajout générique de Wind Resistance comme métrique objective, avec portées club et sac pilotées par le DSL existant.
 - Implémentation déclarative de Bounce Reduction Boost et Fade/Draw x2 comme modificateurs objectifs compatibles avec Explain, compare-bags et inventory-status.
 - Ajout de l'audit opérationnel `inventory-status`, de sa sortie JSON et des rapports générés sur la couverture réelle de l'inventaire et l'état du produit.

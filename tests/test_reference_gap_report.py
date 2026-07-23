@@ -33,7 +33,7 @@ class ReferenceGapReportTests(unittest.TestCase):
 
     def test_coverage_is_computed_from_saved_bags(self):
         coverage = {item.bag_id: item for item in self.report().bag_coverage}
-        self.assertEqual((coverage["par3_divebomb"].implemented_occurrences, coverage["par3_divebomb"].ability_occurrences), (5, 8))
+        self.assertEqual((coverage["par3_divebomb"].implemented_occurrences, coverage["par3_divebomb"].ability_occurrences), (6, 8))
         self.assertEqual((coverage["par3_high_flight"].implemented_occurrences, coverage["par3_high_flight"].ability_occurrences), (8, 9))
         self.assertEqual(coverage["par3_high_flight"].coverage_percent, 88.89)
 

@@ -8,9 +8,9 @@
 |---|---:|
 | Known inventory clubs | 20 |
 | Official ability occurrences | 35 |
-| Implemented occurrences | 25 |
-| Inventory occurrence coverage | 71.43% |
-| Fully implemented clubs | 12 |
+| Implemented occurrences | 28 |
+| Inventory occurrence coverage | 80.00% |
+| Fully implemented clubs | 14 |
 
 ## Homestead (`homestead`)
 
@@ -35,7 +35,7 @@ Saved bags: none.
 
 | Official ability | Official text | Pattern | Status | compare-bags impact |
 |---|---|---|---|---|
-| Chains into Willoughsby (`kinship__chains_into_willoughsby`) | Chains into Willoughsby. (On your next shot, Willoughsby clubs have +X to all stats.) | `unqualified:chains_into_willoughsby` | `scenario_required` | scenario metric; no effect in the static comparator |
+| Chains into Willoughsby (`kinship__chains_into_willoughsby`) | Chains into Willoughsby. (On your next shot, Willoughsby clubs have +X to all stats.) | `delayed_all_stats_by_club_attribute` | `implemented` | included in objective ability contributions |
 | Brand Loyalty +X (`kinship__brand_loyalty_x`) | Has +X power per Willoughsby club next to Kinship. | `mechanic:dsl_pipeline` | `implemented` | changes a core compared statistic |
 
 ## Groundskeep (`groundskeep`)
@@ -166,7 +166,7 @@ Saved bags: none.
 
 | Official ability | Official text | Pattern | Status | compare-bags impact |
 |---|---|---|---|---|
-| Chains into Wedges (`outset__chains_into_wedges`) | Chains into wedges. (On your next shot, wedges have +X to all stats.) | `unqualified:chains_into_wedges` | `scenario_required` | scenario metric; no effect in the static comparator |
+| Chains into Wedges (`outset__chains_into_wedges`) | Chains into wedges. (On your next shot, wedges have +X to all stats.) | `delayed_all_stats_by_club_attribute` | `implemented` | included in objective ability contributions |
 | Tree Bonus (`outset__tree_bonus`) | Gains up to +X to all stats depending on how many trees are within 25 feet. | `unqualified:tree_bonus` | `ambiguous` | impact cannot be quantified before semantic qualification |
 
 ## Into the Breach (`into_the_breach`)
@@ -184,5 +184,5 @@ Saved bags: none.
 
 | Official ability | Official text | Pattern | Status | compare-bags impact |
 |---|---|---|---|---|
-| Chains into Putters (`conqueror__chains_into_putters`) | Chains into putters. (On your next shot, putters have +X to all stats.) | `unqualified:chains_into_putters` | `scenario_required` | scenario metric; no effect in the static comparator |
+| Chains into Putters (`conqueror__chains_into_putters`) | Chains into putters. (On your next shot, putters have +X to all stats.) | `delayed_all_stats_by_club_attribute` | `implemented` | included in objective ability contributions |
 | Brand Loyalty +X (`conqueror__brand_loyalty_x`) | Has +X power per Stanchion club next to Conqueror. | `mechanic:dsl_pipeline` | `implemented` | changes a core compared statistic |

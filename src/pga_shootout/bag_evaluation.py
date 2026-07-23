@@ -8,7 +8,7 @@ from typing import Any, Mapping
 
 from .engine import EvaluationError, RuleEngine
 from .loader import load_raw_json
-from .models import Ability, Bag, BagEntry, Club, Condition, Effect, EvaluationMode, EvaluationResult, GameState, Stats
+from .models import Ability, Bag, BagEntry, Club, Condition, DelayedEffect, Effect, EvaluationMode, EvaluationResult, GameState, Stats
 from .user_data import SavedBag, load_user_data
 
 
@@ -39,10 +39,23 @@ def _stats_by_level(club_data: Mapping[str, Any]) -> dict[int | str, Stats]:
     stats: dict[int | str, Stats] = {}
     for level_name, level_data in club_data["levels"].items():
         values = level_data.get("stats", {})
-        if level_data.get("available") and all(values.get(name) is not None for name in ("power", "control", "spin")):
+        if level_data.get("available") and any(values.get(name) is not None for name in ("power", "control", "spin")):
             level: int | str = int(level_name) if str(level_name).isdigit() else str(level_name)
             stats[level] = Stats.from_mapping(values)
     return stats
+
+
+def _available_stats_by_level(club_data: Mapping[str, Any]) -> dict[int | str, frozenset[str]]:
+    available: dict[int | str, frozenset[str]] = {}
+    for level_name, level_data in club_data["levels"].items():
+        if not level_data.get("available"):
+            continue
+        level: int | str = int(level_name) if str(level_name).isdigit() else str(level_name)
+        values = level_data.get("stats", {})
+        available[level] = frozenset(
+            name for name in ("power", "control", "spin") if values.get(name) is not None
+        )
+    return available
 
 
 def _official_level_scalar(value: Mapping[str, Any]) -> float | None:
@@ -137,6 +150,8 @@ def _abilities_at_level(
                 parameters = {
                     "program": program,
                     "source_club_id": str(club_data["id"]),
+                    "ability_id": occurrence_id,
+                    "ability_source": f"{club_data['name']} / {occurrence_id}",
                     "ability_level": level,
                     "level_components": level_components,
                 }
@@ -159,6 +174,7 @@ def build_game_state(
     catalog_path: str | Path,
     level: int | str | Mapping[str, int | str],
     current_club_id: str | None = None,
+    pending_effects: tuple[DelayedEffect, ...] | list[DelayedEffect] = (),
 ) -> GameState:
     catalog = load_raw_json(catalog_path)
     clubs_data = catalog.get("clubs") if isinstance(catalog, dict) else None
@@ -192,9 +208,14 @@ def build_game_state(
             stats_by_level=stats,
             abilities=_abilities_at_level(data, club_level, semantic_entries, semantic_patterns),
             rarity=str(data["rarity"]["id"]),
+            available_stats_by_level=_available_stats_by_level(data),
         )
         entries.append(BagEntry(club=club, level=club_level))
-    return GameState(bag=Bag(tuple(entries)), current_club_id=current_id)
+    return GameState(
+        bag=Bag(tuple(entries)),
+        current_club_id=current_id,
+        pending_effects=list(pending_effects),
+    )
 
 
 def evaluate_bag(
@@ -205,9 +226,10 @@ def evaluate_bag(
     catalog_path: str | Path = "data/normalized/clubs_official.json",
     current_club_id: str | None = None,
     engine: RuleEngine | None = None,
+    pending_effects: tuple[DelayedEffect, ...] | list[DelayedEffect] = (),
 ) -> BagEvaluation:
     """Evaluate any ordered bag description, including generated candidates."""
-    state = build_game_state(saved_bag, catalog_path, level, current_club_id)
+    state = build_game_state(saved_bag, catalog_path, level, current_club_id, pending_effects)
     rule_engine = engine or RuleEngine()
     effects = [effect for entry in state.bag.entries for ability in entry.club.abilities for effect in ability.effects]
     strict_failed = False
@@ -230,6 +252,7 @@ def evaluate_saved_bag(
     catalog_path: str | Path = "data/normalized/clubs_official.json",
     current_club_id: str | None = None,
     engine: RuleEngine | None = None,
+    pending_effects: tuple[DelayedEffect, ...] | list[DelayedEffect] = (),
 ) -> BagEvaluation:
     saved_bag = load_saved_bag(user_dir, bag_id)
     return evaluate_bag(
@@ -239,6 +262,7 @@ def evaluate_saved_bag(
         catalog_path=catalog_path,
         current_club_id=current_club_id,
         engine=engine,
+        pending_effects=pending_effects,
     )
 
 
@@ -285,6 +309,9 @@ def render_bag_evaluation(evaluation: BagEvaluation) -> str:
         [
             f"Supported mechanics: {len(evaluation.supported_mechanics)} ({', '.join(evaluation.supported_mechanics)})",
             f"Applied effects: {applied}",
+            f"Scheduled effects: {len(result.scheduled_effects)}",
+            f"Pending delayed effects: {len(result.pending_effects)}",
+            f"Consumed delayed effects: {len(result.consumed_effect_ids)}",
             f"Unsupported effects: {len(result.unresolved)}",
             f"Strict mode: {'FAILED' if evaluation.strict_failed else 'NOT REQUESTED' if evaluation.mode is EvaluationMode.PARTIAL else 'SUCCESS'}",
             f"Partial mode: {'SUCCESS' if evaluation.mode is EvaluationMode.PARTIAL else 'NOT REQUESTED'}",

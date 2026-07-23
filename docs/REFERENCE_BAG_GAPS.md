@@ -6,14 +6,14 @@
 
 | Bag | Implemented | Total | Coverage |
 |---|---:|---:|---:|
-| `par3_divebomb` | 5 | 8 | 62.50% |
+| `par3_divebomb` | 6 | 8 | 75.00% |
 | `par3_high_flight` | 8 | 9 | 88.89% |
 
 ## Ability matrix
 
 | Club | User level | Official ability and text | Normalized pattern | Status | Required data | Confidence | compare-bags impact | Bags |
 |---|---:|---|---|---|---|---|---|---|
-| Divebomb (`divebomb`) | null | **Chains into Putters** — Chains into putters. (On your next shot, putters have +X to all stats.) (`divebomb__chains_into_putters`) | `unqualified:chains_into_putters` | `scenario_required` | `ability_level_value`, `shot_history`, `previous_club` | medium | may change Power, Control or Spin totals and their ability contributions | `par3_divebomb` |
+| Divebomb (`divebomb`) | null | **Chains into Putters** — Chains into putters. (On your next shot, putters have +X to all stats.) (`divebomb__chains_into_putters`) | `delayed_all_stats_by_club_attribute` | `implemented` | `source_club`, `ability_level_value`, `pending_effects`, `current_club_type` | high | may change Power, Control or Spin totals and their ability contributions | `par3_divebomb` |
 | Divebomb (`divebomb`) | null | **Corvid Wind Resist** — Your Corvid clubs are X% less affected by wind. (`divebomb__corvid_wind_resist`) | `unqualified:corvid_wind_resist` | `scenario_required` | `ability_level_value`, `wind_speed`, `ordered_bag` | medium | requires a wind scenario; unresolved in static comparison | `par3_divebomb` |
 | Jumpstart (`jumpstart`) | null | **Power Boost** — The club to the left of Jumpstart has +X power. (`jumpstart__power_boost`) | `mechanic:dsl_pipeline` | `implemented` | `ordered_bag`, `source_club`, `ability_level_value` | high | may change Power, Control or Spin totals and their ability contributions | `par3_divebomb` |
 | Steadfast (`steadfast`) | null | **Bag: Rarity Boost** — Common and Rare clubs have +X to all stats. (`steadfast__bag_rarity_boost`) | `filtered_bag_multi_stat_bonus` | `implemented` | `ordered_bag`, `club_rarity`, `source_club`, `ability_level_value`, `resolved_targets` | high | may change Power, Control or Spin totals and their ability contributions | `par3_divebomb` |

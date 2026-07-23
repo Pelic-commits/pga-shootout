@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from .models import Effect, ExplainEntry, GameState
+from .models import Condition, DelayedEffect, Effect, ExplainEntry, GameState
 from .registry import MechanismExecution, MechanismExecutionError
 
 
@@ -23,6 +23,7 @@ class PrimitiveResult:
     explain_inputs: Mapping[str, Any] | None = None
     explain_outputs: Mapping[str, Any] | None = None
     continuations: tuple["PrimitiveContinuation", ...] = ()
+    scheduled_effects: tuple[DelayedEffect, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -445,6 +446,15 @@ def _add_stat(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stats: d
             explain_inputs={"target": _club_name(state, target), "stat": stat, "delta": float(inputs["delta"])},
             explain_outputs={"value": stats[stat]},
         )
+    if stat not in state.current_entry.club.available_stats_at(state.current_entry.level):
+        return PrimitiveResult(
+            {},
+            stats,
+            f"{stat.upper()} is not defined for {_club_name(state, target)}; stat unchanged",
+            applied=False,
+            explain_inputs={"target": _club_name(state, target), "stat": stat, "delta": float(inputs["delta"])},
+            explain_outputs={"value": stats[stat]},
+        )
     delta = float(inputs["delta"])
     before = stats[stat]
     stats[stat] += delta
@@ -491,6 +501,72 @@ def _add_modifier(inputs: Mapping[str, Any], parameters: Mapping[str, Any], stat
     )
 
 
+def _schedule_effect(
+    inputs: Mapping[str, Any],
+    parameters: Mapping[str, Any],
+    stats: dict[str, float],
+    state: GameState,
+) -> PrimitiveResult:
+    source = _club_id(inputs["source"])
+    source_name = _club_name(state, source)
+    current_name = state.current_entry.club.name
+    amount = float(inputs["amount"])
+    filter_field = str(parameters["filter_field"])
+    filter_value = str(parameters["filter_value"])
+    if filter_field not in {"brand", "club_type"}:
+        raise DslExecutionError(f"SCHEDULE_EFFECT cannot filter on club field {filter_field!r}")
+    if source != state.current_club_id:
+        return PrimitiveResult(
+            {"scheduled": False},
+            stats,
+            f"source {source_name} is not the current club; no delayed effect scheduled",
+            applied=False,
+            explain_inputs={
+                "source": source_name,
+                "current_club": current_name,
+                "filter_field": filter_field,
+                "filter_value": filter_value,
+                "amount": amount,
+            },
+            explain_outputs={"scheduled": False},
+        )
+
+    ability_id = str(inputs["ability_id"])
+    ability_source = str(inputs["ability_source"])
+    identifier = f"{ability_id}:next-compatible-shot"
+    trigger = Condition(
+        "current_club_attribute_equals",
+        {"field": filter_field, "value": filter_value},
+        description=f"current club {filter_field} equals {filter_value}",
+    )
+    delayed = DelayedEffect(
+        identifier=identifier,
+        source=ability_source,
+        source_club_id=source,
+        trigger=trigger,
+        effect=Effect(
+            mechanism=str(parameters.get("effect_mechanism", "add_all_stats")),
+            parameters={"amount": amount},
+            condition=Condition("always", description="delayed trigger matched"),
+            source=ability_source,
+        ),
+    )
+    return PrimitiveResult(
+        {"scheduled": True, "effect_id": identifier},
+        stats,
+        f"scheduled +{amount:g} to all stats for the next compatible club",
+        explain_inputs={
+            "source": source_name,
+            "current_club": current_name,
+            "filter_field": filter_field,
+            "filter_value": filter_value,
+            "amount": amount,
+        },
+        explain_outputs={"scheduled": True, "effect_id": identifier},
+        scheduled_effects=(delayed,),
+    )
+
+
 def default_dsl_registry() -> DslPrimitiveRegistry:
     registry = DslPrimitiveRegistry()
     registry.register("SELECT_SELF", _select_self)
@@ -508,6 +584,7 @@ def default_dsl_registry() -> DslPrimitiveRegistry:
     registry.register("UNLESS", _unless)
     registry.register("ADD_STAT", _add_stat)
     registry.register("ADD_MODIFIER", _add_modifier)
+    registry.register("SCHEDULE_EFFECT", _schedule_effect)
     return registry
 
 
@@ -560,10 +637,11 @@ def _execute_nodes(
     outputs: Mapping[str, Mapping[str, Any]] | None = None,
     bindings: Mapping[str, Any] | None = None,
     scope: str = "",
-) -> tuple[dict[str, float], list[ExplainEntry], dict[str, Mapping[str, Any]]]:
+) -> tuple[dict[str, float], list[ExplainEntry], dict[str, Mapping[str, Any]], list[DelayedEffect]]:
     resolved_outputs = dict(outputs or {})
     journal: list[ExplainEntry] = []
     current = stats
+    scheduled_effects: list[DelayedEffect] = []
     for node in nodes:
         if not isinstance(node, Mapping):
             raise DslExecutionError("Every DSL node must be an object")
@@ -576,6 +654,7 @@ def _execute_nodes(
         before = dict(current)
         result = registry.execute(operation, inputs, parameters, current, state)
         current = result.stats
+        scheduled_effects.extend(result.scheduled_effects)
         resolved_outputs[node_id] = dict(result.outputs)
         scoped_node_id = f"{scope}.{node_id}" if scope else node_id
         journal.append(
@@ -598,7 +677,7 @@ def _execute_nodes(
         for continuation in result.continuations:
             nested_bindings = dict(bindings or {})
             nested_bindings.update(continuation.bindings)
-            current, nested_journal, _ = _execute_nodes(
+            current, nested_journal, _, nested_scheduled = _execute_nodes(
                 continuation.nodes,
                 current,
                 effect,
@@ -609,7 +688,8 @@ def _execute_nodes(
                 scope=f"{scoped_node_id}[{continuation.label}]",
             )
             journal.extend(nested_journal)
-    return current, journal, resolved_outputs
+            scheduled_effects.extend(nested_scheduled)
+    return current, journal, resolved_outputs, scheduled_effects
 
 
 def execute_dsl_pipeline(stats: dict[str, float], effect: Effect, state: GameState) -> MechanismExecution:
@@ -618,5 +698,5 @@ def execute_dsl_pipeline(stats: dict[str, float], effect: Effect, state: GameSta
     if not isinstance(nodes, list):
         raise DslExecutionError("dsl_pipeline requires a program containing a nodes list")
 
-    current, journal, _ = _execute_nodes(nodes, dict(stats), effect, state, default_dsl_registry())
-    return MechanismExecution(current, tuple(journal))
+    current, journal, _, scheduled = _execute_nodes(nodes, dict(stats), effect, state, default_dsl_registry())
+    return MechanismExecution(current, tuple(journal), tuple(scheduled))

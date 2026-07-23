@@ -45,7 +45,9 @@ class BagEvaluationEndToEndTests(unittest.TestCase):
         self.assertTrue(evaluation.strict_failed)
         self.assertFalse(evaluation.result.complete)
         self.assertEqual(len(evaluation.result.unresolved), 1)
-        self.assertEqual(len(evaluation.result.explain), 1)
+        self.assertEqual(len(evaluation.result.explain), 5)
+        self.assertEqual(len(evaluation.result.scheduled_effects), 1)
+        self.assertEqual(evaluation.result.explain[2].mechanism, "SCHEDULE_EFFECT")
         self.assertIn("Strict mode: FAILED", render_bag_evaluation(evaluation))
 
     def test_existing_two_mechanics_flow_through_registry_without_club_logic(self):
