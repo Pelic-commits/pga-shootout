@@ -68,6 +68,9 @@ METRIC_DEFINITIONS: Mapping[str, MetricDefinition] = {
     "fade_draw_multiplier": MetricDefinition(
         "fade_draw_multiplier", "Fade/draw", MetricKind.STATIC_MODIFIER, "multiplier"
     ),
+    "wind_resistance_percent": MetricDefinition(
+        "wind_resistance_percent", "Wind resistance", MetricKind.STATIC_MODIFIER, "percent"
+    ),
 }
 
 

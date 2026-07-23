@@ -1,0 +1,51 @@
+SELECT_SELF
+Inputs: {"source_club_id": "high_flight"}
+Outputs: {"club": "High Flight"}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: selected source club High Flight
+
+READ_LEVEL_VALUE
+Inputs: {"level": 12}
+Outputs: {"value": 75.0}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: read value +75 at level 12
+
+SELECT_SELF
+Inputs: {"source_club_id": "high_flight"}
+Outputs: {"club": "High Flight"}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: selected source club High Flight
+
+FOR_EACH
+Inputs: {"binding": "target", "items": ["High Flight"]}
+Outputs: {"iterations": 1}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: executing sub-pipeline for 1 item(s)
+
+ADD_MODIFIER
+Inputs: {"delta": 75.0, "modifier": "wind_resistance_percent", "target": "High Flight"}
+Outputs: {"after": 75.0, "before": 0.0}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0, "wind_resistance_percent": 75.0}
+After: {"control": 10.0, "power": 14.0, "spin": 8.0, "wind_resistance_percent": 75.0}
+Detail: WIND_RESISTANCE_PERCENT += 75
+
+dsl_pipeline
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0, "wind_resistance_percent": 75.0}
+After: {"control": 10.0, "power": 14.0, "spin": 8.0, "wind_resistance_percent": 75.0}
+Detail: applied

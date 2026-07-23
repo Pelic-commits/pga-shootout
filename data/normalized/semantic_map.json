@@ -562,14 +562,37 @@
       "validation_status": "not_started"
     },
     "label:bag_wind_resist": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value",
+        "resolved_targets",
+        "static_modifiers"
+      ],
       "group_id": "label:bag_wind_resist",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official texts: Shots are X% less affected by wind. / Your clubs are X% less affected by wind.",
+        "The official per-level value is exposed as wind_resistance_percent on every club in the bag.",
+        "This representation does not simulate wind physics or infer how multiple wind-resistance sources stack."
+      ],
+      "pattern_id": "static_modifier_targets",
+      "pattern_parameters": {
+        "modifier": "wind_resistance_percent",
+        "selection_inputs": {
+          "source": {
+            "from": "source.club"
+          }
+        },
+        "selection_operation": "SELECT_ALL",
+        "selection_parameters": {
+          "include_source": true
+        }
+      },
+      "priority": 9,
+      "validation_status": "validated_from_official_text"
     },
     "label:beast_strength": {
       "complexity": null,
@@ -2598,14 +2621,34 @@
       "validation_status": "not_started"
     },
     "label:wind_resist_75": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "source_club",
+        "ability_level_value",
+        "resolved_targets",
+        "static_modifiers"
+      ],
       "group_id": "label:wind_resist_75",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: High Flight is 75% less affected by wind.",
+        "The official value is exposed as wind_resistance_percent on the source club only.",
+        "This representation does not simulate wind physics or infer how multiple wind-resistance sources stack."
+      ],
+      "pattern_id": "static_modifier_targets",
+      "pattern_parameters": {
+        "modifier": "wind_resistance_percent",
+        "selection_inputs": {
+          "source_club_id": {
+            "from": "effect.source_club_id"
+          }
+        },
+        "selection_operation": "SELECT_SELF",
+        "selection_parameters": {}
+      },
+      "priority": 9,
+      "validation_status": "validated_from_official_text"
     },
     "label:wind_resistance_100": {
       "complexity": null,

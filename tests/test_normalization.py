@@ -50,6 +50,7 @@ class NormalizationPipelineTests(unittest.TestCase):
             "label:bag_rarity_boost",
             "label:bag_recklessness",
             "label:bag_spin_bonus",
+            "label:bag_wind_resist",
             "label:bounce_reduction_boost",
             "label:brand_loyalty",
             "label:brand_loyalty_x",
@@ -70,6 +71,7 @@ class NormalizationPipelineTests(unittest.TestCase):
             "label:spin_boost",
             "label:stanchion_power",
             "label:water_bounce",
+            "label:wind_resist_75",
         }
         for group_id in qualified_ids:
             qualified = semantic["entries"][group_id]

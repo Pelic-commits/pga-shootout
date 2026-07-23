@@ -10,10 +10,10 @@
 | Inventory declared complete | no |
 | Known user levels | 0/20 |
 | Official owned-club abilities | 35 |
-| Engine-supported owned-club abilities | 23 |
-| Unresolved owned-club abilities | 12 |
-| Owned-ability coverage | 65.71% |
-| Fully simulated owned clubs | 10/20 |
+| Engine-supported owned-club abilities | 25 |
+| Unresolved owned-club abilities | 10 |
+| Owned-ability coverage | 71.43% |
+| Fully simulated owned clubs | 12/20 |
 
 ## Clubs
 
@@ -29,10 +29,10 @@
 | Cyclotron (`cyclotron`) | Ryusei | Driver | Rare | unknown | 2/2 | yes | yes | partially |
 | Neon Impulse (`neon_impulse`) | Ryusei | Wood | Common | unknown | 0/1 | no | partially | partially |
 | Color Theory (`color_theory`) | Ryusei | Iron | Epic | unknown | 0/2 | no | partially | partially |
-| High Flight (`high_flight`) | Corvid | Hybrid | Common | unknown | 1/2 | no | partially | partially |
+| High Flight (`high_flight`) | Corvid | Hybrid | Common | unknown | 2/2 | yes | yes | partially |
 | Cloudcatcher (`cloudcatcher`) | Corvid | Iron | Epic | unknown | 3/3 | yes | yes | partially |
 | Skyfury (`skyfury`) | Corvid | Driver | Epic | unknown | 0/1 | no | partially | partially |
-| Rook (`rook`) | Corvid | Putter | Common | unknown | 1/2 | no | partially | partially |
+| Rook (`rook`) | Corvid | Putter | Common | unknown | 2/2 | yes | yes | partially |
 | Mirage (`mirage`) | PALO | Hybrid | Common | unknown | 2/2 | yes | yes | partially |
 | Lodestar (`lodestar`) | PALO | Iron | Epic | unknown | 2/2 | yes | yes | partially |
 | Green Demon (`green_demon`) | PALO | Driver | Legendary | unknown | 0/1 | no | partially | partially |
@@ -111,7 +111,7 @@
 | Official ability | Official text | Activates | Status | Metrics | Reason | Needed | Technical family |
 |---|---|---:|---|---|---|---|---|
 | Loft Angle +5° (`high_flight__loft_angle_5`) | Launches the ball with a 5° higher angle than other hybrids. | 1 | `missing_user_level` | `loft_angle_degrees` | The engine supports this ability, but the user's current club level is unknown. | `current_level` | `static_modifier_targets` |
-| Wind Resist 75% (`high_flight__wind_resist_75`) | High Flight is 75% less affected by wind. | 5 | `scenario_required` | none | The ability needs wind context; its static descriptor and stacking policy are not yet qualified. | `wind_speed`, `stacking_validation` | `wind_resistance` |
+| Wind Resist 75% (`high_flight__wind_resist_75`) | High Flight is 75% less affected by wind. | 5 | `missing_user_level` | `wind_resistance_percent` | The engine supports this ability, but the user's current club level is unknown. | `current_level` | `static_modifier_targets` |
 
 ### Cloudcatcher
 
@@ -131,7 +131,7 @@
 
 | Official ability | Official text | Activates | Status | Metrics | Reason | Needed | Technical family |
 |---|---|---:|---|---|---|---|---|
-| Bag Wind Resist (`rook__bag_wind_resist`) | Shots are X% less affected by wind. | 1 | `scenario_required` | none | The ability needs wind context; its static descriptor and stacking policy are not yet qualified. | `wind_speed`, `stacking_validation` | `wind_resistance` |
+| Bag Wind Resist (`rook__bag_wind_resist`) | Shots are X% less affected by wind. | 1 | `missing_user_level` | `wind_resistance_percent` | The engine supports this ability, but the user's current club level is unknown. | `current_level` | `static_modifier_targets` |
 | Brand Loyalty +X (`rook__brand_loyalty_x`) | Has +X power per Corvid club next to Rook. | 3 | `missing_user_level` | `power` | The engine supports this ability, but the user's current club level is unknown. | `current_level` | `dsl_pipeline` |
 
 ### Mirage
@@ -180,7 +180,7 @@
 | Bag | Supported abilities | Coverage |
 |---|---:|---:|
 | `par3_divebomb` | 5/8 | 62.50% |
-| `par3_high_flight` | 7/9 | 77.78% |
+| `par3_high_flight` | 8/9 | 88.89% |
 
 ## Missing user data
 
@@ -189,17 +189,7 @@
 
 ## Recommended next lots
 
-### 1. Expose wind resistance as an objective modifier
-
-- Abilities: Wind Resist 75%, Bag Wind Resist.
-- Owned clubs: High Flight, Rook.
-- Expected ability coverage gain: +2.
-- Clubs becoming fully simulated: High Flight, Rook.
-- Difficulty: medium.
-- Required: scope validation, stacking validation.
-- Priority: Improves owned par-3 clubs without requiring a full wind simulation for the static descriptor.
-
-### 2. Implement next-shot chains
+### 1. Implement next-shot chains
 
 - Abilities: Chains into Willoughsby, Chains into Wedges, Chains into Putters.
 - Owned clubs: Kinship, Outset, Conqueror.
@@ -209,7 +199,7 @@
 - Required: history trigger validation, duration and consumption validation.
 - Priority: Covers the largest remaining owned-club cluster after deterministic static modifiers.
 
-### 3. Implement simple terrain conditions
+### 2. Implement simple terrain conditions
 
 - Abilities: Fairway Affinity, Terrain Bonus.
 - Owned clubs: Groundskeep, Color Theory.
@@ -218,3 +208,13 @@
 - Difficulty: medium-high.
 - Required: optional terrain context, official condition validation.
 - Priority: Adds the next reusable scenario contract after the static comparator patterns.
+
+### 3. Qualify deterministic trajectory modifiers
+
+- Abilities: Power Shot, Boundary Rush 75%, Emerald Rush 75%.
+- Owned clubs: Neon Impulse, Skyfury, Green Demon.
+- Expected ability coverage gain: +3.
+- Clubs becoming fully simulated: Neon Impulse, Skyfury, Green Demon.
+- Difficulty: high.
+- Required: validated physics contract, in-game measurements.
+- Priority: Covers the remaining owned deterministic trajectory abilities once their physical meaning is validated.

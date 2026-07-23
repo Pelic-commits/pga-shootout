@@ -24,6 +24,7 @@ Static modifiers (difference = right - left)
 Metric                              Left  Right  Diff
 Bounce reduction (percent)              0     40    +40
 Launch angle adjustment (degrees)       0      5     +5
+Wind resistance (percent)               0     75    +75
 
 Applied ability changes - left
   Jumpstart / jumpstart__power_boost / ADD_STAT: power +4
@@ -35,6 +36,7 @@ Applied ability changes - left
   Sunstorm / sunstorm__plasma_arc_x / ADD_STAT: spin +4
 Applied ability changes - right
   High Flight / high_flight__loft_angle_5 / ADD_MODIFIER: loft_angle_degrees +5
+  High Flight / high_flight__wind_resist_75 / ADD_MODIFIER: wind_resistance_percent +75
   Cyclotron / cyclotron__spin_boost / ADD_STAT: spin +6
   Cyclotron / cyclotron__bounce_reduction_boost / ADD_MODIFIER: bounce_reduction_percent +20
   Ember / ember__alloy / ADD_STAT: power +7
@@ -51,14 +53,13 @@ Unresolved bonuses - left (3):
   Unresolved UnknownMechanismError: unsupported:chains_into_putters
   Unresolved UnknownMechanismError: unsupported:corvid_wind_resist
   Unresolved UnknownMechanismError: unsupported:power_shot
-Unresolved bonuses - right (2):
-  Unresolved UnknownMechanismError: unsupported:wind_resist_75
+Unresolved bonuses - right (1):
   Unresolved UnknownMechanismError: unsupported:power_shot
 Strict status: NOT REQUESTED
 No aggregate score: user preference weights and real club levels are not yet validated.
 
 Confidence diagnostic (objective facts; no score)
-Metrics compared: power, control, spin, bounce_reduction_percent, loft_angle_degrees
+Metrics compared: power, control, spin, bounce_reduction_percent, loft_angle_degrees, wind_resistance_percent
 Left bag (par3_divebomb):
   Simulated abilities: 5/8
   Non-simulated abilities: 3
@@ -66,9 +67,9 @@ Left bag (par3_divebomb):
   Contributions: resolved=5, effective=3, ignored=2, unresolved=3
   Unknown user levels: divebomb, jumpstart, steadfast, ember, sunstorm
 Right bag (par3_high_flight):
-  Simulated abilities: 7/9
-  Non-simulated abilities: 2
-  Classified gaps: ambiguous=0, scenario_required=1, unsupported=1, partial=0
-  Contributions: resolved=7, effective=7, ignored=0, unresolved=2
+  Simulated abilities: 8/9
+  Non-simulated abilities: 1
+  Classified gaps: ambiguous=0, scenario_required=0, unsupported=1, partial=0
+  Contributions: resolved=8, effective=8, ignored=0, unresolved=1
   Unknown user levels: high_flight, cyclotron, ember, maelstrom, sunstorm
 ========================================================================

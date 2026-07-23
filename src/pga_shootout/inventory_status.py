@@ -310,6 +310,14 @@ def _roadmap_lots(clubs: tuple[InventoryClubStatus, ...]) -> tuple[DevelopmentLo
             ("optional terrain context", "official condition validation"),
             "Adds the next reusable scenario contract after the static comparator patterns.",
         ),
+        (
+            "trajectory_physics",
+            "Qualify deterministic trajectory modifiers",
+            {"trajectory_physics"},
+            "high",
+            ("validated physics contract", "in-game measurements"),
+            "Covers the remaining owned deterministic trajectory abilities once their physical meaning is validated.",
+        ),
     )
     result: list[DevelopmentLot] = []
     for identifier, title, families, difficulty, requirements, reason in candidates:

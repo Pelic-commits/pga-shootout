@@ -8,9 +8,9 @@
 |---|---:|
 | Known inventory clubs | 20 |
 | Official ability occurrences | 35 |
-| Implemented occurrences | 23 |
-| Inventory occurrence coverage | 65.71% |
-| Fully implemented clubs | 10 |
+| Implemented occurrences | 25 |
+| Inventory occurrence coverage | 71.43% |
+| Fully implemented clubs | 12 |
 
 ## Homestead (`homestead`)
 
@@ -105,7 +105,7 @@ Saved bags: `par3_high_flight`.
 | Official ability | Official text | Pattern | Status | compare-bags impact |
 |---|---|---|---|---|
 | Loft Angle +5° (`high_flight__loft_angle_5`) | Launches the ball with a 5° higher angle than other hybrids. | `static_modifier_targets` | `implemented` | adds or changes a separately compared static metric |
-| Wind Resist 75% (`high_flight__wind_resist_75`) | High Flight is 75% less affected by wind. | `unqualified:wind_resist_75` | `scenario_required` | scenario metric; no effect in the static comparator |
+| Wind Resist 75% (`high_flight__wind_resist_75`) | High Flight is 75% less affected by wind. | `static_modifier_targets` | `implemented` | included in objective ability contributions |
 
 ## Cloudcatcher (`cloudcatcher`)
 
@@ -131,7 +131,7 @@ Saved bags: none.
 
 | Official ability | Official text | Pattern | Status | compare-bags impact |
 |---|---|---|---|---|
-| Bag Wind Resist (`rook__bag_wind_resist`) | Shots are X% less affected by wind. | `unqualified:bag_wind_resist` | `scenario_required` | scenario metric; no effect in the static comparator |
+| Bag Wind Resist (`rook__bag_wind_resist`) | Shots are X% less affected by wind. | `static_modifier_targets` | `implemented` | included in objective ability contributions |
 | Brand Loyalty +X (`rook__brand_loyalty_x`) | Has +X power per Corvid club next to Rook. | `mechanic:dsl_pipeline` | `implemented` | changes a core compared statistic |
 
 ## Mirage (`mirage`)

@@ -30,7 +30,14 @@ class ValueApiTests(unittest.TestCase):
         metrics = {metric.definition.identifier: metric for metric in self.comparison().metrics}
         self.assertEqual(
             set(metrics),
-            {"power", "control", "spin", "loft_angle_degrees", "bounce_reduction_percent"},
+            {
+                "power",
+                "control",
+                "spin",
+                "loft_angle_degrees",
+                "bounce_reduction_percent",
+                "wind_resistance_percent",
+            },
         )
         self.assertEqual(metrics["power"].definition.kind, MetricKind.STAT)
         self.assertEqual(metrics["loft_angle_degrees"].definition.unit, "degrees")
@@ -38,6 +45,8 @@ class ValueApiTests(unittest.TestCase):
         self.assertEqual(metrics["loft_angle_degrees"].difference_right_minus_left, 5.0)
         self.assertEqual(metrics["bounce_reduction_percent"].definition.unit, "percent")
         self.assertEqual(metrics["bounce_reduction_percent"].right_final, 40.0)
+        self.assertEqual(metrics["wind_resistance_percent"].definition.unit, "percent")
+        self.assertEqual(metrics["wind_resistance_percent"].right_final, 75.0)
         self.assertIn("Launch angle adjustment (degrees)", render_bag_comparison(self.comparison()))
 
     def test_every_loaded_ability_has_a_stable_contribution_identity(self):

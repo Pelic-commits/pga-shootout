@@ -65,7 +65,11 @@ class OptimizerApiTests(unittest.TestCase):
 
         self.assertEqual(
             result.modifier_impact,
-            {"loft_angle_degrees": 5.0, "bounce_reduction_percent": 40.0},
+            {
+                "loft_angle_degrees": 5.0,
+                "wind_resistance_percent": 75.0,
+                "bounce_reduction_percent": 40.0,
+            },
         )
         contribution = next(item for item in result.ability_contributions if item.ability_id == "high_flight__loft_angle_5")
         self.assertEqual(contribution.modification["loft_angle_degrees"], 5.0)
@@ -74,6 +78,11 @@ class OptimizerApiTests(unittest.TestCase):
             if item.ability_id == "maelstrom__bag_bounce_reduction"
         )
         self.assertEqual(bounce.modification["bounce_reduction_percent"], 20.0)
+        wind = next(
+            item for item in result.ability_contributions
+            if item.ability_id == "high_flight__wind_resist_75"
+        )
+        self.assertEqual(wind.modification["wind_resistance_percent"], 75.0)
 
     def test_readiness_is_an_objective_eight_item_checklist(self):
         checklist = {item.identifier: item.status for item in optimizer_readiness_checklist()}
