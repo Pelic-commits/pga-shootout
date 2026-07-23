@@ -65,7 +65,7 @@ class OptimizerApiTests(unittest.TestCase):
 
         self.assertEqual(
             result.modifier_impact,
-            {"loft_angle_degrees": 5.0, "bounce_reduction_percent": 20.0},
+            {"loft_angle_degrees": 5.0, "bounce_reduction_percent": 40.0},
         )
         contribution = next(item for item in result.ability_contributions if item.ability_id == "high_flight__loft_angle_5")
         self.assertEqual(contribution.modification["loft_angle_degrees"], 5.0)

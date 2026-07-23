@@ -623,14 +623,40 @@
       "validation_status": "validated_from_official_text"
     },
     "label:bounce_reduction_boost": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value",
+        "resolved_targets",
+        "static_modifiers"
+      ],
       "group_id": "label:bounce_reduction_boost",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: The club to the left of Cyclotron produces strokes with less bounce.",
+        "The official per-level percentage is exposed as bounce_reduction_percent on the immediately adjacent club to the left.",
+        "This representation does not model trajectory or infer how multiple bounce-reduction effects stack."
+      ],
+      "pattern_id": "static_modifier_targets",
+      "pattern_parameters": {
+        "modifier": "bounce_reduction_percent",
+        "selection_inputs": {
+          "origin": {
+            "from": "source.club"
+          }
+        },
+        "selection_operation": "SELECT_ADJACENT",
+        "selection_parameters": {
+          "directions": [
+            "left"
+          ],
+          "distance": 1
+        }
+      },
+      "priority": 9,
+      "validation_status": "validated_from_official_text"
     },
     "label:boundary_bonus": {
       "complexity": null,
@@ -1250,14 +1276,37 @@
       "validation_status": "validated_from_official_text"
     },
     "label:fade_draw_x2": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value",
+        "resolved_targets",
+        "static_modifiers"
+      ],
       "group_id": "label:fade_draw_x2",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: Your clubs have double fade and draw.",
+        "The official x2 value is exposed as the objective static modifier fade_draw_multiplier on every club in the bag.",
+        "This representation does not simulate shot shaping or infer how multiple multiplier sources stack."
+      ],
+      "pattern_id": "static_modifier_targets",
+      "pattern_parameters": {
+        "modifier": "fade_draw_multiplier",
+        "selection_inputs": {
+          "source": {
+            "from": "source.club"
+          }
+        },
+        "selection_operation": "SELECT_ALL",
+        "selection_parameters": {
+          "include_source": true
+        }
+      },
+      "priority": 9,
+      "validation_status": "validated_from_official_text"
     },
     "label:fairway_affinity": {
       "complexity": null,

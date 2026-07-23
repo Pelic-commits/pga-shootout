@@ -302,6 +302,14 @@ def _roadmap_lots(clubs: tuple[InventoryClubStatus, ...]) -> tuple[DevelopmentLo
             ("history trigger validation", "duration and consumption validation"),
             "Covers the largest remaining owned-club cluster after deterministic static modifiers.",
         ),
+        (
+            "terrain_conditions",
+            "Implement simple terrain conditions",
+            {"terrain_condition"},
+            "medium-high",
+            ("optional terrain context", "official condition validation"),
+            "Adds the next reusable scenario contract after the static comparator patterns.",
+        ),
     )
     result: list[DevelopmentLot] = []
     for identifier, title, families, difficulty, requirements, reason in candidates:
@@ -320,6 +328,8 @@ def _roadmap_lots(clubs: tuple[InventoryClubStatus, ...]) -> tuple[DevelopmentLo
             if any(candidate_id == club.club_id for candidate_id in club_ids)
             and all(ability.engine_supported or ability.occurrence_id in selected_ids for ability in club.abilities)
         )
+        if not selected_ids:
+            continue
         result.append(
             DevelopmentLot(
                 identifier=identifier,
@@ -334,7 +344,7 @@ def _roadmap_lots(clubs: tuple[InventoryClubStatus, ...]) -> tuple[DevelopmentLo
                 priority_reason=reason,
             )
         )
-    return tuple(result)
+    return tuple(result[:3])
 
 
 def analyze_inventory_status(

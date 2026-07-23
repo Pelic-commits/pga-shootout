@@ -7,7 +7,7 @@
 - Loads official club statistics, user inventory and saved bags.
 - Evaluates supported deterministic bag abilities in strict or partial mode.
 - Compares bags metric by metric with attributed contributions and a factual completeness diagnostic.
-- Supports 21/35 owned-club abilities (60.00%).
+- Supports 23/35 owned-club abilities (65.71%).
 
 ## What it does not do
 
@@ -18,8 +18,8 @@
 ## Inventory
 
 - Known clubs: 20; inventory complete: no.
-- Fully simulated clubs: 8/20.
-- Fully comparable by engine coverage: Homestead, Commonlaw, Sandsend, Steadfast, Jumpstart, Cloudcatcher, Mirage, Into the Breach.
+- Fully simulated clubs: 10/20.
+- Fully comparable by engine coverage: Homestead, Commonlaw, Sandsend, Steadfast, Jumpstart, Cyclotron, Cloudcatcher, Mirage, Lodestar, Into the Breach.
 - Known current levels: 0/20.
 
 ## compare-bags
@@ -36,12 +36,12 @@ Meteor remains a future, experimentally blocked subject. Alien Relic and Alien W
 
 ## Next three development lots
 
-1. **Qualify owned-club static modifiers** — Cyclotron, Lodestar; +2 owned abilities; difficulty medium; requires metric and stacking validation.
-2. **Expose wind resistance as an objective modifier** — High Flight, Rook; +2 owned abilities; difficulty medium; requires scope validation, stacking validation.
-3. **Implement next-shot chains** — Kinship, Outset, Conqueror; +3 owned abilities; difficulty medium-high; requires history trigger validation, duration and consumption validation.
+1. **Expose wind resistance as an objective modifier** — High Flight, Rook; +2 owned abilities; difficulty medium; requires scope validation, stacking validation.
+2. **Implement next-shot chains** — Kinship, Outset, Conqueror; +3 owned abilities; difficulty medium-high; requires history trigger validation, duration and consumption validation.
+3. **Implement simple terrain conditions** — Groundskeep, Color Theory; +2 owned abilities; difficulty medium-high; requires optional terrain context, official condition validation.
 
 ## Secondary global coverage
 
-- Groups: 26/125.
-- Ability occurrences: 46/162 (28.40%).
+- Groups: 28/125.
+- Ability occurrences: 48/162 (29.63%).
 - Clubs touched by at least one supported group: 34/88.

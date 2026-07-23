@@ -41,13 +41,14 @@ class UserGapReportTests(unittest.TestCase):
         high_flight = next(club for club in report.clubs if club.club_id == "high_flight")
         self.assertEqual(high_flight.saved_bag_ids, ("par3_high_flight",))
 
-    def test_status_vocabulary_is_closed_and_ambiguous_cyclotron_is_preserved(self):
+    def test_status_vocabulary_is_closed_and_cyclotron_is_implemented(self):
         report = self.report()
         statuses = {ability.status for club in report.clubs for ability in club.abilities}
         self.assertLessEqual(statuses, ALLOWED_STATUSES)
         cyclotron = next(club for club in report.clubs if club.club_id == "cyclotron")
         bounce = next(item for item in cyclotron.abilities if item.label == "Bounce Reduction Boost")
-        self.assertEqual(bounce.status, "ambiguous")
+        self.assertEqual(bounce.status, "implemented")
+        self.assertEqual(bounce.pattern, "static_modifier_targets")
 
     def test_generation_is_reproducible(self):
         report = self.report()

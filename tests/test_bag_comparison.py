@@ -84,7 +84,7 @@ class BagComparisonTests(unittest.TestCase):
         self.assertEqual(comparison.lost_ability_impact, {"power": -1.0, "control": -4.0})
         self.assertEqual(
             comparison.gained_modifier_impact,
-            {"bounce_reduction_percent": 20.0, "loft_angle_degrees": 5.0},
+            {"bounce_reduction_percent": 40.0, "loft_angle_degrees": 5.0},
         )
         self.assertEqual(comparison.lost_modifier_impact, {})
 

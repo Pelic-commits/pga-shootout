@@ -37,7 +37,7 @@ class ValueApiTests(unittest.TestCase):
         self.assertEqual(metrics["loft_angle_degrees"].right_final, 5.0)
         self.assertEqual(metrics["loft_angle_degrees"].difference_right_minus_left, 5.0)
         self.assertEqual(metrics["bounce_reduction_percent"].definition.unit, "percent")
-        self.assertEqual(metrics["bounce_reduction_percent"].right_final, 20.0)
+        self.assertEqual(metrics["bounce_reduction_percent"].right_final, 40.0)
         self.assertIn("Launch angle adjustment (degrees)", render_bag_comparison(self.comparison()))
 
     def test_every_loaded_ability_has_a_stable_contribution_identity(self):

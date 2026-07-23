@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Implémentation déclarative de Bounce Reduction Boost et Fade/Draw x2 comme modificateurs objectifs compatibles avec Explain, compare-bags et inventory-status.
 - Ajout de l'audit opérationnel `inventory-status`, de sa sortie JSON et des rapports générés sur la couverture réelle de l'inventaire et l'état du produit.
 - Ajout d'un diagnostic factuel après `compare-bags` et du pattern Plasma Arc avec sélection de la cible la plus éloignée unique et garde explicite contre les égalités.
 - Ajout de la matrice automatique des capacités des sacs de référence et de la réduction de rebond de Maelstrom filtrée par type de club.

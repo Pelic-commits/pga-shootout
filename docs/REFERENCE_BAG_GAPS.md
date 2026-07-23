@@ -7,7 +7,7 @@
 | Bag | Implemented | Total | Coverage |
 |---|---:|---:|---:|
 | `par3_divebomb` | 5 | 8 | 62.50% |
-| `par3_high_flight` | 6 | 9 | 66.67% |
+| `par3_high_flight` | 7 | 9 | 77.78% |
 
 ## Ability matrix
 
@@ -24,6 +24,6 @@
 | High Flight (`high_flight`) | null | **Loft Angle +5°** — Launches the ball with a 5° higher angle than other hybrids. (`high_flight__loft_angle_5`) | `static_modifier_targets` | `implemented` | `source_club`, `ability_level_value`, `resolved_targets`, `static_modifiers` | high | included in the current objective comparison | `par3_high_flight` |
 | High Flight (`high_flight`) | null | **Wind Resist 75%** — High Flight is 75% less affected by wind. (`high_flight__wind_resist_75`) | `unqualified:wind_resist_75` | `scenario_required` | `ability_level_value`, `wind_speed` | medium | requires a wind scenario; unresolved in static comparison | `par3_high_flight` |
 | Cyclotron (`cyclotron`) | null | **Spin Boost** — The club to the left of Cyclotron has +X spin. (`cyclotron__spin_boost`) | `mechanic:dsl_pipeline` | `implemented` | `ordered_bag`, `source_club`, `ability_level_value` | high | may change Power, Control or Spin totals and their ability contributions | `par3_high_flight` |
-| Cyclotron (`cyclotron`) | null | **Bounce Reduction Boost** — The club to the left of Cyclotron produces strokes with less bounce. (`cyclotron__bounce_reduction_boost`) | `unqualified:bounce_reduction_boost` | `ambiguous` | `ability_level_value`, `ordered_bag`, `static_metric_or_physics_contract` | low | may add a bounce metric and change the unresolved-bonus count | `par3_high_flight` |
+| Cyclotron (`cyclotron`) | null | **Bounce Reduction Boost** — The club to the left of Cyclotron produces strokes with less bounce. (`cyclotron__bounce_reduction_boost`) | `static_modifier_targets` | `implemented` | `ordered_bag`, `source_club`, `ability_level_value`, `resolved_targets`, `static_modifiers` | high | may add a bounce metric and change the unresolved-bonus count | `par3_high_flight` |
 | Maelstrom (`maelstrom`) | null | **Bag Bounce Reduction** — Shots from Drivers, Woods, and Hybrids bounce X% less. (`maelstrom__bag_bounce_reduction`) | `filtered_static_modifier_targets` | `implemented` | `ordered_bag`, `source_club`, `ability_level_value`, `club_type`, `resolved_targets`, `static_modifiers` | high | may add a bounce metric and change the unresolved-bonus count | `par3_high_flight` |
 | Maelstrom (`maelstrom`) | null | **Bag Spin Bonus** — All clubs in your bag gain +X Spin (`maelstrom__bag_spin_bonus`) | `mechanic:dsl_pipeline` | `implemented` | `ordered_bag`, `source_club`, `ability_level_value`, `resolved_targets` | high | may change Power, Control or Spin totals and their ability contributions | `par3_high_flight` |

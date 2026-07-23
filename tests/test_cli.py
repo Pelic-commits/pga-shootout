@@ -177,7 +177,7 @@ class CliTests(unittest.TestCase):
         with contextlib.redirect_stdout(human_output):
             result = main(common)
         self.assertEqual(result, 0)
-        self.assertIn("Engine coverage: 21/35 abilities (60.00%)", human_output.getvalue())
+        self.assertIn("Engine coverage: 23/35 abilities (65.71%)", human_output.getvalue())
         self.assertIn("Fully comparable clubs: Homestead", human_output.getvalue())
 
         json_output = io.StringIO()

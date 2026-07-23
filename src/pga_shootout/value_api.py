@@ -65,6 +65,9 @@ METRIC_DEFINITIONS: Mapping[str, MetricDefinition] = {
     "bounce_reduction_percent": MetricDefinition(
         "bounce_reduction_percent", "Bounce reduction", MetricKind.STATIC_MODIFIER, "percent"
     ),
+    "fade_draw_multiplier": MetricDefinition(
+        "fade_draw_multiplier", "Fade/draw", MetricKind.STATIC_MODIFIER, "multiplier"
+    ),
 }
 
 

@@ -8,9 +8,9 @@
 |---|---:|
 | Known inventory clubs | 20 |
 | Official ability occurrences | 35 |
-| Implemented occurrences | 21 |
-| Inventory occurrence coverage | 60.00% |
-| Fully implemented clubs | 8 |
+| Implemented occurrences | 23 |
+| Inventory occurrence coverage | 65.71% |
+| Fully implemented clubs | 10 |
 
 ## Homestead (`homestead`)
 
@@ -79,7 +79,7 @@ Saved bags: `par3_high_flight`.
 | Official ability | Official text | Pattern | Status | compare-bags impact |
 |---|---|---|---|---|
 | Spin Boost (`cyclotron__spin_boost`) | The club to the left of Cyclotron has +X spin. | `mechanic:dsl_pipeline` | `implemented` | changes a core compared statistic |
-| Bounce Reduction Boost (`cyclotron__bounce_reduction_boost`) | The club to the left of Cyclotron produces strokes with less bounce. | `unqualified:bounce_reduction_boost` | `ambiguous` | adds or changes a separately compared static metric |
+| Bounce Reduction Boost (`cyclotron__bounce_reduction_boost`) | The club to the left of Cyclotron produces strokes with less bounce. | `static_modifier_targets` | `implemented` | adds or changes a separately compared static metric |
 
 ## Neon Impulse (`neon_impulse`)
 
@@ -149,7 +149,7 @@ Saved bags: none.
 
 | Official ability | Official text | Pattern | Status | compare-bags impact |
 |---|---|---|---|---|
-| Fade/Draw x2 (`lodestar__fade_draw_x2`) | Your clubs have double fade and draw. | `unqualified:fade_draw_x2` | `ambiguous` | adds or changes a separately compared static metric |
+| Fade/Draw x2 (`lodestar__fade_draw_x2`) | Your clubs have double fade and draw. | `static_modifier_targets` | `implemented` | adds or changes a separately compared static metric |
 | Brand Loyalty +X (`lodestar__brand_loyalty_x`) | Has +X power per PALO club next to Lodestar. | `mechanic:dsl_pipeline` | `implemented` | changes a core compared statistic |
 
 ## Green Demon (`green_demon`)

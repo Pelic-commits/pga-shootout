@@ -78,8 +78,8 @@ class BagBounceReductionTests(unittest.TestCase):
             catalog_path=CATALOG,
             current_club_id="high_flight",
         )
-        self.assertEqual(evaluation.result.modifiers["bounce_reduction_percent"], 20)
-        self.assertEqual(len(evaluation.result.unresolved), 3)
+        self.assertEqual(evaluation.result.modifiers["bounce_reduction_percent"], 40)
+        self.assertEqual(len(evaluation.result.unresolved), 2)
 
     def test_compare_bags_exposes_the_new_metric(self):
         comparison = compare_saved_bags(
@@ -92,7 +92,7 @@ class BagBounceReductionTests(unittest.TestCase):
             catalog_path=CATALOG,
         )
         metric = next(item for item in comparison.metrics if item.definition.identifier == "bounce_reduction_percent")
-        self.assertEqual((metric.left_final, metric.right_final, metric.difference_right_minus_left), (0, 20, 20))
+        self.assertEqual((metric.left_final, metric.right_final, metric.difference_right_minus_left), (0, 40, 40))
         contribution = next(
             item for item in comparison.right.ability_contributions
             if item.ability_id == "maelstrom__bag_bounce_reduction"

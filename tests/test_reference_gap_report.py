@@ -34,17 +34,20 @@ class ReferenceGapReportTests(unittest.TestCase):
     def test_coverage_is_computed_from_saved_bags(self):
         coverage = {item.bag_id: item for item in self.report().bag_coverage}
         self.assertEqual((coverage["par3_divebomb"].implemented_occurrences, coverage["par3_divebomb"].ability_occurrences), (5, 8))
-        self.assertEqual((coverage["par3_high_flight"].implemented_occurrences, coverage["par3_high_flight"].ability_occurrences), (6, 9))
-        self.assertEqual(coverage["par3_high_flight"].coverage_percent, 66.67)
+        self.assertEqual((coverage["par3_high_flight"].implemented_occurrences, coverage["par3_high_flight"].ability_occurrences), (7, 9))
+        self.assertEqual(coverage["par3_high_flight"].coverage_percent, 77.78)
 
-    def test_exact_maelstrom_text_is_implemented_but_cyclotron_remains_ambiguous(self):
+    def test_exact_maelstrom_and_cyclotron_texts_are_implemented(self):
         abilities = {item.occurrence_id: item for item in self.report().abilities}
         maelstrom = abilities["maelstrom__bag_bounce_reduction"]
         self.assertEqual(maelstrom.official_text, "Shots from Drivers, Woods, and Hybrids bounce X% less.")
         self.assertEqual(maelstrom.normalized_pattern, "filtered_static_modifier_targets")
         self.assertEqual(maelstrom.status, "implemented")
         self.assertEqual(maelstrom.confidence, "high")
-        self.assertEqual(abilities["cyclotron__bounce_reduction_boost"].status, "ambiguous")
+        cyclotron = abilities["cyclotron__bounce_reduction_boost"]
+        self.assertEqual(cyclotron.normalized_pattern, "static_modifier_targets")
+        self.assertEqual(cyclotron.status, "implemented")
+        self.assertEqual(cyclotron.confidence, "high")
         self.assertEqual(abilities["sunstorm__plasma_arc_x"].normalized_pattern, "unique_farthest_multi_stat_bonus")
         self.assertEqual(abilities["sunstorm__plasma_arc_x"].status, "implemented")
 

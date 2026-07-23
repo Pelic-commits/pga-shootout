@@ -10,10 +10,10 @@
 | Inventory declared complete | no |
 | Known user levels | 0/20 |
 | Official owned-club abilities | 35 |
-| Engine-supported owned-club abilities | 21 |
-| Unresolved owned-club abilities | 14 |
-| Owned-ability coverage | 60.00% |
-| Fully simulated owned clubs | 8/20 |
+| Engine-supported owned-club abilities | 23 |
+| Unresolved owned-club abilities | 12 |
+| Owned-ability coverage | 65.71% |
+| Fully simulated owned clubs | 10/20 |
 
 ## Clubs
 
@@ -26,7 +26,7 @@
 | Sandsend (`sandsend`) | Willoughsby | Wedge | Common | unknown | 1/1 | yes | yes | partially |
 | Steadfast (`steadfast`) | Willoughsby | Wedge | Epic | unknown | 2/2 | yes | yes | partially |
 | Jumpstart (`jumpstart`) | Ryusei | Wood | Rare | unknown | 1/1 | yes | yes | partially |
-| Cyclotron (`cyclotron`) | Ryusei | Driver | Rare | unknown | 1/2 | no | partially | partially |
+| Cyclotron (`cyclotron`) | Ryusei | Driver | Rare | unknown | 2/2 | yes | yes | partially |
 | Neon Impulse (`neon_impulse`) | Ryusei | Wood | Common | unknown | 0/1 | no | partially | partially |
 | Color Theory (`color_theory`) | Ryusei | Iron | Epic | unknown | 0/2 | no | partially | partially |
 | High Flight (`high_flight`) | Corvid | Hybrid | Common | unknown | 1/2 | no | partially | partially |
@@ -34,7 +34,7 @@
 | Skyfury (`skyfury`) | Corvid | Driver | Epic | unknown | 0/1 | no | partially | partially |
 | Rook (`rook`) | Corvid | Putter | Common | unknown | 1/2 | no | partially | partially |
 | Mirage (`mirage`) | PALO | Hybrid | Common | unknown | 2/2 | yes | yes | partially |
-| Lodestar (`lodestar`) | PALO | Iron | Epic | unknown | 1/2 | no | partially | partially |
+| Lodestar (`lodestar`) | PALO | Iron | Epic | unknown | 2/2 | yes | yes | partially |
 | Green Demon (`green_demon`) | PALO | Driver | Legendary | unknown | 0/1 | no | partially | partially |
 | Outset (`outset`) | Forester | Driver | Rare | unknown | 0/2 | no | partially | partially |
 | Into the Breach (`into_the_breach`) | Stanchion | Iron | Epic | unknown | 2/2 | yes | yes | partially |
@@ -91,7 +91,7 @@
 | Official ability | Official text | Activates | Status | Metrics | Reason | Needed | Technical family |
 |---|---|---:|---|---|---|---|---|
 | Spin Boost (`cyclotron__spin_boost`) | The club to the left of Cyclotron has +X spin. | 3 | `missing_user_level` | `spin` | The engine supports this ability, but the user's current club level is unknown. | `current_level` | `dsl_pipeline` |
-| Bounce Reduction Boost (`cyclotron__bounce_reduction_boost`) | The club to the left of Cyclotron produces strokes with less bounce. | 5 | `ambiguous` | none | The text omits the numeric placeholder and the bounce stacking rule is not qualified. | `official_text_table_validation`, `stacking_validation` | `static_bounce_modifier` |
+| Bounce Reduction Boost (`cyclotron__bounce_reduction_boost`) | The club to the left of Cyclotron produces strokes with less bounce. | 5 | `missing_user_level` | `bounce_reduction_percent` | The engine supports this ability, but the user's current club level is unknown. | `current_level` | `static_modifier_targets` |
 
 ### Neon Impulse
 
@@ -145,7 +145,7 @@
 
 | Official ability | Official text | Activates | Status | Metrics | Reason | Needed | Technical family |
 |---|---|---:|---|---|---|---|---|
-| Fade/Draw x2 (`lodestar__fade_draw_x2`) | Your clubs have double fade and draw. | 5 | `ambiguous` | none | The fade/draw base metric and multiplication/stacking rule are not qualified. | `metric_contract`, `stacking_validation` | `static_shot_control_modifier` |
+| Fade/Draw x2 (`lodestar__fade_draw_x2`) | Your clubs have double fade and draw. | 5 | `missing_user_level` | `fade_draw_multiplier` | The engine supports this ability, but the user's current club level is unknown. | `current_level` | `static_modifier_targets` |
 | Brand Loyalty +X (`lodestar__brand_loyalty_x`) | Has +X power per PALO club next to Lodestar. | 7 | `missing_user_level` | `power` | The engine supports this ability, but the user's current club level is unknown. | `current_level` | `dsl_pipeline` |
 
 ### Green Demon
@@ -180,7 +180,7 @@
 | Bag | Supported abilities | Coverage |
 |---|---:|---:|
 | `par3_divebomb` | 5/8 | 62.50% |
-| `par3_high_flight` | 6/9 | 66.67% |
+| `par3_high_flight` | 7/9 | 77.78% |
 
 ## Missing user data
 
@@ -189,17 +189,7 @@
 
 ## Recommended next lots
 
-### 1. Qualify owned-club static modifiers
-
-- Abilities: Bounce Reduction Boost, Fade/Draw x2.
-- Owned clubs: Cyclotron, Lodestar.
-- Expected ability coverage gain: +2.
-- Clubs becoming fully simulated: Cyclotron, Lodestar.
-- Difficulty: medium.
-- Required: metric and stacking validation.
-- Priority: Adds deterministic comparison metrics using the existing target-selection and modifier pipeline.
-
-### 2. Expose wind resistance as an objective modifier
+### 1. Expose wind resistance as an objective modifier
 
 - Abilities: Wind Resist 75%, Bag Wind Resist.
 - Owned clubs: High Flight, Rook.
@@ -209,7 +199,7 @@
 - Required: scope validation, stacking validation.
 - Priority: Improves owned par-3 clubs without requiring a full wind simulation for the static descriptor.
 
-### 3. Implement next-shot chains
+### 2. Implement next-shot chains
 
 - Abilities: Chains into Willoughsby, Chains into Wedges, Chains into Putters.
 - Owned clubs: Kinship, Outset, Conqueror.
@@ -218,3 +208,13 @@
 - Difficulty: medium-high.
 - Required: history trigger validation, duration and consumption validation.
 - Priority: Covers the largest remaining owned-club cluster after deterministic static modifiers.
+
+### 3. Implement simple terrain conditions
+
+- Abilities: Fairway Affinity, Terrain Bonus.
+- Owned clubs: Groundskeep, Color Theory.
+- Expected ability coverage gain: +2.
+- Clubs becoming fully simulated: Groundskeep.
+- Difficulty: medium-high.
+- Required: optional terrain context, official condition validation.
+- Priority: Adds the next reusable scenario contract after the static comparator patterns.

@@ -1,0 +1,51 @@
+SELECT_SELF
+Inputs: {"source_club_id": "cyclotron"}
+Outputs: {"club": "Cyclotron"}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: selected source club Cyclotron
+
+READ_LEVEL_VALUE
+Inputs: {"level": 12}
+Outputs: {"value": 20.0}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: read value +20 at level 12
+
+SELECT_ADJACENT
+Inputs: {"directions": ["left"], "distance": 1, "origin": "Cyclotron"}
+Outputs: {"left": "High Flight"}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: selected adjacent clubs ['High Flight']
+
+FOR_EACH
+Inputs: {"binding": "target", "items": ["High Flight"]}
+Outputs: {"iterations": 1}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: executing sub-pipeline for 1 item(s)
+
+ADD_MODIFIER
+Inputs: {"delta": 20.0, "modifier": "bounce_reduction_percent", "target": "High Flight"}
+Outputs: {"after": 20.0, "before": 0.0}
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"bounce_reduction_percent": 20.0, "control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"bounce_reduction_percent": 20.0, "control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: BOUNCE_REDUCTION_PERCENT += 20
+
+dsl_pipeline
+Applied: yes
+Before: {"control": 10.0, "power": 14.0, "spin": 8.0}
+Change: {"bounce_reduction_percent": 20.0, "control": 0.0, "power": 0.0, "spin": 0.0}
+After: {"bounce_reduction_percent": 20.0, "control": 10.0, "power": 14.0, "spin": 8.0}
+Detail: applied
