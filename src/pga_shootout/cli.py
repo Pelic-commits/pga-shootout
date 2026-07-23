@@ -17,6 +17,7 @@ from .inventory_status import (
     write_inventory_reports,
 )
 from .interactive_recommendation import InteractiveRecommendationApp
+from .main_menu import PgaShootoutAssistant
 from .loader import load_raw_json, summarize_raw_json
 from .models import EvaluationMode
 from .normalization import normalize_catalog
@@ -129,6 +130,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="guided placement analysis using saved bags and unlocked club names",
     )
     _add_user_paths(interactive_parser)
+    assistant_parser = subparsers.add_parser(
+        "assistant",
+        help="open the guided French main menu",
+    )
+    _add_user_paths(assistant_parser)
     normalize_parser = subparsers.add_parser("normalize", help="regenerate structural ability artifacts without interpretation")
     normalize_parser.add_argument("--source", default="data/normalized/clubs_official.json")
     normalize_parser.add_argument("--output-dir", default="data/normalized")
@@ -297,6 +303,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 1 if all(item.status is RecommendationStatus.EXCLUDED for item in result.candidates) else 0
     elif args.command == "recommend-interactive":
         return InteractiveRecommendationApp(
+            user_dir=args.user_dir,
+            catalog_path=args.catalog,
+        ).run()
+    elif args.command == "assistant":
+        return PgaShootoutAssistant(
             user_dir=args.user_dir,
             catalog_path=args.catalog,
         ).run()

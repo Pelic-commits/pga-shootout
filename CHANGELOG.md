@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Ajout du lanceur Windows `DEMARRER_PGA_SHOOTOUT.bat`, du menu principal français et des assistants sauvegardés de gestion de l'inventaire et des sacs.
 - Ajout d'un guide complet de premier lancement, de création des données utilisateur et d'utilisation interactive.
 - Ajout de `recommend-interactive`, parcours guidé par noms lisibles avec catégories, avertissements et consultation de l'Explain d'un placement.
 - Ajout de `recommend-placement`, de la matrice multi-position avec cache du sac de référence et de la séparation explicite entre niveaux réels et niveaux de scénario.

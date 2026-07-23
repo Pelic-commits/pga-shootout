@@ -2,6 +2,10 @@
 
 Moteur Python piloté par les données pour reproduire les calculs de **PGA TOUR Golf Shootout**. La priorité est la fidélité du simulateur ; l’optimisation des sacs viendra après sa validation.
 
+## Démarrage utilisateur sous Windows
+
+Installez Python 3.11 ou une version plus récente, puis double-cliquez sur **`DEMARRER_PGA_SHOOTOUT.bat`**. Le lanceur prépare l'application et ouvre les menus guidés en français. Voir [docs/FIRST_RUN.md](docs/FIRST_RUN.md).
+
 ## État
 
 Le socle fournit des modèles immuables, un chargeur JSON, des conditions séparées des effets, un registre de mécanismes extensible, un moteur de règles minimal et un journal Explain détaillé. Aucune capacité propre à un club n’est codée en dur.
@@ -41,6 +45,7 @@ pga-shootout recommend-replacement par3_divebomb jumpstart cyclotron --scenario-
 pga-shootout recommend-placement par3_divebomb cyclotron --scenario-level 12 --partial
 pga-shootout recommend-placement par3_divebomb cyclotron --scenario-level 12 --partial --json
 pga-shootout recommend-interactive
+pga-shootout assistant
 ```
 
 `--scenario-level` applique explicitement un niveau hypothétique commun. L'ancien `--level` reste un alias temporaire. Pour les commandes de recommandation, l'absence de cette option active le mode réel : chaque niveau doit alors provenir de l'inventaire et toute valeur manquante exclut le candidat.

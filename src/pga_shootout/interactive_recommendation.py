@@ -43,13 +43,13 @@ class InteractiveRecommendationFormatter:
     def __init__(self, structured_formatter: type[PlacementRecommendationFormatter] = PlacementRecommendationFormatter):
         self.structured_formatter = structured_formatter
 
-    def render(self, result: PlacementRecommendationResult) -> tuple[str, ...]:
+    def render(self, result: PlacementRecommendationResult, *, bag_name: str | None = None) -> tuple[str, ...]:
         # Ensure the interactive view and non-interactive JSON share the same serializable source.
         self.structured_formatter.render_json(result)
         lines = [
             "",
             "Résultats",
-            f"Sac : {result.request.bag_id}",
+            f"Sac : {bag_name or result.request.bag_id}",
             f"Club testé : {result.incoming_club_name}",
             f"Mode de niveau : {'réel' if result.request.level_mode == 'actual' else 'scénario'}",
         ]
@@ -72,7 +72,10 @@ class InteractiveRecommendationFormatter:
                 ]
             )
             if candidate.new_unresolved_ability_ids:
-                lines.append("Nouvelles capacités non résolues : " + ", ".join(candidate.new_unresolved_ability_ids))
+                lines.append(
+                    "Nouvelles capacités non encore prises en charge : "
+                    + self._ability_labels(candidate.new_unresolved_ability_ids)
+                )
             if candidate.exclusion_reasons:
                 lines.append(
                     "Exclusion : "
@@ -109,10 +112,21 @@ class InteractiveRecommendationFormatter:
             return "L'inventaire utilisateur est incomplet ; la recommandation n'est pas exhaustive."
         if value.startswith("The candidate retains unresolved abilities already present in the baseline:"):
             abilities = value.split(":", 1)[1].strip()
-            return f"Capacités non résolues déjà présentes dans le sac de référence : {abilities}."
+            return (
+                "Capacités non encore prises en charge déjà présentes dans le sac de référence : "
+                f"{InteractiveRecommendationFormatter._ability_labels(abilities.split(', '))}."
+            )
         if value.startswith("Delayed effects are reported"):
             return "Les effets différés sont signalés par position mais aucune séquence de coups n'est simulée."
         return value
+
+    @staticmethod
+    def _ability_labels(values) -> str:
+        labels = []
+        for value in values:
+            readable = value.split("__", 1)[-1].replace("_", " ").strip().title()
+            labels.append(readable)
+        return ", ".join(labels)
 
     @staticmethod
     def _exclusion_label(value: str) -> str:
@@ -191,11 +205,15 @@ class InteractiveRecommendationApp:
         input_fn: InputFunction | None = None,
         output_fn: OutputFunction = print,
         service: PlacementRecommendationService | None = None,
+        forced_mode: str | None = None,
     ) -> None:
         self.user_dir = Path(user_dir)
         self.catalog_path = Path(catalog_path)
         self.input = input_fn or input
         self.output = output_fn
+        if forced_mode not in {None, "actual", "scenario"}:
+            raise ValueError("forced_mode must be actual, scenario, or None")
+        self.forced_mode = forced_mode
         self.service = service or PlacementRecommendationService(
             user_dir=self.user_dir,
             catalog_path=self.catalog_path,
@@ -224,7 +242,7 @@ class InteractiveRecommendationApp:
             eligible,
             lambda item: item.display_name,
         )
-        mode_choice = self._choose(
+        mode_choice = self.forced_mode or self._choose(
             "Choisissez le mode :",
             ("actual", "scenario"),
             lambda item: "Réel" if item == "actual" else "Scénario",
@@ -242,7 +260,7 @@ class InteractiveRecommendationApp:
         self.output("")
         self.output("Analyse...")
         result = self.service.analyze(request)
-        for line in self.formatter.render(result):
+        for line in self.formatter.render(result, bag_name=bag.name):
             self.output(line)
 
         if self._ask_yes_no("Afficher les explications détaillées d'un placement ?"):
