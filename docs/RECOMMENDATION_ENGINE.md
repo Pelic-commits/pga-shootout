@@ -281,7 +281,18 @@ Un niveau commun implicite est interdit. Un niveau absent ne doit jamais être r
 
 La complétude de l'inventaire est indépendante des niveaux. Même avec tous les niveaux renseignés, `inventory_complete: false` impose l'avertissement : « recommandations exhaustives uniquement parmi les clubs enregistrés ».
 
-## 6. Première version fonctionnelle proposée
+## 6. Vertical slice disponible
+
+La commande actuelle analyse un remplacement fourni explicitement et évalue une seule position :
+
+```text
+pga-shootout recommend-replacement <bag_id> <club_sortant> <club_entrant>
+    --level LEVEL [--position N] [--strict|--partial] [--json]
+```
+
+Sans `--position`, la position du club remplacé est évaluée. Cette commande utilise déjà `RecommendationRequest`, `CandidateValidator`, `CandidateEvaluator`, `CandidateComparator`, `QualificationFilter` et `RecommendationFormatter`. Elle ne génère aucun candidat et ne prétend pas mesurer les effets sur les quatre autres positions.
+
+## 7. Première version exhaustive proposée
 
 Une commande future pourrait suivre ce contrat produit :
 
@@ -296,7 +307,7 @@ Sans `--metric`, la sortie présente la frontière Pareto et les compromis. Avec
 
 La sortie JSON doit être le contrat d'intégration futur ; la sortie texte n'en est qu'un rendu.
 
-## 7. Roadmap d'implémentation
+## 8. Roadmap d'implémentation
 
 ### Lot A — contrats et génération de candidats
 
@@ -349,7 +360,7 @@ La sortie JSON doit être le contrat d'intégration futur ; la sortie texte n'en
 
 **Valeur produit :** permet de répondre progressivement à « améliore le plus Control » ou « quel ordre évite de perdre Power ? », sans transformer ces objectifs en préférence universelle.
 
-## 8. Stratégie de tests
+## 9. Stratégie de tests
 
 Chaque lot doit vérifier :
 
@@ -366,7 +377,7 @@ Chaque lot doit vérifier :
 - golden tests CLI/JSON sur les sacs de référence ;
 - absence de modification des golden tests du Rule Engine.
 
-## 9. Risques et protections
+## 10. Risques et protections
 
 | Risque | Protection architecturale |
 |---|---|
@@ -382,7 +393,7 @@ Chaque lot doit vérifier :
 | Recommandation dépendante du terrain ou de la physique | Contexte absent signalé ; aucun substitut inventé |
 | Divergence entre CLI et API | Un `RecommendationSet` structuré unique alimente les deux rendus |
 
-## 10. Décision d'architecture
+## 11. Décision d'architecture
 
 La première version peut être construite sans changer le Rule Engine. Les composants à créer appartiennent tous à l'orchestration produit : génération, validation, évaluation multi-position, comparaison, qualification et rendu.
 

@@ -19,6 +19,12 @@ from .inventory_status import (
 from .loader import load_raw_json, summarize_raw_json
 from .models import EvaluationMode
 from .normalization import normalize_catalog
+from .recommendation import (
+    RecommendationFormatter,
+    RecommendationRequest,
+    RecommendationService,
+    RecommendationStatus,
+)
 from .reference_gap_report import generate_reference_gap_report
 from .user_data import ClubCatalogIndex, load_user_data, validate_user_data
 from .user_gap_report import generate_user_gap_report
@@ -66,6 +72,29 @@ def build_parser() -> argparse.ArgumentParser:
     compare_mode = compare_parser.add_mutually_exclusive_group(required=True)
     compare_mode.add_argument("--strict", action="store_true")
     compare_mode.add_argument("--partial", action="store_true")
+    recommendation_parser = subparsers.add_parser(
+        "recommend-replacement",
+        help="analyze one explicit club replacement without an aggregate score",
+    )
+    recommendation_parser.add_argument("bag_id")
+    recommendation_parser.add_argument("outgoing_club_id")
+    recommendation_parser.add_argument("incoming_club_id")
+    recommendation_parser.add_argument(
+        "--level",
+        required=True,
+        type=_level_value,
+        help="explicit scenario level for every club",
+    )
+    recommendation_parser.add_argument(
+        "--position",
+        type=int,
+        help="1-based current position to evaluate; defaults to the replaced position",
+    )
+    recommendation_parser.add_argument("--json", action="store_true", help="emit structured JSON")
+    _add_user_paths(recommendation_parser)
+    recommendation_mode = recommendation_parser.add_mutually_exclusive_group(required=True)
+    recommendation_mode.add_argument("--strict", action="store_true")
+    recommendation_mode.add_argument("--partial", action="store_true")
     normalize_parser = subparsers.add_parser("normalize", help="regenerate structural ability artifacts without interpretation")
     normalize_parser.add_argument("--source", default="data/normalized/clubs_official.json")
     normalize_parser.add_argument("--output-dir", default="data/normalized")
@@ -192,6 +221,27 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         print(render_bag_comparison(comparison))
         return 1 if comparison.strict_failed else 0
+    elif args.command == "recommend-replacement":
+        mode = EvaluationMode.STRICT if args.strict else EvaluationMode.PARTIAL
+        result = RecommendationService(
+            user_dir=args.user_dir,
+            catalog_path=args.catalog,
+        ).analyze(
+            RecommendationRequest(
+                bag_id=args.bag_id,
+                outgoing_club_id=args.outgoing_club_id,
+                incoming_club_id=args.incoming_club_id,
+                level=args.level,
+                mode=mode,
+                current_position=args.position,
+            )
+        )
+        print(
+            RecommendationFormatter.render_json(result)
+            if args.json
+            else RecommendationFormatter.render_text(result)
+        )
+        return 1 if result.status is RecommendationStatus.EXCLUDED else 0
     elif args.command.startswith("user-"):
         bundle = load_user_data(args.user_dir)
         report = validate_user_data(bundle, ClubCatalogIndex.load(args.catalog))

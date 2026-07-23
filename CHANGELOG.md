@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Ajout du vertical slice `recommend-replacement` pour valider, évaluer, comparer, qualifier et expliquer un remplacement explicite sans score global.
 - Ajout d'une couche minimale d'effets différés, de la primitive DSL `SCHEDULE_EFFECT` et du pattern générique Chains filtré par marque ou type de club.
 - Ajout générique de Wind Resistance comme métrique objective, avec portées club et sac pilotées par le DSL existant.
 - Implémentation déclarative de Bounce Reduction Boost et Fade/Draw x2 comme modificateurs objectifs compatibles avec Explain, compare-bags et inventory-status.
