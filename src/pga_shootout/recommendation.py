@@ -28,9 +28,13 @@ class RecommendationRequest:
     bag_id: str
     outgoing_club_id: str
     incoming_club_id: str
-    level: int | str
+    level: int | str | None = None
     mode: EvaluationMode = EvaluationMode.PARTIAL
     current_position: int | None = None
+
+    @property
+    def level_mode(self) -> str:
+        return "scenario" if self.level is not None else "actual"
 
 
 @dataclass(frozen=True)
@@ -148,7 +152,8 @@ class RecommendationResult:
             "bag_id": self.request.bag_id,
             "replacement": replacement,
             "evaluated_position": self.evaluated_position,
-            "level_scenario": self.request.level,
+            "level_mode": self.request.level_mode,
+            "scenario_level": self.request.level,
             "mode": self.request.mode.value,
             "status": self.status.value,
             "metrics": [item.as_dict() for item in self.metrics],
@@ -180,10 +185,12 @@ class CandidateValidator:
         catalog = load_raw_json(self.catalog_path)
         clubs = catalog.get("clubs", {}) if isinstance(catalog, Mapping) else {}
         errors: list[str] = []
-        warnings = [
-            f"Explicit level scenario {request.level!s} is used for every club; it is not a recorded user level.",
-            "Only one current position is evaluated; effects on the other four positions are not included.",
-        ]
+        warnings = ["Only one current position is evaluated; effects on the other four positions are not included."]
+        if request.level is not None:
+            warnings.insert(
+                0,
+                f"Explicit level scenario {request.level!s} is used for every club; it is not a recorded user level.",
+            )
         if not bundle.inventory.inventory_complete:
             warnings.append("The user inventory is incomplete; this result is not an exhaustive recommendation.")
 
@@ -225,15 +232,26 @@ class CandidateValidator:
         if len(set(candidate_ids)) != len(candidate_ids):
             errors.append("Candidate bag contains duplicate clubs.")
 
+        resolved_levels: dict[str, int | str] = {}
         for club_id in set((*saved_bag.club_ids, *candidate_ids)):
             club_data = clubs.get(club_id) if isinstance(clubs, Mapping) else None
             if not isinstance(club_data, Mapping):
                 errors.append(f"Unknown official club in candidate evaluation: {club_id}")
                 continue
+            if request.level is not None:
+                club_level: int | str | None = request.level
+            else:
+                owned = bundle.inventory.get(club_id)
+                club_level = owned.current_level if owned is not None else None
+            if club_level is None:
+                errors.append(f"No recorded user level is available for club {club_id!r} in actual mode.")
+                continue
             levels = club_data.get("levels", {})
-            level_data = levels.get(str(request.level)) if isinstance(levels, Mapping) else None
+            level_data = levels.get(str(club_level)) if isinstance(levels, Mapping) else None
             if not isinstance(level_data, Mapping) or not level_data.get("available"):
-                errors.append(f"Level {request.level!s} is unavailable for club {club_id!r}.")
+                errors.append(f"Level {club_level!s} is unavailable for club {club_id!r}.")
+                continue
+            resolved_levels[club_id] = club_level
 
         replacement = None
         if outgoing_index is not None and isinstance(incoming_data, Mapping) and isinstance(outgoing_data, Mapping):
@@ -256,12 +274,13 @@ class CandidateValidator:
                 tuple(warnings),
             )
 
-        levels = {club_id: request.level for club_id in set((*saved_bag.club_ids, *candidate_ids))}
-        baseline = BagCandidate(f"{request.bag_id}:baseline", saved_bag.club_ids, levels)
+        baseline_levels = {club_id: resolved_levels[club_id] for club_id in saved_bag.club_ids}
+        candidate_levels = {club_id: resolved_levels[club_id] for club_id in candidate_ids}
+        baseline = BagCandidate(f"{request.bag_id}:baseline", saved_bag.club_ids, baseline_levels)
         candidate = BagCandidate(
             f"{request.bag_id}:p{outgoing_index + 1}:{request.outgoing_club_id}-to-{request.incoming_club_id}",
             tuple(candidate_ids),
-            levels,
+            candidate_levels,
         )
         return ValidationResult(
             request,
@@ -278,16 +297,28 @@ class CandidateEvaluator:
     def __init__(self, evaluator: BagEvaluator) -> None:
         self.evaluator = evaluator
 
-    def evaluate(self, validation: ValidationResult) -> CandidateEvaluation:
+    def evaluate_baseline(self, validation: ValidationResult, position: int) -> ComparedBag:
+        if not validation.valid or validation.baseline is None:
+            raise ValueError("Candidate validation must succeed before baseline evaluation")
+        return self.evaluator.evaluate(
+            BagEvaluationRequest(validation.baseline, position, validation.request.mode)
+        )
+
+    def evaluate(
+        self,
+        validation: ValidationResult,
+        *,
+        baseline: ComparedBag | None = None,
+    ) -> CandidateEvaluation:
         if not validation.valid or validation.evaluated_position is None:
             raise ValueError("Candidate validation must succeed before evaluation")
-        baseline = self.evaluator.evaluate(
+        resolved_baseline = baseline or self.evaluator.evaluate(
             BagEvaluationRequest(validation.baseline, validation.evaluated_position, validation.request.mode)
         )
         candidate = self.evaluator.evaluate(
             BagEvaluationRequest(validation.candidate, validation.evaluated_position, validation.request.mode)
         )
-        return CandidateEvaluation(validation, baseline, candidate)
+        return CandidateEvaluation(validation, resolved_baseline, candidate)
 
 
 def _ability_summary(item: AbilityContribution) -> AbilitySummary:
@@ -435,7 +466,8 @@ class RecommendationFormatter:
             f"Bag: {result.request.bag_id}",
             f"Proposed replacement: {proposal}",
             f"Evaluated current position: {result.evaluated_position if result.evaluated_position is not None else 'unavailable'}",
-            f"Level scenario: {result.request.level}",
+            f"Level mode: {result.request.level_mode}",
+            *([f"Scenario level: {result.request.level}"] if result.request.level is not None else []),
             f"Status: {result.status.value.upper()}",
             "",
             "Gains by metric",

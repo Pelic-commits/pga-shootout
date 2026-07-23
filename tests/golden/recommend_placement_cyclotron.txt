@@ -1,0 +1,18 @@
+placement 1 divebomb->cyclotron pareto
+  evaluated 1 cyclotron: power=+1, control=+2, spin=+7
+placement 2 jumpstart->cyclotron tradeoff
+  evaluated 1 divebomb: power=-4, spin=+6, bounce_reduction_percent=+20
+  evaluated 2 cyclotron: power=+3, control=+2, spin=+8
+placement 3 steadfast->cyclotron tradeoff
+  evaluated 1 divebomb: power=-4, control=-4, spin=-4
+  evaluated 2 jumpstart: power=-4, control=-4, spin=+2, bounce_reduction_percent=+20
+  evaluated 3 cyclotron: power=+3, control=+1, spin=+7
+  evaluated 4 ember: power=-4, control=-4
+placement 4 ember->cyclotron tradeoff
+  evaluated 3 steadfast: spin=+6, bounce_reduction_percent=+20
+  evaluated 4 cyclotron: power=+1, control=-5, spin=+17
+  evaluated 5 sunstorm: power=-7
+placement 5 sunstorm->cyclotron tradeoff
+  evaluated 1 divebomb: power=-4, control=-4, spin=-4
+  evaluated 4 ember: power=-7, bounce_reduction_percent=+20
+  evaluated 5 cyclotron: power=-6, control=+6, spin=+4

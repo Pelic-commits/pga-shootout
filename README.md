@@ -34,12 +34,15 @@ pga-shootout coverage
 pga-shootout inventory-status
 pga-shootout inventory-status --json
 pga-shootout inventory-status --write-reports
-pga-shootout evaluate-bag par3_divebomb --level 12 --partial
-pga-shootout evaluate-bag par3_divebomb --level 12 --strict
-pga-shootout compare-bags par3_divebomb par3_high_flight --level 12 --position 1 --partial
+pga-shootout evaluate-bag par3_divebomb --scenario-level 12 --partial
+pga-shootout evaluate-bag par3_divebomb --scenario-level 12 --strict
+pga-shootout compare-bags par3_divebomb par3_high_flight --scenario-level 12 --position 1 --partial
+pga-shootout recommend-replacement par3_divebomb jumpstart cyclotron --scenario-level 12 --partial
+pga-shootout recommend-placement par3_divebomb cyclotron --scenario-level 12 --partial
+pga-shootout recommend-placement par3_divebomb cyclotron --scenario-level 12 --partial --json
 ```
 
-Le niveau est un niveau de scénario explicite, jamais déduit de l'inventaire utilisateur tant que les niveaux réels sont inconnus.
+`--scenario-level` applique explicitement un niveau hypothétique commun. L'ancien `--level` reste un alias temporaire. Pour les commandes de recommandation, l'absence de cette option active le mode réel : chaque niveau doit alors provenir de l'inventaire et toute valeur manquante exclut le candidat.
 
 `normalize` régénère les artefacts structurels à partir de `clubs_official.json`. Il ne déduit aucune mécanique de jeu.
 
@@ -50,6 +53,8 @@ Le niveau est un niveau de scénario explicite, jamais déduit de l'inventaire u
 Le mode `strict` échoue sur une mécanique inconnue. Le mode `partial` conserve le résultat calculable et signale explicitement chaque élément non évalué.
 
 `compare-bags` compare la composition et le club occupant la même position dans deux sacs. Il affiche les statistiques de base, l'impact des capacités, les statistiques finales, les bonus gagnés ou perdus et les bonus non résolus, sans inventer de score global ni de poids de préférence.
+
+`recommend-placement` teste les cinq emplacements du club entrant fourni, évalue chaque composition sur les cinq positions et présente les améliorations Pareto, compromis, placements neutres et exclusions. Il ne parcourt pas encore automatiquement l'inventaire.
 
 ## Données utilisateur
 

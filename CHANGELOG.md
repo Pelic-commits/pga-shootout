@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Ajout de `recommend-placement`, de la matrice multi-position avec cache du sac de référence et de la séparation explicite entre niveaux réels et niveaux de scénario.
 - Ajout du vertical slice `recommend-replacement` pour valider, évaluer, comparer, qualifier et expliquer un remplacement explicite sans score global.
 - Ajout d'une couche minimale d'effets différés, de la primitive DSL `SCHEDULE_EFFECT` et du pattern générique Chains filtré par marque ou type de club.
 - Ajout générique de Wind Resistance comme métrique objective, avec portées club et sac pilotées par le DSL existant.

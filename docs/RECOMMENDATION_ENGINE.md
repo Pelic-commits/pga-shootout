@@ -283,14 +283,47 @@ La complétude de l'inventaire est indépendante des niveaux. Même avec tous le
 
 ## 6. Vertical slice disponible
 
-La commande actuelle analyse un remplacement fourni explicitement et évalue une seule position :
+La commande suivante analyse un remplacement fourni explicitement et évalue une seule position :
 
 ```text
 pga-shootout recommend-replacement <bag_id> <club_sortant> <club_entrant>
-    --level LEVEL [--position N] [--strict|--partial] [--json]
+    [--scenario-level LEVEL] [--position N] [--strict|--partial] [--json]
 ```
 
 Sans `--position`, la position du club remplacé est évaluée. Cette commande utilise déjà `RecommendationRequest`, `CandidateValidator`, `CandidateEvaluator`, `CandidateComparator`, `QualificationFilter` et `RecommendationFormatter`. Elle ne génère aucun candidat et ne prétend pas mesurer les effets sur les quatre autres positions.
+
+La commande `recommend-placement` constitue le deuxième vertical slice :
+
+```text
+pga-shootout recommend-placement <bag_id> <club_entrant>
+    [--scenario-level LEVEL] [--strict|--partial] [--json]
+```
+
+Elle génère exactement un remplacement par position, au maximum cinq. Chaque composition est ensuite évaluée sur les cinq positions courantes. La sortie conserve donc une matrice `placement × position évaluée × métrique`. Les cinq évaluations du sac de référence sont mises en cache et réutilisées pour tous les placements.
+
+La qualification Pareto, compromis, neutre ou exclu porte sur toutes les cellules qualifiées de la matrice. Les capacités gagnées/perdues, effets différés et éléments non résolus restent séparés. Aucune métrique d'une unité différente n'est additionnée.
+
+### Sémantique des niveaux
+
+Les commandes de recommandation ont deux parcours exclusifs :
+
+- sans option de niveau : mode `actual`, avec les niveaux propres à chaque club lus dans l'inventaire ; toute valeur indispensable absente exclut le placement ;
+- avec `--scenario-level LEVEL` : mode `scenario`, avec le même niveau hypothétique explicitement appliqué à chaque club et un avertissement dans chaque résultat.
+
+L'ancien `--level LEVEL` reste temporairement accepté comme alias de `--scenario-level`. Il ne désigne jamais un niveau utilisateur réel. `evaluate-bag` et `compare-bags`, qui exigent encore un scénario explicite, acceptent également le nouveau nom et conservent cet alias temporaire.
+
+À l'état actuel des données, les niveaux réels des clubs sont absents : le mode `actual` exclut donc honnêtement les cinq placements au lieu d'inventer une valeur.
+
+### Limites du parcours placement
+
+- un seul club entrant, fourni explicitement ;
+- aucun parcours automatique de l'inventaire ;
+- aucun remplacement multiple ;
+- aucune permutation des quatre clubs conservés ;
+- aucune séquence de coups pour résoudre Chains ;
+- aucune capacité de terrain ou de physique ajoutée ;
+- aucune capacité n'est actuellement marquée « indispensable » par une politique utilisateur ; toutes les capacités perdues restent affichées ;
+- aucun score global ni pondération.
 
 ## 7. Première version exhaustive proposée
 

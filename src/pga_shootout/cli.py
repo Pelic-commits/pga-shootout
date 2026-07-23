@@ -19,6 +19,11 @@ from .inventory_status import (
 from .loader import load_raw_json, summarize_raw_json
 from .models import EvaluationMode
 from .normalization import normalize_catalog
+from .placement_recommendation import (
+    PlacementRecommendationFormatter,
+    PlacementRecommendationRequest,
+    PlacementRecommendationService,
+)
 from .recommendation import (
     RecommendationFormatter,
     RecommendationRequest,
@@ -39,6 +44,22 @@ def _level_value(value: str) -> int | str:
     return int(value) if value.isdigit() else value
 
 
+def _add_scenario_level(parser: argparse.ArgumentParser, *, required: bool) -> None:
+    group = parser.add_mutually_exclusive_group(required=required)
+    group.add_argument(
+        "--scenario-level",
+        dest="level",
+        type=_level_value,
+        help="explicit hypothetical level applied to every club",
+    )
+    group.add_argument(
+        "--level",
+        dest="level",
+        type=_level_value,
+        help="deprecated compatibility alias for --scenario-level",
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="pga-shootout")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -57,7 +78,7 @@ def build_parser() -> argparse.ArgumentParser:
         _add_user_paths(subparsers.add_parser(command, help=help_text))
     evaluate_parser = subparsers.add_parser("evaluate-bag", help="evaluate a saved user bag through the rule engine")
     evaluate_parser.add_argument("bag_id")
-    evaluate_parser.add_argument("--level", required=True, type=_level_value, help="explicit scenario level for all bag clubs")
+    _add_scenario_level(evaluate_parser, required=True)
     evaluate_parser.add_argument("--current-club", help="stable club identifier; defaults to the first bag position")
     _add_user_paths(evaluate_parser)
     mode_group = evaluate_parser.add_mutually_exclusive_group(required=True)
@@ -66,7 +87,7 @@ def build_parser() -> argparse.ArgumentParser:
     compare_parser = subparsers.add_parser("compare-bags", help="compare two saved bags without an invented aggregate score")
     compare_parser.add_argument("left_bag_id")
     compare_parser.add_argument("right_bag_id")
-    compare_parser.add_argument("--level", required=True, type=_level_value, help="explicit scenario level for both bags")
+    _add_scenario_level(compare_parser, required=True)
     compare_parser.add_argument("--position", type=int, default=1, help="1-based current club position in both bags")
     _add_user_paths(compare_parser)
     compare_mode = compare_parser.add_mutually_exclusive_group(required=True)
@@ -79,12 +100,7 @@ def build_parser() -> argparse.ArgumentParser:
     recommendation_parser.add_argument("bag_id")
     recommendation_parser.add_argument("outgoing_club_id")
     recommendation_parser.add_argument("incoming_club_id")
-    recommendation_parser.add_argument(
-        "--level",
-        required=True,
-        type=_level_value,
-        help="explicit scenario level for every club",
-    )
+    _add_scenario_level(recommendation_parser, required=False)
     recommendation_parser.add_argument(
         "--position",
         type=int,
@@ -95,6 +111,18 @@ def build_parser() -> argparse.ArgumentParser:
     recommendation_mode = recommendation_parser.add_mutually_exclusive_group(required=True)
     recommendation_mode.add_argument("--strict", action="store_true")
     recommendation_mode.add_argument("--partial", action="store_true")
+    placement_parser = subparsers.add_parser(
+        "recommend-placement",
+        help="analyze all five placements of one explicit incoming club",
+    )
+    placement_parser.add_argument("bag_id")
+    placement_parser.add_argument("incoming_club_id")
+    _add_scenario_level(placement_parser, required=False)
+    placement_parser.add_argument("--json", action="store_true", help="emit structured JSON")
+    _add_user_paths(placement_parser)
+    placement_mode = placement_parser.add_mutually_exclusive_group(required=True)
+    placement_mode.add_argument("--strict", action="store_true")
+    placement_mode.add_argument("--partial", action="store_true")
     normalize_parser = subparsers.add_parser("normalize", help="regenerate structural ability artifacts without interpretation")
     normalize_parser.add_argument("--source", default="data/normalized/clubs_official.json")
     normalize_parser.add_argument("--output-dir", default="data/normalized")
@@ -242,6 +270,25 @@ def main(argv: Sequence[str] | None = None) -> int:
             else RecommendationFormatter.render_text(result)
         )
         return 1 if result.status is RecommendationStatus.EXCLUDED else 0
+    elif args.command == "recommend-placement":
+        mode = EvaluationMode.STRICT if args.strict else EvaluationMode.PARTIAL
+        result = PlacementRecommendationService(
+            user_dir=args.user_dir,
+            catalog_path=args.catalog,
+        ).analyze(
+            PlacementRecommendationRequest(
+                bag_id=args.bag_id,
+                incoming_club_id=args.incoming_club_id,
+                level=args.level,
+                mode=mode,
+            )
+        )
+        print(
+            PlacementRecommendationFormatter.render_json(result)
+            if args.json
+            else PlacementRecommendationFormatter.render_text(result)
+        )
+        return 1 if all(item.status is RecommendationStatus.EXCLUDED for item in result.candidates) else 0
     elif args.command.startswith("user-"):
         bundle = load_user_data(args.user_dir)
         report = validate_user_data(bundle, ClubCatalogIndex.load(args.catalog))
