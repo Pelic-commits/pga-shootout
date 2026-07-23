@@ -16,6 +16,7 @@ from .inventory_status import (
     render_inventory_status,
     write_inventory_reports,
 )
+from .interactive_recommendation import InteractiveRecommendationApp
 from .loader import load_raw_json, summarize_raw_json
 from .models import EvaluationMode
 from .normalization import normalize_catalog
@@ -123,6 +124,11 @@ def build_parser() -> argparse.ArgumentParser:
     placement_mode = placement_parser.add_mutually_exclusive_group(required=True)
     placement_mode.add_argument("--strict", action="store_true")
     placement_mode.add_argument("--partial", action="store_true")
+    interactive_parser = subparsers.add_parser(
+        "recommend-interactive",
+        help="guided placement analysis using saved bags and unlocked club names",
+    )
+    _add_user_paths(interactive_parser)
     normalize_parser = subparsers.add_parser("normalize", help="regenerate structural ability artifacts without interpretation")
     normalize_parser.add_argument("--source", default="data/normalized/clubs_official.json")
     normalize_parser.add_argument("--output-dir", default="data/normalized")
@@ -289,6 +295,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             else PlacementRecommendationFormatter.render_text(result)
         )
         return 1 if all(item.status is RecommendationStatus.EXCLUDED for item in result.candidates) else 0
+    elif args.command == "recommend-interactive":
+        return InteractiveRecommendationApp(
+            user_dir=args.user_dir,
+            catalog_path=args.catalog,
+        ).run()
     elif args.command.startswith("user-"):
         bundle = load_user_data(args.user_dir)
         report = validate_user_data(bundle, ClubCatalogIndex.load(args.catalog))

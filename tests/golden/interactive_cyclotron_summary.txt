@@ -1,0 +1,19 @@
+Assistant de placement PGA Shootout
+Choisissez un sac :
+Choisissez un club à tester :
+Choisissez le mode :
+Niveau de scénario :
+Niveau de scénario : 12
+Placement 1 — Divebomb → Cyclotron
+Catégorie : amélioration sans contrepartie
+Placement 2 — Jumpstart → Cyclotron
+Catégorie : compromis
+Placement 3 — Steadfast → Cyclotron
+Catégorie : compromis
+Placement 4 — Ember → Cyclotron
+Catégorie : compromis
+Placement 5 — Sunstorm → Cyclotron
+Catégorie : compromis
+Aucun score global n'a été calculé.
+Plusieurs placements peuvent rester des compromis différents.
+Afficher les explications détaillées d'un placement ?

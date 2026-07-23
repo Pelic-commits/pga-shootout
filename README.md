@@ -40,6 +40,7 @@ pga-shootout compare-bags par3_divebomb par3_high_flight --scenario-level 12 --p
 pga-shootout recommend-replacement par3_divebomb jumpstart cyclotron --scenario-level 12 --partial
 pga-shootout recommend-placement par3_divebomb cyclotron --scenario-level 12 --partial
 pga-shootout recommend-placement par3_divebomb cyclotron --scenario-level 12 --partial --json
+pga-shootout recommend-interactive
 ```
 
 `--scenario-level` applique explicitement un niveau hypothétique commun. L'ancien `--level` reste un alias temporaire. Pour les commandes de recommandation, l'absence de cette option active le mode réel : chaque niveau doit alors provenir de l'inventaire et toute valeur manquante exclut le candidat.
@@ -55,6 +56,8 @@ Le mode `strict` échoue sur une mécanique inconnue. Le mode `partial` conserve
 `compare-bags` compare la composition et le club occupant la même position dans deux sacs. Il affiche les statistiques de base, l'impact des capacités, les statistiques finales, les bonus gagnés ou perdus et les bonus non résolus, sans inventer de score global ni de poids de préférence.
 
 `recommend-placement` teste les cinq emplacements du club entrant fourni, évalue chaque composition sur les cinq positions et présente les améliorations Pareto, compromis, placements neutres et exclusions. Il ne parcourt pas encore automatiquement l'inventaire.
+
+`recommend-interactive` guide l'utilisateur par les noms lisibles des sacs et clubs, puis permet d'ouvrir l'Explain détaillé d'un placement. Voir [docs/INTERACTIVE_CLI.md](docs/INTERACTIVE_CLI.md).
 
 ## Données utilisateur
 

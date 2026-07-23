@@ -325,6 +325,12 @@ L'ancien `--level LEVEL` reste temporairement accepté comme alias de `--scenari
 - aucune capacité n'est actuellement marquée « indispensable » par une politique utilisateur ; toutes les capacités perdues restent affichées ;
 - aucun score global ni pondération.
 
+### Interface interactive
+
+`pga-shootout recommend-interactive` orchestre ce même parcours sans demander les identifiants internes. L'interface sélectionne un sac, un club débloqué et le mode réel ou scénario, puis rend le même `PlacementRecommendationResult`. Elle n'ajoute aucune qualification et ne modifie aucun calcul.
+
+Après la synthèse, l'utilisateur peut choisir un placement. L'interface reconstruit alors sa composition avec `CandidateValidator` et `CandidateEvaluator`, puis affiche le journal Explain existant pour chacune des cinq positions. Cette réévaluation est une vue détaillée à la demande, distincte de la classification déjà calculée.
+
 ## 7. Première version exhaustive proposée
 
 Une commande future pourrait suivre ce contrat produit :
