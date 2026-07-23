@@ -59,6 +59,8 @@ Le mode `strict` échoue sur une mécanique inconnue. Le mode `partial` conserve
 
 `recommend-interactive` guide l'utilisateur par les noms lisibles des sacs et clubs, puis permet d'ouvrir l'Explain détaillé d'un placement. Voir [docs/INTERACTIVE_CLI.md](docs/INTERACTIVE_CLI.md).
 
+Pour une installation complète depuis un ordinateur neuf, la création d'un inventaire et le premier essai guidé, voir [docs/FIRST_RUN.md](docs/FIRST_RUN.md).
+
 ## Données utilisateur
 
 Les informations du joueur vivent exclusivement dans `data/user/` et ne modifient ni le catalogue officiel ni les règles du simulateur.
