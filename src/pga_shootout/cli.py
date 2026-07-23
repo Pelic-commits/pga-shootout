@@ -10,6 +10,12 @@ from .bag_evaluation import evaluate_saved_bag, render_bag_evaluation
 from .bag_comparison import compare_saved_bags, render_bag_comparison
 from .coverage import generate_coverage_report
 from .data_validation import validate_official_data
+from .inventory_status import (
+    analyze_inventory_status,
+    render_inventory_json,
+    render_inventory_status,
+    write_inventory_reports,
+)
 from .loader import load_raw_json, summarize_raw_json
 from .models import EvaluationMode
 from .normalization import normalize_catalog
@@ -76,6 +82,24 @@ def build_parser() -> argparse.ArgumentParser:
     reference_parser.add_argument("--normalized-dir", default="data/normalized")
     reference_parser.add_argument("--raw-catalog", default="data/raw/pga_club_stats_extract_v2_2026-07-21.json")
     reference_parser.add_argument("--output", default="docs/REFERENCE_BAG_GAPS.md")
+    inventory_status_parser = subparsers.add_parser(
+        "inventory-status",
+        help="show the operational status of every known owned club",
+    )
+    inventory_status_parser.add_argument("--user-dir", default="data/user")
+    inventory_status_parser.add_argument("--normalized-dir", default="data/normalized")
+    inventory_status_parser.add_argument(
+        "--raw-catalog",
+        default="data/raw/pga_club_stats_extract_v2_2026-07-21.json",
+    )
+    inventory_status_parser.add_argument("--json", action="store_true", help="emit the same audit as structured JSON")
+    inventory_status_parser.add_argument(
+        "--write-reports",
+        action="store_true",
+        help="regenerate the inventory and project status Markdown reports",
+    )
+    inventory_status_parser.add_argument("--inventory-output", default="docs/INVENTORY_STATUS.md")
+    inventory_status_parser.add_argument("--project-output", default="docs/PROJECT_STATUS.md")
     return parser
 
 
@@ -134,6 +158,15 @@ def main(argv: Sequence[str] | None = None) -> int:
             ],
             "report": args.output,
         }, indent=2, ensure_ascii=False))
+    elif args.command == "inventory-status":
+        report = analyze_inventory_status(
+            user_dir=args.user_dir,
+            normalized_dir=args.normalized_dir,
+            raw_catalog_path=args.raw_catalog,
+        )
+        if args.write_reports:
+            write_inventory_reports(report, args.inventory_output, args.project_output)
+        print(render_inventory_json(report) if args.json else render_inventory_status(report))
     elif args.command == "evaluate-bag":
         mode = EvaluationMode.STRICT if args.strict else EvaluationMode.PARTIAL
         evaluation = evaluate_saved_bag(

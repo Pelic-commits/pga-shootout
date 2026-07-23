@@ -31,6 +31,9 @@ pga-shootout validate-data data/raw/pga_club_stats_extract_v2_2026-07-21.json da
 pga-shootout inspect data/raw/pga_club_stats_extract_v2_2026-07-21.json
 pga-shootout normalize
 pga-shootout coverage
+pga-shootout inventory-status
+pga-shootout inventory-status --json
+pga-shootout inventory-status --write-reports
 pga-shootout evaluate-bag par3_divebomb --level 12 --partial
 pga-shootout evaluate-bag par3_divebomb --level 12 --strict
 pga-shootout compare-bags par3_divebomb par3_high_flight --level 12 --position 1 --partial
@@ -41,6 +44,8 @@ Le niveau est un niveau de scénario explicite, jamais déduit de l'inventaire u
 `normalize` régénère les artefacts structurels à partir de `clubs_official.json`. Il ne déduit aucune mécanique de jeu.
 
 `coverage` compare ces artefacts au registre courant et régénère `docs/MECHANIC_COVERAGE.md`.
+
+`inventory-status` recalcule l'état opérationnel des clubs possédés depuis le catalogue, le registre moteur et `data/user/`. La sortie humaine, la sortie JSON et les rapports `docs/INVENTORY_STATUS.md` / `docs/PROJECT_STATUS.md` partagent exactement le même audit.
 
 Le mode `strict` échoue sur une mécanique inconnue. Le mode `partial` conserve le résultat calculable et signale explicitement chaque élément non évalué.
 

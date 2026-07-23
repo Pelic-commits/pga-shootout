@@ -165,6 +165,43 @@ class CliTests(unittest.TestCase):
             self.assertIn('"unique_clubs": 8', output.getvalue())
             self.assertIn("# Reference Bag Ability Matrix", report_path.read_text(encoding="utf-8"))
 
+    def test_inventory_status_cli_human_json_and_reports_share_one_audit(self):
+        root = Path(__file__).resolve().parents[1]
+        common = [
+            "inventory-status",
+            "--user-dir", str(root / "data" / "user"),
+            "--normalized-dir", str(root / "data" / "normalized"),
+            "--raw-catalog", str(root / "data" / "raw" / "pga_club_stats_extract_v2_2026-07-21.json"),
+        ]
+        human_output = io.StringIO()
+        with contextlib.redirect_stdout(human_output):
+            result = main(common)
+        self.assertEqual(result, 0)
+        self.assertIn("Engine coverage: 21/35 abilities (60.00%)", human_output.getvalue())
+        self.assertIn("Fully comparable clubs: Homestead", human_output.getvalue())
+
+        json_output = io.StringIO()
+        with contextlib.redirect_stdout(json_output):
+            result = main([*common, "--json"])
+        self.assertEqual(result, 0)
+        payload = json.loads(json_output.getvalue())
+        self.assertEqual((payload["inventory_clubs"], payload["global_clubs"]), (20, 88))
+
+        with tempfile.TemporaryDirectory() as directory:
+            inventory_path = Path(directory) / "inventory.md"
+            project_path = Path(directory) / "project.md"
+            report_output = io.StringIO()
+            with contextlib.redirect_stdout(report_output):
+                result = main([
+                    *common,
+                    "--write-reports",
+                    "--inventory-output", str(inventory_path),
+                    "--project-output", str(project_path),
+                ])
+            self.assertEqual(result, 0)
+            self.assertIn("# User Inventory Status", inventory_path.read_text(encoding="utf-8"))
+            self.assertIn("# Project Status", project_path.read_text(encoding="utf-8"))
+
 
 if __name__ == "__main__":
     unittest.main()
