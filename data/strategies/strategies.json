@@ -1,0 +1,356 @@
+{
+  "schema_version": "1.0.0",
+  "strategies": [
+    {
+      "identifier": "par3",
+      "version": "1.0.0",
+      "user_name": "Sac Par 3",
+      "description": "Atteindre directement le green, puis terminer depuis le green.",
+      "origin": "bundled",
+      "bag_size": 5,
+      "uncertainty_policy": "report_indeterminate",
+      "expected_active_roles": ["attack_club", "putter"],
+      "available_support_clubs": 3,
+      "sequence": [
+        {
+          "identifier": "attack",
+          "name": "Atteindre le green",
+          "active_role": "attack_club",
+          "function": {"identifier": "reach_target_zone", "parameters": {"target_zone": "green"}},
+          "context": {"values": {"terrain": "tee"}, "required_data": []},
+          "requirements": [
+            {
+              "identifier": "reach_green",
+              "subject": {"kind": "shot_outcome", "field": "target_zone"},
+              "operator": "eq",
+              "expected": "green",
+              "description": "Le coup doit atteindre le green.",
+              "required_data": ["validated_carry_model", "target_distance"]
+            }
+          ],
+          "local_objectives": [
+            {
+              "priority": 1,
+              "operation": "pareto",
+              "metric": "all_comparable_metrics",
+              "description": "Conserver les compromis objectifs entre toutes les métriques comparables."
+            }
+          ]
+        },
+        {
+          "identifier": "putt",
+          "name": "Terminer depuis le green",
+          "active_role": "putter",
+          "function": {"identifier": "finish", "parameters": {"start_zone": "green"}},
+          "context": {"values": {"terrain": "green"}, "required_data": []},
+          "requirements": [
+            {
+              "identifier": "finish_hole",
+              "subject": {"kind": "shot_outcome", "field": "hole_result"},
+              "operator": "eq",
+              "expected": "holed",
+              "description": "Le coup doit terminer le trou.",
+              "required_data": ["validated_putt_model"]
+            }
+          ],
+          "local_objectives": [
+            {
+              "priority": 1,
+              "operation": "pareto",
+              "metric": "all_comparable_metrics",
+              "description": "Conserver les compromis objectifs entre toutes les métriques comparables."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "identifier": "par4_short",
+      "version": "1.0.0",
+      "user_name": "Sac Par 4 court",
+      "description": "Attaquer directement le green, puis terminer depuis le green.",
+      "origin": "bundled",
+      "bag_size": 5,
+      "uncertainty_policy": "report_indeterminate",
+      "expected_active_roles": ["attack_club", "putter"],
+      "available_support_clubs": 3,
+      "sequence": [
+        {
+          "identifier": "attack",
+          "name": "Attaque directe du green",
+          "active_role": "attack_club",
+          "function": {"identifier": "reach_target_zone", "parameters": {"target_zone": "green"}},
+          "context": {"values": {"terrain": "tee"}, "required_data": []},
+          "requirements": [
+            {
+              "identifier": "reach_green",
+              "subject": {"kind": "shot_outcome", "field": "target_zone"},
+              "operator": "eq",
+              "expected": "green",
+              "description": "Le coup doit atteindre le green.",
+              "required_data": ["validated_carry_model", "target_distance"]
+            }
+          ],
+          "local_objectives": [
+            {
+              "priority": 1,
+              "operation": "pareto",
+              "metric": "all_comparable_metrics",
+              "description": "Conserver les compromis objectifs entre toutes les métriques comparables."
+            }
+          ]
+        },
+        {
+          "identifier": "putt",
+          "name": "Terminer depuis le green",
+          "active_role": "putter",
+          "function": {"identifier": "finish", "parameters": {"start_zone": "green"}},
+          "context": {"values": {"terrain": "green"}, "required_data": []},
+          "requirements": [
+            {
+              "identifier": "finish_hole",
+              "subject": {"kind": "shot_outcome", "field": "hole_result"},
+              "operator": "eq",
+              "expected": "holed",
+              "description": "Le coup doit terminer le trou.",
+              "required_data": ["validated_putt_model"]
+            }
+          ],
+          "local_objectives": [
+            {
+              "priority": 1,
+              "operation": "pareto",
+              "metric": "all_comparable_metrics",
+              "description": "Conserver les compromis objectifs entre toutes les métriques comparables."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "identifier": "par4_long",
+      "version": "1.0.0",
+      "user_name": "Sac Par 4 long",
+      "description": "Jouer un départ, une approche vers le green, puis terminer depuis le green.",
+      "origin": "bundled",
+      "bag_size": 5,
+      "uncertainty_policy": "report_indeterminate",
+      "expected_active_roles": ["drive_club", "approach_club", "putter"],
+      "available_support_clubs": 2,
+      "sequence": [
+        {
+          "identifier": "drive",
+          "name": "Départ",
+          "active_role": "drive_club",
+          "function": {"identifier": "advance_toward_target", "parameters": {}},
+          "context": {"values": {"terrain": "tee"}, "required_data": []},
+          "requirements": [
+            {
+              "identifier": "prepare_approach",
+              "subject": {"kind": "shot_outcome", "field": "next_step_ready"},
+              "operator": "eq",
+              "expected": true,
+              "description": "Le départ doit préparer l'étape d'approche.",
+              "required_data": ["validated_carry_model", "target_distance"]
+            }
+          ],
+          "local_objectives": [
+            {
+              "priority": 1,
+              "operation": "pareto",
+              "metric": "all_comparable_metrics",
+              "description": "Conserver les compromis objectifs entre toutes les métriques comparables."
+            }
+          ]
+        },
+        {
+          "identifier": "approach",
+          "name": "Approche vers le green",
+          "active_role": "approach_club",
+          "function": {"identifier": "reach_target_zone", "parameters": {"target_zone": "green"}},
+          "context": {"values": {}, "required_data": []},
+          "requirements": [
+            {
+              "identifier": "reach_green",
+              "subject": {"kind": "shot_outcome", "field": "target_zone"},
+              "operator": "eq",
+              "expected": "green",
+              "description": "L'approche doit atteindre le green.",
+              "required_data": ["validated_carry_model", "target_distance"]
+            }
+          ],
+          "local_objectives": [
+            {
+              "priority": 1,
+              "operation": "pareto",
+              "metric": "all_comparable_metrics",
+              "description": "Conserver les compromis objectifs entre toutes les métriques comparables."
+            }
+          ]
+        },
+        {
+          "identifier": "putt",
+          "name": "Terminer depuis le green",
+          "active_role": "putter",
+          "function": {"identifier": "finish", "parameters": {"start_zone": "green"}},
+          "context": {"values": {"terrain": "green"}, "required_data": []},
+          "requirements": [
+            {
+              "identifier": "finish_hole",
+              "subject": {"kind": "shot_outcome", "field": "hole_result"},
+              "operator": "eq",
+              "expected": "holed",
+              "description": "Le coup doit terminer le trou.",
+              "required_data": ["validated_putt_model"]
+            }
+          ],
+          "local_objectives": [
+            {
+              "priority": 1,
+              "operation": "pareto",
+              "metric": "all_comparable_metrics",
+              "description": "Conserver les compromis objectifs entre toutes les métriques comparables."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "identifier": "par5",
+      "version": "1.0.0",
+      "user_name": "Sac Par 5",
+      "description": "Jouer un long départ, une longue approche vers le green, puis terminer depuis le green.",
+      "origin": "bundled",
+      "bag_size": 5,
+      "uncertainty_policy": "report_indeterminate",
+      "expected_active_roles": ["drive_club", "approach_club", "putter"],
+      "available_support_clubs": 2,
+      "sequence": [
+        {
+          "identifier": "drive",
+          "name": "Long départ",
+          "active_role": "drive_club",
+          "function": {"identifier": "advance_toward_target", "parameters": {}},
+          "context": {"values": {"terrain": "tee"}, "required_data": []},
+          "requirements": [
+            {
+              "identifier": "prepare_approach",
+              "subject": {"kind": "shot_outcome", "field": "next_step_ready"},
+              "operator": "eq",
+              "expected": true,
+              "description": "Le départ doit préparer l'étape d'approche.",
+              "required_data": ["validated_carry_model", "target_distance"]
+            }
+          ],
+          "local_objectives": [
+            {
+              "priority": 1,
+              "operation": "pareto",
+              "metric": "all_comparable_metrics",
+              "description": "Conserver les compromis objectifs entre toutes les métriques comparables."
+            }
+          ]
+        },
+        {
+          "identifier": "approach",
+          "name": "Longue approche vers le green",
+          "active_role": "approach_club",
+          "function": {"identifier": "reach_target_zone", "parameters": {"target_zone": "green"}},
+          "context": {"values": {}, "required_data": []},
+          "requirements": [
+            {
+              "identifier": "reach_green",
+              "subject": {"kind": "shot_outcome", "field": "target_zone"},
+              "operator": "eq",
+              "expected": "green",
+              "description": "L'approche doit atteindre le green.",
+              "required_data": ["validated_carry_model", "target_distance"]
+            },
+            {
+              "identifier": "meet_long_approach_carry",
+              "subject": {"kind": "objective_metric", "metric": "real_carry"},
+              "operator": "gte",
+              "expected": {"source": "future_context.approach_distance"},
+              "description": "La portée réelle doit satisfaire la distance de la longue approche.",
+              "required_data": ["validated_carry_model", "approach_distance"]
+            }
+          ],
+          "local_objectives": [
+            {
+              "priority": 1,
+              "operation": "pareto",
+              "metric": "all_comparable_metrics",
+              "description": "Conserver les compromis objectifs entre toutes les métriques comparables."
+            }
+          ]
+        },
+        {
+          "identifier": "putt",
+          "name": "Terminer depuis le green",
+          "active_role": "putter",
+          "function": {"identifier": "finish", "parameters": {"start_zone": "green"}},
+          "context": {"values": {"terrain": "green"}, "required_data": []},
+          "requirements": [
+            {
+              "identifier": "finish_hole",
+              "subject": {"kind": "shot_outcome", "field": "hole_result"},
+              "operator": "eq",
+              "expected": "holed",
+              "description": "Le coup doit terminer le trou.",
+              "required_data": ["validated_putt_model"]
+            }
+          ],
+          "local_objectives": [
+            {
+              "priority": 1,
+              "operation": "pareto",
+              "metric": "all_comparable_metrics",
+              "description": "Conserver les compromis objectifs entre toutes les métriques comparables."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "identifier": "head_crosswind",
+      "version": "1.0.0",
+      "user_name": "Vent contraire / latéral",
+      "description": "Ajoute un contexte de vent contraire ou latéral et expose la résistance au vent comme objectif local séparé.",
+      "compatible_strategy_ids": ["par4_long", "par5"],
+      "patches": [
+        {
+          "step_id": "drive",
+          "context_updates": {"wind_relation": "head_or_crosswind"},
+          "required_context_data": ["validated_wind_direction_context"],
+          "add_requirements": [],
+          "add_local_objectives": [
+            {
+              "priority": 1,
+              "operation": "maximize",
+              "metric": "wind_resistance_percent",
+              "description": "Comparer séparément la résistance au vent pour le départ.",
+              "required_data": ["wind_speed"]
+            }
+          ]
+        },
+        {
+          "step_id": "approach",
+          "context_updates": {"wind_relation": "head_or_crosswind"},
+          "required_context_data": ["validated_wind_direction_context"],
+          "add_requirements": [],
+          "add_local_objectives": [
+            {
+              "priority": 1,
+              "operation": "maximize",
+              "metric": "wind_resistance_percent",
+              "description": "Comparer séparément la résistance au vent pour l'approche.",
+              "required_data": ["wind_speed"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -45,6 +45,9 @@ pga-shootout coverage
 pga-shootout inventory-status
 pga-shootout inventory-status --json
 pga-shootout inventory-status --write-reports
+pga-shootout strategy-list
+pga-shootout strategy-show par4_long
+pga-shootout strategy-show par4_long --variant head_crosswind
 pga-shootout evaluate-bag par3_divebomb --scenario-level 12 --partial
 pga-shootout evaluate-bag par3_divebomb --scenario-level 12 --strict
 pga-shootout compare-bags par3_divebomb par3_high_flight --scenario-level 12 --position 1 --partial
@@ -65,6 +68,8 @@ pga-shootout data-dashboard
 `coverage` compare ces artefacts au registre courant et régénère `docs/MECHANIC_COVERAGE.md`.
 
 `inventory-status` recalcule l'état opérationnel des clubs possédés depuis le catalogue, le registre moteur et `data/user/`. La sortie humaine, la sortie JSON et les rapports `docs/INVENTORY_STATUS.md` / `docs/PROJECT_STATUS.md` partagent exactement le même audit.
+
+`strategy-list` et `strategy-show` consultent la bibliothèque déclarative de plans de jeu. Ces préréglages décrivent des séquences, des rôles et des exigences génériques ; ils ne déclenchent aucune règle particulière dans le moteur. Voir [docs/STRATEGY_MODEL.md](docs/STRATEGY_MODEL.md).
 
 Le mode `strict` échoue sur une mécanique inconnue. Le mode `partial` conserve le résultat calculable et signale explicitement chaque élément non évalué.
 

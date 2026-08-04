@@ -39,6 +39,7 @@ from .user_gap_report import generate_user_gap_report
 from .catalog_store import catalog_versions, diff_catalog_versions, render_catalog_diff_markdown
 from .data_dashboard import build_data_dashboard, write_dashboard
 from .storage import PgaDatabase, migration_preview
+from .strategy import StrategyRegistry, render_strategy, render_strategy_list
 
 
 def _add_user_paths(parser: argparse.ArgumentParser) -> None:
@@ -203,6 +204,24 @@ def build_parser() -> argparse.ArgumentParser:
     )
     inventory_status_parser.add_argument("--inventory-output", default="docs/INVENTORY_STATUS.md")
     inventory_status_parser.add_argument("--project-output", default="docs/PROJECT_STATUS.md")
+    strategy_list_parser = subparsers.add_parser(
+        "strategy-list",
+        help="list the data-driven game strategies available to the user",
+    )
+    strategy_list_parser.add_argument("--registry", default="data/strategies/strategies.json")
+    strategy_show_parser = subparsers.add_parser(
+        "strategy-show",
+        help="show one strategy, its roles, variants and missing evaluation data",
+    )
+    strategy_show_parser.add_argument("strategy_id")
+    strategy_show_parser.add_argument(
+        "--variant",
+        action="append",
+        default=[],
+        help="compatible variant identifier; may be repeated",
+    )
+    strategy_show_parser.add_argument("--registry", default="data/strategies/strategies.json")
+    strategy_show_parser.add_argument("--json", action="store_true", help="emit structured JSON")
     return parser
 
 
@@ -270,6 +289,21 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.write_reports:
             write_inventory_reports(report, args.inventory_output, args.project_output)
         print(render_inventory_json(report) if args.json else render_inventory_status(report))
+    elif args.command == "strategy-list":
+        print(render_strategy_list(StrategyRegistry.load(args.registry)))
+    elif args.command == "strategy-show":
+        registry = StrategyRegistry.load(args.registry)
+        strategy = registry.resolve(args.strategy_id, tuple(args.variant))
+        compatible = registry.compatible_variants(args.strategy_id)
+        if args.json:
+            print(json.dumps({
+                "strategy": strategy.definition.to_dict(),
+                "applied_variant_ids": strategy.applied_variant_ids,
+                "compatible_variants": [item.to_dict() for item in compatible],
+                "missing_evaluation_data": strategy.missing_evaluation_data,
+            }, indent=2, ensure_ascii=False))
+        else:
+            print(render_strategy(strategy, compatible))
     elif args.command == "evaluate-bag":
         mode = EvaluationMode.STRICT if args.strict else EvaluationMode.PARTIAL
         evaluation = evaluate_saved_bag(
