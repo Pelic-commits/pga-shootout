@@ -27,11 +27,11 @@ class InventoryStatusTests(unittest.TestCase):
 
     def test_totals_are_derived_and_inventory_is_distinct_from_catalog(self):
         report = self.report()
-        self.assertEqual(report.inventory_clubs, 20)
+        self.assertEqual(report.inventory_clubs, 21)
         self.assertFalse(report.inventory_complete)
-        self.assertEqual(report.official_abilities, 35)
+        self.assertEqual(report.official_abilities, 36)
         self.assertEqual(report.simulated_abilities, 28)
-        self.assertEqual(report.unresolved_abilities, 7)
+        self.assertEqual(report.unresolved_abilities, 8)
         self.assertEqual(report.fully_simulated_clubs, 14)
         self.assertEqual(report.known_user_levels, 0)
         self.assertEqual((report.global_clubs, report.global_abilities), (88, 162))
@@ -127,8 +127,8 @@ class InventoryStatusTests(unittest.TestCase):
         self.assertEqual(render_inventory_markdown(first), render_inventory_markdown(second))
         self.assertEqual(render_project_status_markdown(first), render_project_status_markdown(second))
         payload = json.loads(render_inventory_json(first))
-        self.assertEqual(payload["inventory_clubs"], 20)
-        self.assertEqual(len(payload["clubs"]), 20)
+        self.assertEqual(payload["inventory_clubs"], 21)
+        self.assertEqual(len(payload["clubs"]), 21)
 
     def test_written_reports_share_the_same_audit(self):
         report = self.report()

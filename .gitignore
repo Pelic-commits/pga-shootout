@@ -5,6 +5,7 @@ __pycache__/
 .coverage
 htmlcov/
 .venv/
+.venv_incompatible/
 dist/
 build/
 
@@ -12,3 +13,9 @@ build/
 data/raw/*
 !data/raw/.gitkeep
 !data/raw/pga_club_stats_extract_v2_2026-07-21.json
+
+# Local mutable profile database and automatic recoverable backups.
+data/*.sqlite
+data/*.sqlite-*
+data/backups/
+data/user/backups/

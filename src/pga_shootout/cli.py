@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 from collections.abc import Sequence
+from pathlib import Path
 
 from .bag_evaluation import evaluate_saved_bag, render_bag_evaluation
 from .bag_comparison import compare_saved_bags, render_bag_comparison
@@ -35,6 +36,9 @@ from .recommendation import (
 from .reference_gap_report import generate_reference_gap_report
 from .user_data import ClubCatalogIndex, load_user_data, validate_user_data
 from .user_gap_report import generate_user_gap_report
+from .catalog_store import catalog_versions, diff_catalog_versions, render_catalog_diff_markdown
+from .data_dashboard import build_data_dashboard, write_dashboard
+from .storage import PgaDatabase, migration_preview
 
 
 def _add_user_paths(parser: argparse.ArgumentParser) -> None:
@@ -134,7 +138,27 @@ def build_parser() -> argparse.ArgumentParser:
         "assistant",
         help="open the guided French main menu",
     )
-    _add_user_paths(assistant_parser)
+    assistant_parser.add_argument("--database", "--user-dir", dest="database", default="data/pga_shootout.sqlite")
+    assistant_parser.add_argument("--legacy-user-dir", default="data/user")
+    assistant_parser.add_argument("--catalog", default="data/normalized/clubs_official.json")
+    data_init = subparsers.add_parser("data-init", help="initialize versioned SQLite storage and migrate JSON user data")
+    data_init.add_argument("--database", default="data/pga_shootout.sqlite")
+    data_init.add_argument("--manifest", default="data/catalog/versions.json")
+    data_init.add_argument("--user-dir", default="data/user")
+    data_init.add_argument("--preview", action="store_true")
+    catalog_diff = subparsers.add_parser("catalog-diff", help="compare two retained catalog versions")
+    catalog_diff.add_argument("--database", default="data/pga_shootout.sqlite")
+    catalog_diff.add_argument("--old-version")
+    catalog_diff.add_argument("--new-version")
+    catalog_diff.add_argument("--json-output")
+    catalog_diff.add_argument("--markdown-output")
+    export_parser = subparsers.add_parser("data-export", help="export SQLite user data as diagnostic JSON")
+    export_parser.add_argument("--database", default="data/pga_shootout.sqlite")
+    export_parser.add_argument("--output-dir", required=True)
+    dashboard_parser = subparsers.add_parser("data-dashboard", help="regenerate the catalog/inventory/optimization dashboard")
+    dashboard_parser.add_argument("--database", default="data/pga_shootout.sqlite")
+    dashboard_parser.add_argument("--markdown-output", default="docs/DATA_DASHBOARD.md")
+    dashboard_parser.add_argument("--json-output", default="data/reports/data_dashboard.json")
     normalize_parser = subparsers.add_parser("normalize", help="regenerate structural ability artifacts without interpretation")
     normalize_parser.add_argument("--source", default="data/normalized/clubs_official.json")
     normalize_parser.add_argument("--output-dir", default="data/normalized")
@@ -308,9 +332,40 @@ def main(argv: Sequence[str] | None = None) -> int:
         ).run()
     elif args.command == "assistant":
         return PgaShootoutAssistant(
-            user_dir=args.user_dir,
+            user_dir=args.database,
             catalog_path=args.catalog,
+            legacy_user_dir=args.legacy_user_dir,
         ).run()
+    elif args.command == "data-init":
+        preview = migration_preview(args.user_dir)
+        if args.preview:
+            print(json.dumps(preview.as_dict(), indent=2, ensure_ascii=False))
+        else:
+            database = PgaDatabase(args.database)
+            database.initialize_catalog(args.manifest)
+            result = None if database.has_user_profile() else database.migrate_json_user(args.user_dir)
+            print(json.dumps({"database": args.database, "versions": [item.__dict__ for item in catalog_versions(args.database)], "migration": result.as_dict() if result else "already_migrated"}, indent=2, ensure_ascii=False))
+    elif args.command == "catalog-diff":
+        versions = catalog_versions(args.database)
+        old_version = args.old_version or versions[-2].version_id
+        new_version = args.new_version or versions[-1].version_id
+        diff = diff_catalog_versions(args.database, old_version, new_version)
+        if args.json_output:
+            Path(args.json_output).parent.mkdir(parents=True, exist_ok=True)
+            with open(args.json_output, "w", encoding="utf-8", newline="\n") as stream:
+                json.dump(diff.as_dict(), stream, ensure_ascii=False, indent=2)
+                stream.write("\n")
+        if args.markdown_output:
+            Path(args.markdown_output).parent.mkdir(parents=True, exist_ok=True)
+            with open(args.markdown_output, "w", encoding="utf-8", newline="\n") as stream:
+                stream.write(render_catalog_diff_markdown(diff))
+        print(json.dumps(diff.as_dict(), indent=2, ensure_ascii=False))
+    elif args.command == "data-export":
+        print(json.dumps([str(path) for path in PgaDatabase(args.database).export_user_json(args.output_dir)], indent=2, ensure_ascii=False))
+    elif args.command == "data-dashboard":
+        report = build_data_dashboard(args.database)
+        write_dashboard(report, args.markdown_output, args.json_output)
+        print(json.dumps(report.as_dict(), indent=2, ensure_ascii=False))
     elif args.command.startswith("user-"):
         bundle = load_user_data(args.user_dir)
         report = validate_user_data(bundle, ClubCatalogIndex.load(args.catalog))

@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0.0",
+  "versions": [
+    {
+      "version_id": "official-2026-06-14-captured-2026-07-21",
+      "catalog_path": "data/normalized/clubs_official.json",
+      "raw_path": "data/raw/pga_club_stats_extract_v2_2026-07-21.json",
+      "semantic_map_path": "data/normalized/semantic_map.json",
+      "source_url": "https://concretesoftware.com/pga-tour-golf-shootout-club-stats/",
+      "source_last_updated": "2026-06-14",
+      "captured_at": "2026-07-21T23:16:43.262Z",
+      "verified_at": null,
+      "catalog_sha256": "76d298789030964a32cd4b047cba2598cc5b647b61a90b13ca962767f3417a85",
+      "raw_sha256": "449831121cada54114ac8175af38b99ab8bd6ecf15310600a1df9192ca703a14",
+      "club_count": 88,
+      "is_current": false,
+      "confidence": "official capture complete against the 88 clubs declared by the page"
+    },
+    {
+      "version_id": "official-2026-06-14-verified-2026-08-04",
+      "catalog_path": "data/normalized/clubs_official.json",
+      "raw_path": "data/raw/pga_club_stats_extract_v2_2026-07-21.json",
+      "semantic_map_path": "data/normalized/semantic_map.json",
+      "source_url": "https://concretesoftware.com/pga-tour-golf-shootout-club-stats/",
+      "source_last_updated": "2026-06-14",
+      "captured_at": "2026-07-21T23:16:43.262Z",
+      "verified_at": "2026-08-04",
+      "catalog_sha256": "76d298789030964a32cd4b047cba2598cc5b647b61a90b13ca962767f3417a85",
+      "raw_sha256": "449831121cada54114ac8175af38b99ab8bd6ecf15310600a1df9192ca703a14",
+      "club_count": 88,
+      "is_current": true,
+      "confidence": "bounded verification: official page still declares June 14, 2026 and exposes the same 88 club names and public metadata; detailed Blacksmith data was rechecked live",
+      "verification": {
+        "method": "live official page DOM inspection",
+        "brand_counts": {
+          "corvid": 10,
+          "forester": 11,
+          "nautilus": 9,
+          "palo": 10,
+          "phoenix": 8,
+          "ryusei": 10,
+          "stanchion": 13,
+          "willoughsby": 11,
+          "mythical": 6
+        },
+        "blacksmith_found": true,
+        "limitations": [
+          "The official page exposes no update timestamp after June 14, 2026.",
+          "No independent authoritative source proving clubs beyond the 88 declared by the official page was found.",
+          "The verified version intentionally reuses the byte-identical July 21 capture because the official content version did not change."
+        ]
+      }
+    }
+  ]
+}

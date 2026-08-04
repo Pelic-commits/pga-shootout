@@ -1,0 +1,87 @@
+{
+  "catalog": {
+    "version": "official-2026-06-14-verified-2026-08-04",
+    "source_last_updated": "2026-06-14",
+    "verified_at": "2026-08-04",
+    "source": "https://concretesoftware.com/pga-tour-golf-shootout-club-stats/",
+    "clubs": 88,
+    "statistics_complete": false,
+    "statistics_levels_complete": 680,
+    "statistics_levels_available": 831,
+    "abilities_complete": true,
+    "abilities_described": 162,
+    "abilities_total": 162,
+    "confidence": "bounded verification: official page still declares June 14, 2026 and exposes the same 88 club names and public metadata; detailed Blacksmith data was rechecked live",
+    "anomalies": [
+      "The official page exposes no update timestamp after June 14, 2026.",
+      "No independent authoritative source proving clubs beyond the 88 declared by the official page was found.",
+      "The verified version intentionally reuses the byte-identical July 21 capture because the official content version did not change."
+    ],
+    "changes_from_previous": {
+      "old_version": "official-2026-06-14-captured-2026-07-21",
+      "new_version": "official-2026-06-14-verified-2026-08-04",
+      "added_clubs": [],
+      "missing_clubs": [],
+      "renamed_clubs": [],
+      "metadata_changes": [],
+      "stat_changes": [],
+      "added_abilities": [],
+      "removed_abilities": [],
+      "ability_text_changes": [],
+      "ability_value_changes": [],
+      "data_now_missing": [],
+      "anomalies": [
+        "The official page exposes no update timestamp after June 14, 2026.",
+        "No independent authoritative source proving clubs beyond the 88 declared by the official page was found.",
+        "The verified version intentionally reuses the byte-identical July 21 capture because the official content version did not change."
+      ],
+      "changed": false
+    }
+  },
+  "inventory": {
+    "owned_clubs": 21,
+    "known_levels": 0,
+    "complete_owned_entries": 0,
+    "examined_clubs": 21,
+    "unexamined_clubs": 67,
+    "saved_bags": 2,
+    "recently_added_catalog_clubs": [],
+    "blacksmith": {
+      "present_in_catalog": true,
+      "examined": true,
+      "owned": true,
+      "level": null
+    },
+    "engine_coverage": {
+      "simulated": 28,
+      "official": 36,
+      "percent": 77.78
+    }
+  },
+  "optimization": {
+    "usable": [
+      "official base stats by level",
+      "deterministic implemented bag effects",
+      "separate objective metrics",
+      "bag order and composition"
+    ],
+    "incomplete": [
+      "user levels and cards",
+      "inventory examination",
+      "unresolved ability coverage"
+    ],
+    "calculable_request_families": [
+      "constraints and ordered objectives over validated engine metrics",
+      "Pareto comparisons over validated metrics"
+    ],
+    "partially_calculable": [
+      "queries including unresolved abilities",
+      "multi-scenario queries with only categorical known context"
+    ],
+    "not_honestly_calculable": [
+      "real carry or distance without a validated physics model",
+      "course geometry optimization",
+      "wind outcomes beyond objective wind-resistance comparison"
+    ]
+  }
+}

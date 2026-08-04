@@ -27,7 +27,9 @@ class UserDataTests(unittest.TestCase):
 
     def test_loads_all_five_user_files(self):
         self.assertEqual(self.bundle.account.player_name, "Pierre")
-        self.assertEqual(len(self.bundle.inventory.entries), 20)
+        self.assertEqual(len(self.bundle.inventory.entries), 21)
+        self.assertTrue(self.bundle.inventory.get("blacksmith").unlocked)
+        self.assertIsNone(self.bundle.inventory.get("blacksmith").cards_owned)
         self.assertEqual(len(self.bundle.preferences.priorities), 7)
         self.assertEqual(len(self.bundle.bags), 2)
         self.assertEqual(len(self.bundle.observations), 10)

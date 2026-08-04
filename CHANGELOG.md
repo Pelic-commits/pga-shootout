@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Ajout du catalogue SQLite immuable et versionné, du diff reproductible et de la vérification officielle du 4 août 2026.
+- Migration sauvegardée du profil JSON vers SQLite, export diagnostique et adaptateur conservant les objets métier du moteur.
+- Ajout de la synchronisation guidée en lot, du Data Dashboard et du contrat générique sérialisable des futures demandes d'optimisation.
+- Ajout de Blacksmith à l'inventaire connu avec niveau et cartes explicitement inconnus.
 - Ajout du lanceur Windows `DEMARRER_PGA_SHOOTOUT.bat`, du menu principal français et des assistants sauvegardés de gestion de l'inventaire et des sacs.
 - Ajout d'un guide complet de premier lancement, de création des données utilisateur et d'utilisation interactive.
 - Ajout de `recommend-interactive`, parcours guidé par noms lisibles avec catégories, avertissements et consultation de l'Explain d'un placement.

@@ -21,7 +21,29 @@ Le lanceur travaille uniquement dans le dossier du projet. Il :
 - ouvre le menu principal ;
 - garde la fenêtre ouverte si une erreur survient et affiche une explication simple.
 
-L'application est écrite en Python. Il n'y a rien à compiler et aucune base de données à installer.
+L'application est écrite en Python. Il n'y a rien à compiler ni aucun serveur de base de données à installer : Python fournit SQLite et l'application crée sa base locale automatiquement.
+
+## Catalogue, inventaire et version des données
+
+Le **catalogue** décrit les 88 clubs publiés par le jeu (statistiques, capacités,
+marques, types et niveaux). Il est en lecture seule dans les menus. Votre
+**inventaire** indique seulement les clubs que vous avez examinés, ceux que vous
+possédez et les niveaux/cartes que vous connaissez. L'absence d'un club de votre
+inventaire ne signifie donc jamais qu'il est verrouillé.
+
+Au premier démarrage de cette version, les anciens JSON sont sauvegardés puis
+migrés automatiquement vers `data/pga_shootout.sqlite`. Pour actualiser plusieurs
+clubs, choisissez « Consulter ou modifier mes clubs », puis « Synchroniser mon
+inventaire ». Vous pouvez laisser niveau et cartes vides, examiner plusieurs
+clubs, contrôler le résumé, puis confirmer une seule fois ou annuler sans écrire.
+
+La version et la provenance du catalogue apparaissent dans
+`docs/DATA_DASHBOARD.md`. Le catalogue actuel est une vérification du 4 août 2026
+de la source officielle annoncée au 14 juin 2026. Certaines futures demandes
+d'optimisation restent impossibles lorsqu'elles exigent une portée réelle, la
+géométrie d'un parcours ou une physique non validée. L'application doit alors le
+dire, jamais inventer une conversion. Les exemples Power/Control/portée ne sont
+pas des modes fermés : ils illustrent un contrat générique extensible.
 
 ## Le menu principal
 
@@ -44,7 +66,7 @@ Répondez toujours avec le numéro affiché. Une mauvaise saisie ne ferme pas l'
 
 ## Tout premier lancement
 
-Si les cinq fichiers personnels n'existent pas, l'application les crée avec une structure vide et valide. Elle ne remplace jamais silencieusement un fichier déjà présent.
+Si des fichiers personnels historiques existent, l'application les sauvegarde et les migre dans SQLite sans les remplacer. Sur une installation neuve, l'assistant initialise des données personnelles valides. Il ne remplace jamais silencieusement une donnée existante.
 
 Lorsque moins de cinq clubs sont enregistrés ou qu'aucun sac n'existe, l'assistant propose la première configuration :
 

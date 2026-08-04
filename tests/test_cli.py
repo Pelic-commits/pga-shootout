@@ -145,7 +145,7 @@ class CliTests(unittest.TestCase):
                     "--output", str(report_path),
                 ])
             self.assertEqual(result, 0)
-            self.assertIn('"inventory_clubs": 20', output.getvalue())
+            self.assertIn('"inventory_clubs": 21', output.getvalue())
             self.assertIn("# User Inventory Ability Gaps", report_path.read_text(encoding="utf-8"))
 
     def test_reference_gaps_cli_regenerates_saved_bag_matrix(self):
@@ -177,7 +177,7 @@ class CliTests(unittest.TestCase):
         with contextlib.redirect_stdout(human_output):
             result = main(common)
         self.assertEqual(result, 0)
-        self.assertIn("Engine coverage: 28/35 abilities (80.00%)", human_output.getvalue())
+        self.assertIn("Engine coverage: 28/36 abilities (77.78%)", human_output.getvalue())
         self.assertIn("Fully comparable clubs: Homestead", human_output.getvalue())
 
         json_output = io.StringIO()
@@ -185,7 +185,7 @@ class CliTests(unittest.TestCase):
             result = main([*common, "--json"])
         self.assertEqual(result, 0)
         payload = json.loads(json_output.getvalue())
-        self.assertEqual((payload["inventory_clubs"], payload["global_clubs"]), (20, 88))
+        self.assertEqual((payload["inventory_clubs"], payload["global_clubs"]), (21, 88))
 
         with tempfile.TemporaryDirectory() as directory:
             inventory_path = Path(directory) / "inventory.md"

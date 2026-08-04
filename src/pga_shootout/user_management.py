@@ -16,6 +16,8 @@ from pathlib import Path
 from typing import Any
 
 from .user_data import ClubCatalogIndex, UserDataError, load_user_data, validate_user_data
+from .storage import PgaDatabase
+from .catalog_store import catalog_versions, diff_catalog_versions
 
 
 InputFunction = Callable[[str], str]
@@ -317,6 +319,110 @@ class UserDataStore:
         return text or "Les données utilisateur ne sont pas valides."
 
 
+class SqliteUserDataStore:
+    """SQLite adapter exposing the existing user-domain interface."""
+
+    def __init__(self, database_path: str | Path, catalog_path: str | Path, *, legacy_user_dir: str | Path = "data/user", manifest_path: str | Path = "data/catalog/versions.json") -> None:
+        self.user_dir = Path(database_path)
+        self.catalog_path = Path(catalog_path)
+        self.legacy_user_dir = Path(legacy_user_dir)
+        self.manifest_path = Path(manifest_path)
+        self.catalog = ClubCatalogIndex.load(self.catalog_path)
+        self.database = PgaDatabase(self.user_dir)
+
+    def ensure_files(self) -> tuple[str, ...]:
+        self.database.initialize_catalog(self.manifest_path)
+        if self.database.has_user_profile():
+            return ()
+        self.database.migrate_json_user(self.legacy_user_dir)
+        return (self.user_dir.name,)
+
+    def reset_after_confirmation(self) -> Path:
+        raise UserManagementError("La remise à zéro SQLite exige une restauration explicite de sauvegarde.")
+
+    def backup(self) -> Path:
+        return self.database.backup()
+
+    def validation(self):
+        return validate_user_data(self.database.load_user_bundle(), self.catalog)
+
+    def validate_or_raise(self) -> None:
+        report = self.validation()
+        if not report.valid:
+            raise UserManagementError(" ".join(report.errors))
+
+    def search_clubs(self, query: str) -> tuple[tuple[str, str], ...]:
+        words = tuple(part for part in _normalized(query).split() if part)
+        matches = [
+            (club_id, str(club["name"]))
+            for club_id, club in self.catalog.clubs.items()
+            if words and all(word in _normalized(str(club["name"])) for word in words)
+        ]
+        return tuple(sorted(matches, key=lambda item: item[1].casefold()))
+
+    def filter_clubs(self, *, brand: str | None = None, club_type: str | None = None, rarity: str | None = None, unexamined: bool = False, incomplete: bool = False) -> tuple[dict[str, Any], ...]:
+        examined = {item["club_id"]: item for item in self.inventory_documents()}
+        matches = []
+        for club_id, club in self.catalog.clubs.items():
+            user = examined.get(club_id)
+            if brand and str(club["brand"]["name"]).casefold() != brand.casefold():
+                continue
+            if club_type and str(club["club_type"]["name"]).casefold() != club_type.casefold():
+                continue
+            if rarity and str(club["rarity"]["name"]).casefold() != rarity.casefold():
+                continue
+            if unexamined and user is not None:
+                continue
+            if incomplete and not (user and user["unlocked"] and any(user[field] is None for field in ("current_level", "cards_owned", "cards_required_for_next_upgrade"))):
+                continue
+            matches.append({"club_id": club_id, "display_name": club["name"], "brand": club["brand"]["name"], "club_type": club["club_type"]["name"], "rarity": club["rarity"]["name"], "user": user})
+        return tuple(sorted(matches, key=lambda item: str(item["display_name"]).casefold()))
+
+    def new_catalog_clubs(self) -> tuple[dict[str, Any], ...]:
+        versions = catalog_versions(self.user_dir)
+        if len(versions) < 2:
+            return ()
+        diff = diff_catalog_versions(self.user_dir, versions[-2].version_id, versions[-1].version_id)
+        added = set(diff.added_clubs)
+        return tuple(item for item in self.filter_clubs() if item["club_id"] in added)
+
+    def inventory_documents(self) -> list[dict[str, Any]]:
+        return self.database.inventory_documents()
+
+    def owned_inventory(self) -> tuple[dict[str, Any], ...]:
+        return tuple(item for item in self.inventory_documents() if item["unlocked"])
+
+    def apply_inventory_batch(self, changes: Sequence[dict[str, Any]]) -> Path:
+        if any(not self.catalog.contains(str(item["club_id"])) for item in changes):
+            raise UserManagementError("Un club sélectionné n'existe pas dans le catalogue.")
+        return self.database.apply_inventory_batch(changes)
+
+    def save_inventory_entry(self, club_id: str, *, current_level: int | None, cards_owned: int | None, cards_required: int | None, unlocked: bool = True) -> tuple[Path, bool | None]:
+        backup = self.apply_inventory_batch(({"club_id": club_id, "display_name": self.catalog.clubs[club_id]["name"], "unlocked": unlocked, "current_level": current_level, "cards_owned": cards_owned, "cards_required_for_next_upgrade": cards_required},))
+        upgrade = None if cards_owned is None or cards_required is None else cards_owned >= cards_required
+        return backup, upgrade
+
+    def mark_not_owned(self, club_id: str) -> Path:
+        current = next(item for item in self.inventory_documents() if item["club_id"] == club_id)
+        return self.apply_inventory_batch(({**current, "unlocked": False},))
+
+    def delete_inventory_entry(self, club_id: str) -> Path:
+        raise UserManagementError("Marquez ce club non possédé afin de conserver l'historique.")
+
+    def bag_documents(self) -> list[dict[str, Any]]:
+        return self.database.bag_documents()
+
+    def save_bag(self, name: str, club_ids: Sequence[str], *, bag_id: str | None = None) -> tuple[Path, str]:
+        return self.database.save_bag(name, club_ids, bag_id=bag_id)
+
+    def delete_bag(self, bag_id: str) -> Path:
+        return self.database.delete_bag(bag_id)
+
+    @staticmethod
+    def french_error(error: object) -> str:
+        return str(error)
+
+
 class GuidedPrompts:
     def __init__(self, input_fn: InputFunction | None = None, output_fn: OutputFunction = print) -> None:
         self.input = input_fn or input
@@ -349,9 +455,93 @@ class GuidedPrompts:
                 return int(value)
             self.output(f"Saisie invalide. Entrez un nombre entier supérieur ou égal à {minimum}.")
 
+    def optional_integer(self, title: str, *, minimum: int = 0) -> int | None:
+        while True:
+            self.output(title + " (Entrée = inconnu)")
+            value = self.input("> ").strip()
+            if not value:
+                return None
+            if value.isdigit() and int(value) >= minimum:
+                return int(value)
+            self.output(f"Saisie invalide. Entrez un entier supérieur ou égal à {minimum}, ou laissez vide.")
+
+
+class InventorySyncAssistant(GuidedPrompts):
+    """Stage many catalog-backed edits and commit them atomically after review."""
+
+    def __init__(self, store: SqliteUserDataStore, input_fn: InputFunction | None = None, output_fn: OutputFunction = print) -> None:
+        super().__init__(input_fn, output_fn)
+        self.store = store
+
+    def run(self) -> bool:
+        staged: dict[str, dict[str, Any]] = {}
+        while True:
+            action = self.choose(
+                "Synchroniser mon inventaire",
+                ("search", "brand", "type", "rarity", "unexamined", "incomplete", "new", "review", "cancel"),
+                lambda item: {
+                    "search": "Rechercher par nom", "brand": "Filtrer par marque",
+                    "type": "Filtrer par type", "rarity": "Filtrer par rareté",
+                    "unexamined": "Clubs non encore examinés", "incomplete": "Entrées incomplètes",
+                    "new": "Clubs ajoutés depuis la version précédente", "review": "Résumer et enregistrer",
+                    "cancel": "Annuler sans enregistrer",
+                }[item],
+                allow_back=False,
+            )
+            if action == "cancel":
+                self.output("Session annulée : aucune donnée n'a été modifiée.")
+                return False
+            if action == "review":
+                if not staged:
+                    self.output("Aucune modification en attente.")
+                    continue
+                self.output("Modifications en attente :")
+                for item in staged.values():
+                    status = "possédé" if item["unlocked"] else "non possédé"
+                    self.output(f"- {item['display_name']} : {status}, niveau {item['current_level'] or 'inconnu'}")
+                if not self.yes_no("Enregistrer toutes ces modifications ?"):
+                    self.output("Rien n'a été enregistré; la session continue.")
+                    continue
+                backup = self.store.apply_inventory_batch(tuple(staged.values()))
+                self.output(f"Inventaire synchronisé. Sauvegarde créée : {backup}")
+                return True
+            choices = self._select_candidates(action)
+            if not choices:
+                self.output("Aucun club ne correspond à ce filtre.")
+                continue
+            selected = self.choose("Choisissez un club à examiner :", choices, lambda item: f"{item['display_name']} — {item['brand']} / {item['club_type']} / {item['rarity']}")
+            if selected is None:
+                continue
+            owned = self.yes_no(f"Possédez-vous {selected['display_name']} ?")
+            staged[selected["club_id"]] = {
+                "club_id": selected["club_id"], "display_name": selected["display_name"], "unlocked": owned,
+                "current_level": self.optional_integer("Niveau actuel", minimum=1) if owned else None,
+                "cards_owned": self.optional_integer("Cartes possédées") if owned else None,
+                "cards_required_for_next_upgrade": self.optional_integer("Seuil de prochaine amélioration", minimum=1) if owned else None,
+            }
+            self.output(f"{selected['display_name']} ajouté au résumé; vous pouvez continuer avec d'autres clubs.")
+
+    def _select_candidates(self, action: str) -> tuple[dict[str, Any], ...]:
+        if action == "search":
+            self.output("Nom affiché du club :")
+            ids = {club_id for club_id, _ in self.store.search_clubs(self.input("> ").strip())}
+            return tuple(item for item in self.store.filter_clubs() if item["club_id"] in ids)
+        if action in {"brand", "type", "rarity"}:
+            key = {"brand": "brand", "type": "club_type", "rarity": "rarity"}[action]
+            values = sorted({str(item[key]) for item in self.store.filter_clubs()}, key=str.casefold)
+            selected = self.choose("Choisissez une valeur :", values, str)
+            return () if selected is None else self.store.filter_clubs(**{key: selected})
+        if action == "unexamined":
+            return self.store.filter_clubs(unexamined=True)
+        if action == "incomplete":
+            return self.store.filter_clubs(incomplete=True)
+        if action == "new":
+            return self.store.new_catalog_clubs()
+        return ()
+
 
 class InventoryAssistant(GuidedPrompts):
-    def __init__(self, store: UserDataStore, input_fn: InputFunction | None = None, output_fn: OutputFunction = print) -> None:
+    def __init__(self, store: UserDataStore | SqliteUserDataStore, input_fn: InputFunction | None = None, output_fn: OutputFunction = print) -> None:
         super().__init__(input_fn, output_fn)
         self.store = store
 
@@ -359,8 +549,9 @@ class InventoryAssistant(GuidedPrompts):
         while True:
             choice = self.choose(
                 "Gestion de mes clubs",
-                ("list", "edit", "not_owned", "delete", "back"),
+                (("sync", "list", "edit", "not_owned", "delete", "back") if isinstance(self.store, SqliteUserDataStore) else ("list", "edit", "not_owned", "delete", "back")),
                 lambda item: {
+                    "sync": "Synchroniser mon inventaire",
                     "list": "Afficher mes clubs",
                     "edit": "Ajouter ou modifier un club",
                     "not_owned": "Marquer un club comme non possédé",
@@ -371,7 +562,9 @@ class InventoryAssistant(GuidedPrompts):
             )
             if choice == "back":
                 return
-            if choice == "list":
+            if choice == "sync":
+                InventorySyncAssistant(self.store, self.input, self.output).run()
+            elif choice == "list":
                 self.list_inventory()
             elif choice == "edit":
                 self.edit_club()

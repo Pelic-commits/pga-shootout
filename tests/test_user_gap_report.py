@@ -23,12 +23,12 @@ class UserGapReportTests(unittest.TestCase):
 
     def test_every_known_inventory_club_and_official_ability_is_present(self):
         report = self.report()
-        self.assertEqual(report.inventory_clubs, 20)
-        self.assertEqual(report.ability_occurrences, 35)
-        self.assertEqual(len({club.club_id for club in report.clubs}), 20)
+        self.assertEqual(report.inventory_clubs, 21)
+        self.assertEqual(report.ability_occurrences, 36)
+        self.assertEqual(len({club.club_id for club in report.clubs}), 21)
         self.assertEqual(
             len({ability.occurrence_id for club in report.clubs for ability in club.abilities}),
-            35,
+            36,
         )
 
     def test_report_uses_exact_official_text_and_known_bag_membership(self):

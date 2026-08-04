@@ -13,8 +13,8 @@ Le socle fournit des modèles immuables, un chargeur JSON, des conditions sépar
 ## Installation et tests
 
 ```powershell
-$env:PYTHONPATH = "src"
-python -m unittest discover -v
+python -m pip install -e ".[dev]"
+python -m pytest -q
 ```
 
 ## Données
@@ -46,6 +46,9 @@ pga-shootout recommend-placement par3_divebomb cyclotron --scenario-level 12 --p
 pga-shootout recommend-placement par3_divebomb cyclotron --scenario-level 12 --partial --json
 pga-shootout recommend-interactive
 pga-shootout assistant
+pga-shootout data-init --preview
+pga-shootout catalog-diff
+pga-shootout data-dashboard
 ```
 
 `--scenario-level` applique explicitement un niveau hypothétique commun. L'ancien `--level` reste un alias temporaire. Pour les commandes de recommandation, l'absence de cette option active le mode réel : chaque niveau doit alors provenir de l'inventaire et toute valeur manquante exclut le candidat.
@@ -68,7 +71,7 @@ Pour une installation complète depuis un ordinateur neuf, la création d'un inv
 
 ## Données utilisateur
 
-Les informations du joueur vivent exclusivement dans `data/user/` et ne modifient ni le catalogue officiel ni les règles du simulateur.
+Les informations du joueur sont normalement gérées dans `data/pga_shootout.sqlite` et ne modifient ni le catalogue officiel versionné ni les règles du simulateur. Les fichiers de `data/user/` restent l'import/export JSON historique et diagnostique. Voir [docs/DATA_FOUNDATION.md](docs/DATA_FOUNDATION.md).
 
 ```powershell
 pga-shootout user-validate

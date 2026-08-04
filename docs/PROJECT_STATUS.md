@@ -7,7 +7,7 @@
 - Loads official club statistics, user inventory and saved bags.
 - Evaluates supported deterministic bag abilities in strict or partial mode.
 - Compares bags metric by metric with attributed contributions and a factual completeness diagnostic.
-- Supports 28/35 owned-club abilities (80.00%).
+- Supports 28/36 owned-club abilities (77.78%).
 
 ## What it does not do
 
@@ -17,10 +17,10 @@
 
 ## Inventory
 
-- Known clubs: 20; inventory complete: no.
-- Fully simulated clubs: 14/20.
+- Known clubs: 21; inventory complete: no.
+- Fully simulated clubs: 14/21.
 - Fully comparable by engine coverage: Homestead, Commonlaw, Kinship, Sandsend, Steadfast, Jumpstart, Cyclotron, High Flight, Cloudcatcher, Rook, Mirage, Lodestar, Into the Breach, Conqueror.
-- Known current levels: 0/20.
+- Known current levels: 0/21.
 
 ## compare-bags
 

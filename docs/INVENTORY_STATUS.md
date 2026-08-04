@@ -6,14 +6,14 @@
 
 | Measure | Value |
 |---|---:|
-| Known inventory clubs | 20 |
+| Known inventory clubs | 21 |
 | Inventory declared complete | no |
-| Known user levels | 0/20 |
-| Official owned-club abilities | 35 |
+| Known user levels | 0/21 |
+| Official owned-club abilities | 36 |
 | Engine-supported owned-club abilities | 28 |
-| Unresolved owned-club abilities | 7 |
-| Owned-ability coverage | 80.00% |
-| Fully simulated owned clubs | 14/20 |
+| Unresolved owned-club abilities | 8 |
+| Owned-ability coverage | 77.78% |
+| Fully simulated owned clubs | 14/21 |
 
 ## Clubs
 
@@ -39,6 +39,7 @@
 | Outset (`outset`) | Forester | Driver | Rare | unknown | 1/2 | no | partially | partially |
 | Into the Breach (`into_the_breach`) | Stanchion | Iron | Epic | unknown | 2/2 | yes | yes | partially |
 | Conqueror (`conqueror`) | Stanchion | Driver | Rare | unknown | 2/2 | yes | yes | partially |
+| Blacksmith (`blacksmith`) | Mythical | Iron | Mythical | unknown | 0/1 | no | partially | partially |
 
 ### Homestead
 
@@ -175,6 +176,12 @@
 | Chains into Putters (`conqueror__chains_into_putters`) | Chains into putters. (On your next shot, putters have +X to all stats.) | 3 | `missing_user_level` | `control`, `power`, `spin` | The engine supports this ability, but the user's current club level is unknown. | `current_level` | `delayed_all_stats_by_club_attribute` |
 | Brand Loyalty +X (`conqueror__brand_loyalty_x`) | Has +X power per Stanchion club next to Conqueror. | 5 | `missing_user_level` | `power` | The engine supports this ability, but the user's current club level is unknown. | `current_level` | `dsl_pipeline` |
 
+### Blacksmith
+
+| Official ability | Official text | Activates | Status | Metrics | Reason | Needed | Technical family |
+|---|---|---:|---|---|---|---|---|
+| Texas Tee (`blacksmith__texas_tee`) | Gains additional Power when hitting from the tee. | 9 | `ambiguous` | none | The normalized group has no validated semantic interpretation. | `semantic_qualification` | `unqualified:texas_tee` |
+
 ## Reference bags (regression only)
 
 | Bag | Supported abilities | Coverage |
@@ -184,7 +191,7 @@
 
 ## Missing user data
 
-- Current levels: Homestead, Commonlaw, Kinship, Groundskeep, Sandsend, Steadfast, Jumpstart, Cyclotron, Neon Impulse, Color Theory, High Flight, Cloudcatcher, Skyfury, Rook, Mirage, Lodestar, Green Demon, Outset, Into the Breach, Conqueror.
+- Current levels: Homestead, Commonlaw, Kinship, Groundskeep, Sandsend, Steadfast, Jumpstart, Cyclotron, Neon Impulse, Color Theory, High Flight, Cloudcatcher, Skyfury, Rook, Mirage, Lodestar, Green Demon, Outset, Into the Breach, Conqueror, Blacksmith.
 - Inventory completeness: the inventory is explicitly partial.
 
 ## Recommended next lots

@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
   "inventory_complete": false,
-  "observed_at": "2026-07-21",
-  "source": "user_report_from_meteor_conversation",
+  "observed_at": "2026-08-04",
+  "source": "user_inventory_update",
   "entries": [
     {"club_id":"homestead","display_name":"Homestead","unlocked":true,"current_level":null,"cards_owned":438,"cards_required_for_next_upgrade":500,"upgrade_available":false,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
     {"club_id":"commonlaw","display_name":"Commonlaw","unlocked":true,"current_level":null,"cards_owned":8,"cards_required_for_next_upgrade":25,"upgrade_available":false,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
@@ -23,6 +23,7 @@
     {"club_id":"green_demon","display_name":"Green Demon","unlocked":true,"current_level":null,"cards_owned":3,"cards_required_for_next_upgrade":2,"upgrade_available":true,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
     {"club_id":"outset","display_name":"Outset","unlocked":true,"current_level":null,"cards_owned":59,"cards_required_for_next_upgrade":50,"upgrade_available":true,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
     {"club_id":"into_the_breach","display_name":"Into the Breach","unlocked":true,"current_level":null,"cards_owned":7,"cards_required_for_next_upgrade":25,"upgrade_available":false,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
-    {"club_id":"conqueror","display_name":"Conqueror","unlocked":true,"current_level":null,"cards_owned":88,"cards_required_for_next_upgrade":50,"upgrade_available":true,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"}
+    {"club_id":"conqueror","display_name":"Conqueror","unlocked":true,"current_level":null,"cards_owned":88,"cards_required_for_next_upgrade":50,"upgrade_available":true,"observed_at":"2026-07-21","source":"user_report_from_meteor_conversation"},
+    {"club_id":"blacksmith","display_name":"Blacksmith","unlocked":true,"current_level":null,"cards_owned":null,"cards_required_for_next_upgrade":null,"upgrade_available":null,"observed_at":"2026-08-04","source":"user_statement_2026-08-04"}
   ]
 }

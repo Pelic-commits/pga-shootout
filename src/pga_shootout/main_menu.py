@@ -6,21 +6,27 @@ from collections.abc import Callable
 from pathlib import Path
 
 from .interactive_recommendation import InteractiveRecommendationApp
-from .user_management import BagAssistant, GuidedPrompts, InventoryAssistant, UserDataStore, UserManagementError
+from .user_management import BagAssistant, GuidedPrompts, InventoryAssistant, SqliteUserDataStore, UserDataStore, UserManagementError
 
 
 class PgaShootoutAssistant(GuidedPrompts):
     def __init__(
         self,
         *,
-        user_dir: str | Path = "data/user",
+        user_dir: str | Path = "data/pga_shootout.sqlite",
         catalog_path: str | Path = "data/normalized/clubs_official.json",
+        legacy_user_dir: str | Path = "data/user",
         input_fn=None,
         output_fn=print,
         recommendation_factory: Callable[..., object] = InteractiveRecommendationApp,
     ) -> None:
         super().__init__(input_fn, output_fn)
-        self.store = UserDataStore(user_dir, catalog_path)
+        path = Path(user_dir)
+        self.store = (
+            SqliteUserDataStore(path, catalog_path, legacy_user_dir=legacy_user_dir)
+            if path.suffix.casefold() in {".sqlite", ".sqlite3", ".db"}
+            else UserDataStore(path, catalog_path)
+        )
         self.inventory = InventoryAssistant(self.store, self.input, self.output)
         self.bags = BagAssistant(self.store, self.input, self.output)
         self.recommendation_factory = recommendation_factory

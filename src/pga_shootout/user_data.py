@@ -39,13 +39,15 @@ class InventoryEntry:
     display_name: str
     unlocked: bool
     current_level: int | None
-    cards_owned: int
-    cards_required_for_next_upgrade: int
+    cards_owned: int | None
+    cards_required_for_next_upgrade: int | None
     observed_at: str
     source: str
 
     @property
-    def upgrade_available(self) -> bool:
+    def upgrade_available(self) -> bool | None:
+        if self.cards_owned is None or self.cards_required_for_next_upgrade is None:
+            return None
         return self.cards_owned >= self.cards_required_for_next_upgrade
 
 
@@ -150,6 +152,11 @@ def _read_object(path: Path) -> dict[str, Any]:
 
 def load_user_data(user_dir: str | Path) -> UserDataBundle:
     root = Path(user_dir)
+    if root.suffix.casefold() in {".sqlite", ".sqlite3", ".db"}:
+        # Local import keeps the domain model independent from its persistence adapter.
+        from .storage import PgaDatabase
+
+        return PgaDatabase(root).load_user_bundle()
     account_data = _read_object(root / "account.json")
     inventory_data = _read_object(root / "inventory.json")
     preferences_data = _read_object(root / "preferences.json")
@@ -176,12 +183,17 @@ def load_user_data(user_dir: str | Path) -> UserDataBundle:
             display_name=str(item["display_name"]),
             unlocked=bool(item["unlocked"]),
             current_level=None if item.get("current_level") is None else int(item["current_level"]),
-            cards_owned=int(item["cards_owned"]),
-            cards_required_for_next_upgrade=int(item["cards_required_for_next_upgrade"]),
+            cards_owned=None if item.get("cards_owned") is None else int(item["cards_owned"]),
+            cards_required_for_next_upgrade=(
+                None
+                if item.get("cards_required_for_next_upgrade") is None
+                else int(item["cards_required_for_next_upgrade"])
+            ),
             observed_at=str(item["observed_at"]),
             source=str(item["source"]),
         )
-        if bool(item["upgrade_available"]) != entry.upgrade_available:
+        stored_upgrade = item.get("upgrade_available")
+        if stored_upgrade is not None and bool(stored_upgrade) != entry.upgrade_available:
             raise UserDataError(f"stored upgrade_available is inconsistent for {entry.club_id}")
         loaded_entries.append(entry)
     entries = tuple(loaded_entries)
@@ -238,7 +250,9 @@ def validate_user_data(bundle: UserDataBundle, catalog: ClubCatalogIndex) -> Use
     if duplicates:
         errors.append("duplicate inventory club references")
     for entry in bundle.inventory.entries:
-        if entry.cards_owned < 0 or entry.cards_required_for_next_upgrade <= 0:
+        if entry.cards_owned is not None and entry.cards_owned < 0:
+            errors.append(f"invalid card counts for {entry.club_id}")
+        if entry.cards_required_for_next_upgrade is not None and entry.cards_required_for_next_upgrade <= 0:
             errors.append(f"invalid card counts for {entry.club_id}")
     for bag in bundle.bags:
         if len(bag.club_ids) != 5:

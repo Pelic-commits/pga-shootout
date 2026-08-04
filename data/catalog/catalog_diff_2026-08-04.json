@@ -1,0 +1,20 @@
+{
+  "old_version": "official-2026-06-14-captured-2026-07-21",
+  "new_version": "official-2026-06-14-verified-2026-08-04",
+  "added_clubs": [],
+  "missing_clubs": [],
+  "renamed_clubs": [],
+  "metadata_changes": [],
+  "stat_changes": [],
+  "added_abilities": [],
+  "removed_abilities": [],
+  "ability_text_changes": [],
+  "ability_value_changes": [],
+  "data_now_missing": [],
+  "anomalies": [
+    "The official page exposes no update timestamp after June 14, 2026.",
+    "No independent authoritative source proving clubs beyond the 88 declared by the official page was found.",
+    "The verified version intentionally reuses the byte-identical July 21 capture because the official content version did not change."
+  ],
+  "changed": false
+}
