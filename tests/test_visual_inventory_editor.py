@@ -6,7 +6,11 @@ import sqlite3
 
 import pytest
 
-from pga_shootout.inventory_editor import InventoryEditorService
+from pga_shootout.inventory_editor import (
+    InventoryEditorApp,
+    InventoryEditorService,
+    cards_required_for_next_level,
+)
 from pga_shootout.storage import USER_FILENAMES
 
 
@@ -61,7 +65,7 @@ def test_loads_all_88_catalog_clubs_and_filters_by_display_metadata(tmp_path):
     assert all(not row.complete for row in editor.filter_rows(rows, incomplete_only=True))
 
 
-def test_adds_blacksmith_with_unknown_values_and_real_zero_cards(tmp_path):
+def test_adds_blacksmith_with_calculated_progression_and_real_zero_cards(tmp_path):
     editor = service(tmp_path, without_blacksmith=True)
     original = editor.load_rows()
     changed = edit(original, "blacksmith", owned=True, current_level=9, cards_owned=0, cards_required=None)
@@ -73,9 +77,11 @@ def test_adds_blacksmith_with_unknown_values_and_real_zero_cards(tmp_path):
     assert summary.added == ("Blacksmith",)
     assert blacksmith.owned and blacksmith.current_level == 9
     assert blacksmith.cards_owned == 0
-    assert blacksmith.cards_required is None
-    assert blacksmith.upgrade_available is None
-    assert not blacksmith.complete
+    assert blacksmith.next_threshold == 2
+    assert blacksmith.progression == "0 / 2"
+    assert blacksmith.cards_remaining == 2
+    assert blacksmith.upgrade_available is False
+    assert blacksmith.complete
     assert dashboard.blacksmith_owned
 
 
@@ -85,7 +91,7 @@ def test_multiple_clubs_save_once_preserves_bags_and_catalog(tmp_path):
     bags_before = editor.database.load_user_bundle().bags
     catalog_before = catalog_snapshot(editor)
     meteor_level = next(row.allowed_levels[0] for row in original if row.club_id == "meteor")
-    changed = edit(original, "blacksmith", owned=True, current_level=9, cards_owned=0, cards_required=10)
+    changed = edit(original, "blacksmith", owned=True, current_level=9, cards_owned=0)
     changed = edit(changed, "meteor", owned=True, current_level=meteor_level, cards_owned=None, cards_required=None)
     backup, summary, _dashboard = editor.save(original, changed)
     loaded = {row.club_id: row for row in editor.load_rows()}
@@ -119,7 +125,6 @@ def test_duplicate_catalog_row_is_reported_before_any_write(tmp_path):
     (
         ({"owned": True, "current_level": 1}, "Niveau indisponible"),
         ({"owned": True, "current_level": 9, "cards_owned": -1}, "positives ou égales à zéro"),
-        ({"owned": True, "current_level": 9, "cards_required": 0}, "strictement positif"),
     ),
 )
 def test_invalid_blacksmith_row_rolls_back_whole_session(tmp_path, changes, message):
@@ -139,6 +144,61 @@ def test_non_owned_club_cannot_keep_level_or_cards(tmp_path):
     errors = editor.validate(changed)
     assert "blacksmith" in errors
     assert "non possédé" in errors["blacksmith"]
+
+
+@pytest.mark.parametrize(
+    ("rarity", "level", "expected"),
+    (
+        ("Common", 8, 500),
+        ("Rare", 6, 50),
+        ("Epic", 6, 25),
+        ("Legendary", 7, 2),
+        ("Mythical", 9, 2),
+        ("Common", 12, None),
+        ("Mythical", None, None),
+    ),
+)
+def test_card_threshold_is_calculated_from_rarity_and_current_level(rarity, level, expected):
+    assert cards_required_for_next_level(rarity, level) == expected
+
+
+def test_existing_threshold_is_preserved_only_while_level_is_unknown(tmp_path):
+    editor = service(tmp_path)
+    cyclotron = next(row for row in editor.load_rows() if row.club_id == "cyclotron")
+    assert cyclotron.current_level is None
+    assert cyclotron.next_threshold == 50
+    known = replace(cyclotron, current_level=6)
+    assert known.next_threshold == 50
+    changed_level = replace(cyclotron, current_level=7)
+    assert changed_level.next_threshold == 100
+
+
+def test_calculated_columns_react_to_cards_and_never_go_negative(tmp_path):
+    editor = service(tmp_path, without_blacksmith=True)
+    row = next(row for row in editor.load_rows() if row.club_id == "blacksmith")
+    row = replace(row, examined=True, owned=True, current_level=9, cards_owned=1)
+    assert row.progression == "1 / 2"
+    assert row.cards_remaining == 1
+    assert row.upgrade_available is False
+    upgraded = replace(row, cards_owned=3)
+    assert upgraded.progression == "3 / 2"
+    assert upgraded.cards_remaining == 0
+    assert upgraded.upgrade_available is True
+    assert upgraded.as_change()["cards_required_for_next_upgrade"] == 2
+
+
+def test_only_progression_inputs_are_editable_and_keyboard_navigation_is_stable():
+    assert InventoryEditorApp.EDITABLE_COLUMNS == {7: "current_level", 8: "cards_owned"}
+    assert "required" in InventoryEditorApp.COLUMNS
+    assert "progression" in InventoryEditorApp.COLUMNS
+    assert "remaining" in InventoryEditorApp.COLUMNS
+    assert "upgrade" in InventoryEditorApp.COLUMNS
+    visible = ("alpha", "beta", "gamma")
+    assert InventoryEditorApp.next_edit_target(visible, "alpha", 7, "next_cell") == ("alpha", 8)
+    assert InventoryEditorApp.next_edit_target(visible, "alpha", 8, "next_cell") == ("beta", 7)
+    assert InventoryEditorApp.next_edit_target(visible, "alpha", 7, "next_row") == ("beta", 7)
+    assert InventoryEditorApp.next_edit_target(visible, "alpha", 8, "next_row") == ("beta", 8)
+    assert InventoryEditorApp.next_edit_target(visible, "gamma", 8, "next_row") is None
 
 
 def test_launcher_opens_visual_editor_directly_without_main_menu():

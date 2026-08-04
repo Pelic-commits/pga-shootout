@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Calcul automatique de la progression des clubs dans l'éditeur visuel, avec cartes restantes, disponibilité d'amélioration et navigation clavier améliorée.
 - Ajout de l'éditeur visuel Tkinter dédié à l'inventaire, de son lanceur Windows, de l'édition en lot transactionnelle et du menu principal simplifié.
 - Ajout du catalogue SQLite immuable et versionné, du diff reproductible et de la vérification officielle du 4 août 2026.
 - Migration sauvegardée du profil JSON vers SQLite, export diagnostique et adaptateur conservant les objets métier du moteur.

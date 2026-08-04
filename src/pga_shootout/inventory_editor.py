@@ -17,6 +17,28 @@ from .user_management import SqliteUserDataStore
 
 UNKNOWN = "—"
 
+# Number of copies needed to upgrade *to* each regular level.  Reference tables:
+# https://golfshootout.fandom.com/wiki/Rarity (and its per-rarity pages).
+# This reference
+# belongs to the editor: it is not written into or inferred as game mechanics
+# by the catalog or Rule Engine.  Elite upgrades are intentionally absent
+# because their copy requirements are not present in the versioned catalog.
+CARD_REQUIREMENTS_BY_TARGET_LEVEL: dict[str, dict[int, int]] = {
+    "Common": {2: 2, 3: 5, 4: 10, 5: 25, 6: 50, 7: 100, 8: 250, 9: 500, 10: 1_000, 11: 2_500, 12: 5_000},
+    "Rare": {4: 5, 5: 10, 6: 25, 7: 50, 8: 100, 9: 250, 10: 500, 11: 1_000, 12: 2_500},
+    "Epic": {6: 5, 7: 25, 8: 50, 9: 100, 10: 250, 11: 500, 12: 1_000},
+    "Legendary": {8: 2, 9: 4, 10: 6, 11: 8, 12: 10},
+    "Mythical": {10: 2, 11: 3, 12: 4},
+}
+
+
+def cards_required_for_next_level(rarity: str, current_level: int | None) -> int | None:
+    """Return the documented regular-level card threshold, if determinable."""
+
+    if current_level is None:
+        return None
+    return CARD_REQUIREMENTS_BY_TARGET_LEVEL.get(rarity, {}).get(current_level + 1)
+
 
 @dataclass(frozen=True)
 class InventoryRow:
@@ -34,10 +56,30 @@ class InventoryRow:
     cards_required: int | None
 
     @property
-    def upgrade_available(self) -> bool | None:
-        if not self.owned or self.cards_owned is None or self.cards_required is None:
+    def next_threshold(self) -> int | None:
+        if not self.owned:
             return None
-        return self.cards_owned >= self.cards_required
+        calculated = cards_required_for_next_level(self.rarity, self.current_level)
+        # Preserve useful legacy observations until the user supplies a level.
+        return self.cards_required if self.current_level is None else calculated
+
+    @property
+    def progression(self) -> str:
+        if not self.owned or self.cards_owned is None or self.next_threshold is None:
+            return UNKNOWN
+        return f"{self.cards_owned} / {self.next_threshold}"
+
+    @property
+    def cards_remaining(self) -> int | None:
+        if not self.owned or self.cards_owned is None or self.next_threshold is None:
+            return None
+        return max(self.next_threshold - self.cards_owned, 0)
+
+    @property
+    def upgrade_available(self) -> bool | None:
+        if not self.owned or self.cards_owned is None or self.next_threshold is None:
+            return None
+        return self.cards_owned >= self.next_threshold
 
     @property
     def complete(self) -> bool:
@@ -45,7 +87,7 @@ class InventoryRow:
             return False
         if not self.owned:
             return True
-        return all(value is not None for value in (self.current_level, self.cards_owned, self.cards_required))
+        return all(value is not None for value in (self.current_level, self.cards_owned, self.next_threshold))
 
     @property
     def data_state(self) -> str:
@@ -60,7 +102,7 @@ class InventoryRow:
             "unlocked": self.owned,
             "current_level": self.current_level,
             "cards_owned": self.cards_owned,
-            "cards_required_for_next_upgrade": self.cards_required,
+            "cards_required_for_next_upgrade": self.next_threshold,
         }
 
 
@@ -206,7 +248,7 @@ class InventoryEditorService:
     @staticmethod
     def _row_error(row: InventoryRow) -> str | None:
         if not row.owned:
-            if any(value is not None for value in (row.current_level, row.cards_owned, row.cards_required)):
+            if any(value is not None for value in (row.current_level, row.cards_owned)):
                 return "Un club non possédé ne doit pas conserver de niveau ou de cartes."
             return None
         if row.current_level is not None and row.current_level not in row.allowed_levels:
@@ -214,8 +256,6 @@ class InventoryEditorService:
             return f"Niveau indisponible pour ce club. Valeurs possibles : {allowed}."
         if row.cards_owned is not None and row.cards_owned < 0:
             return "Les cartes possédées doivent être positives ou égales à zéro."
-        if row.cards_required is not None and row.cards_required <= 0:
-            return "Le seuil d'amélioration doit être strictement positif."
         return None
 
     def validate_bags(self) -> tuple[str, ...]:
@@ -243,7 +283,7 @@ class InventoryEditorService:
                 removed.append(row.name)
             if old.current_level != row.current_level:
                 levels.append(f"{row.name} ({old.current_level if old.current_level is not None else 'inconnu'} → {row.current_level if row.current_level is not None else 'inconnu'})")
-            if (old.cards_owned, old.cards_required) != (row.cards_owned, row.cards_required):
+            if old.cards_owned != row.cards_owned:
                 cards.append(row.name)
         return InventoryChangeSummary(tuple(added), tuple(removed), tuple(levels), tuple(cards))
 
@@ -295,7 +335,8 @@ class InventoryEditorService:
 class InventoryEditorApp:
     """Small Tkinter table dedicated exclusively to inventory maintenance."""
 
-    COLUMNS = ("owned", "name", "brand", "type", "rarity", "unlock", "level", "cards", "required", "upgrade", "state", "error")
+    COLUMNS = ("owned", "name", "brand", "type", "rarity", "unlock", "level", "cards", "required", "progression", "remaining", "upgrade", "state", "error")
+    EDITABLE_COLUMNS = {7: "current_level", 8: "cards_owned"}
 
     def __init__(self, service: InventoryEditorService, root=None) -> None:
         import tkinter as tk
@@ -343,8 +384,8 @@ class InventoryEditorApp:
         frame = ttk.Frame(self.root, padding=(10, 0))
         frame.pack(fill="both", expand=True)
         self.tree = ttk.Treeview(frame, columns=self.COLUMNS, show="headings", selectmode="browse")
-        labels = {"owned": "Possédé", "name": "Club", "brand": "Marque", "type": "Type", "rarity": "Rareté", "unlock": "Déblocage", "level": "Niveau", "cards": "Cartes", "required": "Seuil suivant", "upgrade": "Amélioration", "state": "Données", "error": "Erreur"}
-        widths = {"owned": 70, "name": 150, "brand": 105, "type": 90, "rarity": 90, "unlock": 80, "level": 75, "cards": 80, "required": 95, "upgrade": 95, "state": 100, "error": 330}
+        labels = {"owned": "Possédé", "name": "Club", "brand": "Marque", "type": "Type", "rarity": "Rareté", "unlock": "Déblocage", "level": "Niveau", "cards": "Cartes possédées", "required": "Seuil suivant", "progression": "Progression", "remaining": "Cartes restantes", "upgrade": "Amélioration disponible", "state": "Données", "error": "Erreur"}
+        widths = {"owned": 70, "name": 150, "brand": 105, "type": 90, "rarity": 90, "unlock": 80, "level": 75, "cards": 110, "required": 95, "progression": 100, "remaining": 105, "upgrade": 135, "state": 100, "error": 330}
         for column in self.COLUMNS:
             self.tree.heading(column, text=labels[column])
             self.tree.column(column, width=widths[column], minwidth=55, anchor="center" if column not in {"name", "error"} else "w")
@@ -382,7 +423,9 @@ class InventoryEditorApp:
             str(row.unlock_level) if row.unlock_level is not None else UNKNOWN,
             str(row.current_level) if row.current_level is not None else UNKNOWN,
             str(row.cards_owned) if row.cards_owned is not None else UNKNOWN,
-            str(row.cards_required) if row.cards_required is not None else UNKNOWN,
+            str(row.next_threshold) if row.next_threshold is not None else UNKNOWN,
+            row.progression,
+            str(row.cards_remaining) if row.cards_remaining is not None else UNKNOWN,
             UNKNOWN if upgrade is None else ("Oui" if upgrade else "Non"), row.data_state,
             self.errors.get(row.club_id, ""),
         )
@@ -410,9 +453,25 @@ class InventoryEditorApp:
     def _edit_cell(self, event) -> None:
         item = self.tree.identify_row(event.y)
         column_number = int(self.tree.identify_column(event.x).lstrip("#") or 0)
-        if not item or column_number not in (7, 8, 9):
+        if not item or column_number not in self.EDITABLE_COLUMNS:
             return
-        field = {7: "current_level", 8: "cards_owned", 9: "cards_required"}[column_number]
+        self._begin_edit(item, column_number)
+
+    @staticmethod
+    def next_edit_target(visible_ids: tuple[str, ...], item: str, column_number: int, navigation: str) -> tuple[str, int] | None:
+        if item not in visible_ids:
+            return None
+        position = visible_ids.index(item)
+        if navigation == "next_cell" and column_number == 7:
+            return item, 8
+        if position + 1 >= len(visible_ids):
+            return None
+        return visible_ids[position + 1], 7 if navigation == "next_cell" else column_number
+
+    def _begin_edit(self, item: str, column_number: int) -> None:
+        if not self.tree.exists(item) or column_number not in self.EDITABLE_COLUMNS:
+            return
+        field = self.EDITABLE_COLUMNS[column_number]
         x, y, width, height = self.tree.bbox(item, f"#{column_number}")
         entry = self.ttk.Entry(self.tree)
         current = getattr(self.rows[item], field)
@@ -421,11 +480,13 @@ class InventoryEditorApp:
         entry.focus_set()
         finished = False
 
-        def finish(_event=None) -> None:
+        def finish(_event=None, *, navigation: str | None = None) -> str | None:
             nonlocal finished
             if finished:
-                return
+                return "break" if navigation else None
             finished = True
+            visible_ids = tuple(row.club_id for row in self._visible_rows())
+            target = self.next_edit_target(visible_ids, item, column_number, navigation) if navigation else None
             text = entry.get().strip()
             if text and (not text.isdigit()):
                 self.errors[item] = "Saisissez un nombre entier ou laissez vide."
@@ -435,8 +496,14 @@ class InventoryEditorApp:
                 self.errors.pop(item, None)
             entry.destroy()
             self._refresh()
+            if target and self.tree.exists(target[0]):
+                self.tree.selection_set(target[0])
+                self.tree.see(target[0])
+                self.root.after_idle(lambda: self._begin_edit(*target))
+            return "break" if navigation else None
 
-        entry.bind("<Return>", finish)
+        entry.bind("<Return>", lambda event: finish(event, navigation="next_row"))
+        entry.bind("<Tab>", lambda event: finish(event, navigation="next_cell"))
         entry.bind("<FocusOut>", finish)
 
         def cancel(_event=None) -> None:

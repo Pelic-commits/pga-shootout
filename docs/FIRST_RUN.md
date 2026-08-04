@@ -40,11 +40,21 @@ clubs, utilisez directement l'éditeur visuel décrit ci-dessous.
 1. Double-cliquez sur **`GERER_MON_INVENTAIRE.bat`**.
 2. Recherchez un club par son nom ou filtrez par marque, type, rareté, possession
    ou données incomplètes.
-3. Cliquez sur la case **Possédé**, puis double-cliquez sur Niveau, Cartes ou
-   Seuil suivant pour modifier la valeur. Une cellule vide signifie « inconnu ».
+3. Cliquez sur la case **Possédé**, puis double-cliquez sur **Niveau** ou
+   **Cartes possédées**. Ce sont les deux seules valeurs de progression à saisir ;
+   une cellule vide signifie « inconnu ».
 4. Modifiez autant de clubs que nécessaire, puis cliquez sur **Enregistrer toutes
    les modifications**.
 5. Vérifiez le résumé global et confirmez une seule fois.
+
+Le seuil suivant est calculé automatiquement à partir de la rareté et du niveau.
+Les colonnes **Progression**, **Cartes restantes** et **Amélioration disponible**
+se mettent à jour dès qu'un niveau ou un nombre de cartes est validé. `Tab`
+passe à la cellule modifiable suivante et `Entrée` à la même cellule de la ligne
+suivante, sans réinitialiser les filtres actifs. Si le niveau est inconnu,
+l'éditeur conserve l'ancien seuil observé lorsqu'il existe ; sinon il affiche
+« — ». Le coût d'un passage de niveau 12 vers Elite reste inconnu tant qu'il
+n'est pas présent dans les données validées.
 
 L'éditeur affiche les 88 clubs officiels sur un écran unique. Une ligne jaune a
 été modifiée sans être enregistrée ; une ligne rouge contient une erreur avec une
@@ -54,7 +64,7 @@ instantanément toutes les valeurs chargées, sans toucher à la base.
 ### Exemple — Blacksmith
 
 Recherchez `Blacksmith`, cochez **Possédé**, saisissez son niveau s'il est connu
-et laissez Cartes ou Seuil suivant vides si vous ne les connaissez pas. La valeur
+et laissez Cartes possédées vide si vous ne les connaissez pas. La valeur
 `0` saisie dans Cartes signifie réellement zéro et reste différente d'une cellule
 vide. Vous pouvez ensuite rechercher d'autres clubs avant d'enregistrer.
 

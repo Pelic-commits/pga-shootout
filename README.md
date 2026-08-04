@@ -9,7 +9,9 @@ Installez Python 3.11 ou une version plus récente, puis double-cliquez sur **`D
 Pour mettre à jour directement les 88 clubs sur un seul écran, double-cliquez sur
 **`GERER_MON_INVENTAIRE.bat`**. L'éditeur Tkinter permet recherche, filtres,
 édition en lot, valeurs inconnues, validation par ligne et enregistrement
-transactionnel avec sauvegarde.
+transactionnel avec sauvegarde. Les seuils de progression, cartes restantes et
+améliorations disponibles sont calculés automatiquement ; seuls le niveau et les
+cartes possédées sont saisis.
 
 ## État
 
