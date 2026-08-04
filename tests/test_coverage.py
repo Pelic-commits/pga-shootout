@@ -28,10 +28,10 @@ class MechanicCoverageTests(unittest.TestCase):
     def test_current_coverage_reflects_qualified_pipelines(self):
         report = analyze_coverage(NORMALIZED)
         self.assertEqual(report.registered_handlers, ("add_stat", "add_all_stats", "dsl_pipeline"))
-        self.assertEqual(report.implemented_groups, 33)
-        self.assertEqual(report.occurrence_coverage_percent, 33.95)
-        self.assertEqual(report.club_coverage_percent, 42.05)
-        self.assertEqual(report.unclassified_groups, 92)
+        self.assertEqual(report.implemented_groups, 35)
+        self.assertEqual(report.occurrence_coverage_percent, 35.19)
+        self.assertEqual(report.club_coverage_percent, 44.32)
+        self.assertEqual(report.unclassified_groups, 90)
 
     def test_ranking_is_reproducible_and_uses_real_gain(self):
         first = analyze_coverage(NORMALIZED)

@@ -14,6 +14,18 @@ class UnknownConditionError(LookupError):
     pass
 
 
+class MissingConditionContextError(UnknownConditionError):
+    pass
+
+
+def _state_equals(state: GameState, _stats: dict[str, float], params: dict[str, Any]) -> bool:
+    field = str(params["field"])
+    actual = getattr(state, field, None)
+    if actual is None and bool(params.get("required", False)):
+        raise MissingConditionContextError(f"Missing required scenario context: {field}")
+    return actual == params.get("value")
+
+
 class ConditionRegistry:
     def __init__(self) -> None:
         self._evaluators: dict[str, ConditionEvaluator] = {}
@@ -34,10 +46,7 @@ class ConditionRegistry:
 def default_condition_registry() -> ConditionRegistry:
     registry = ConditionRegistry()
     registry.register("always", lambda _state, _stats, _params: True)
-    registry.register(
-        "state_equals",
-        lambda state, _stats, params: getattr(state, str(params["field"]), None) == params.get("value"),
-    )
+    registry.register("state_equals", _state_equals)
     registry.register(
         "current_club_attribute_equals",
         lambda state, _stats, params: getattr(state.current_entry.club, str(params["field"]), None)

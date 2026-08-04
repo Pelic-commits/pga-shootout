@@ -159,10 +159,22 @@ def _abilities_at_level(
                     parameters["level_value"] = level_value
         if not mechanism:
             mechanism = f"unsupported:{label_id}"
+        semantic_condition = semantic.get("condition") if isinstance(semantic, Mapping) else None
+        if isinstance(semantic_condition, Mapping):
+            condition_parameters = semantic_condition.get("parameters", {})
+            if not isinstance(condition_parameters, Mapping):
+                raise BagEvaluationError(f"Invalid semantic condition parameters for {label_id!r}")
+            condition = Condition(
+                str(semantic_condition.get("kind", "always")),
+                dict(condition_parameters),
+                str(semantic_condition.get("description", "")),
+            )
+        else:
+            condition = Condition("always", description="semantic condition not available in official catalog")
         effect = Effect(
             mechanism=str(mechanism),
             parameters=dict(parameters),
-            condition=Condition("always", description="semantic condition not available in official catalog"),
+            condition=condition,
             source=f"{club_data['name']} / {occurrence_id}",
         )
         abilities.append(Ability(identifier=occurrence_id, text=label_id, effects=(effect,)))
@@ -175,6 +187,7 @@ def build_game_state(
     level: int | str | Mapping[str, int | str],
     current_club_id: str | None = None,
     pending_effects: tuple[DelayedEffect, ...] | list[DelayedEffect] = (),
+    terrain: str | None = None,
 ) -> GameState:
     catalog = load_raw_json(catalog_path)
     clubs_data = catalog.get("clubs") if isinstance(catalog, dict) else None
@@ -214,6 +227,7 @@ def build_game_state(
     return GameState(
         bag=Bag(tuple(entries)),
         current_club_id=current_id,
+        terrain=terrain,
         pending_effects=list(pending_effects),
     )
 
@@ -227,9 +241,10 @@ def evaluate_bag(
     current_club_id: str | None = None,
     engine: RuleEngine | None = None,
     pending_effects: tuple[DelayedEffect, ...] | list[DelayedEffect] = (),
+    terrain: str | None = None,
 ) -> BagEvaluation:
     """Evaluate any ordered bag description, including generated candidates."""
-    state = build_game_state(saved_bag, catalog_path, level, current_club_id, pending_effects)
+    state = build_game_state(saved_bag, catalog_path, level, current_club_id, pending_effects, terrain)
     rule_engine = engine or RuleEngine()
     effects = [effect for entry in state.bag.entries for ability in entry.club.abilities for effect in ability.effects]
     strict_failed = False
@@ -253,6 +268,7 @@ def evaluate_saved_bag(
     current_club_id: str | None = None,
     engine: RuleEngine | None = None,
     pending_effects: tuple[DelayedEffect, ...] | list[DelayedEffect] = (),
+    terrain: str | None = None,
 ) -> BagEvaluation:
     saved_bag = load_saved_bag(user_dir, bag_id)
     return evaluate_bag(
@@ -263,6 +279,7 @@ def evaluate_saved_bag(
         current_club_id=current_club_id,
         engine=engine,
         pending_effects=pending_effects,
+        terrain=terrain,
     )
 
 
@@ -274,6 +291,7 @@ def render_bag_evaluation(evaluation: BagEvaluation) -> str:
         current.name,
         f"Bag: {evaluation.bag.name}",
         f"Level scenario: {evaluation.state.current_entry.level}",
+        f"Terrain scenario: {evaluation.state.terrain or 'not provided'}",
         "",
         "Base stats",
         f"Power ..... {result.base_stats.power:g}",

@@ -66,6 +66,14 @@ def _add_scenario_level(parser: argparse.ArgumentParser, *, required: bool) -> N
     )
 
 
+def _add_simple_scenario(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--terrain",
+        choices=("tee", "fairway", "rough", "bunker", "green"),
+        help="optional categorical terrain context",
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="pga-shootout")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -85,6 +93,7 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate_parser = subparsers.add_parser("evaluate-bag", help="evaluate a saved user bag through the rule engine")
     evaluate_parser.add_argument("bag_id")
     _add_scenario_level(evaluate_parser, required=True)
+    _add_simple_scenario(evaluate_parser)
     evaluate_parser.add_argument("--current-club", help="stable club identifier; defaults to the first bag position")
     _add_user_paths(evaluate_parser)
     mode_group = evaluate_parser.add_mutually_exclusive_group(required=True)
@@ -94,6 +103,7 @@ def build_parser() -> argparse.ArgumentParser:
     compare_parser.add_argument("left_bag_id")
     compare_parser.add_argument("right_bag_id")
     _add_scenario_level(compare_parser, required=True)
+    _add_simple_scenario(compare_parser)
     compare_parser.add_argument("--position", type=int, default=1, help="1-based current club position in both bags")
     _add_user_paths(compare_parser)
     compare_mode = compare_parser.add_mutually_exclusive_group(required=True)
@@ -179,7 +189,7 @@ def build_parser() -> argparse.ArgumentParser:
         "inventory-status",
         help="show the operational status of every known owned club",
     )
-    inventory_status_parser.add_argument("--user-dir", default="data/user")
+    inventory_status_parser.add_argument("--user-dir", default="data/pga_shootout.sqlite")
     inventory_status_parser.add_argument("--normalized-dir", default="data/normalized")
     inventory_status_parser.add_argument(
         "--raw-catalog",
@@ -269,6 +279,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             user_dir=args.user_dir,
             catalog_path=args.catalog,
             current_club_id=args.current_club,
+            terrain=args.terrain,
         )
         print(render_bag_evaluation(evaluation))
         return 1 if evaluation.strict_failed else 0
@@ -282,6 +293,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             mode=mode,
             user_dir=args.user_dir,
             catalog_path=args.catalog,
+            terrain=args.terrain,
         )
         print(render_bag_comparison(comparison))
         return 1 if comparison.strict_failed else 0

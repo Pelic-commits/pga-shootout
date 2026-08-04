@@ -169,7 +169,7 @@ class CliTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
         common = [
             "inventory-status",
-            "--user-dir", str(root / "data" / "user"),
+            "--user-dir", str(root / "data" / "pga_shootout.sqlite"),
             "--normalized-dir", str(root / "data" / "normalized"),
             "--raw-catalog", str(root / "data" / "raw" / "pga_club_stats_extract_v2_2026-07-21.json"),
         ]
@@ -177,7 +177,7 @@ class CliTests(unittest.TestCase):
         with contextlib.redirect_stdout(human_output):
             result = main(common)
         self.assertEqual(result, 0)
-        self.assertIn("Engine coverage: 28/36 abilities (77.78%)", human_output.getvalue())
+        self.assertIn("Engine coverage: 56/138 abilities (40.58%)", human_output.getvalue())
         self.assertIn("Fully comparable clubs: Homestead", human_output.getvalue())
 
         json_output = io.StringIO()
@@ -185,7 +185,7 @@ class CliTests(unittest.TestCase):
             result = main([*common, "--json"])
         self.assertEqual(result, 0)
         payload = json.loads(json_output.getvalue())
-        self.assertEqual((payload["inventory_clubs"], payload["global_clubs"]), (21, 88))
+        self.assertEqual((payload["inventory_clubs"], payload["global_clubs"]), (75, 88))
 
         with tempfile.TemporaryDirectory() as directory:
             inventory_path = Path(directory) / "inventory.md"

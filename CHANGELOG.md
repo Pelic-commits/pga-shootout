@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Qualification générique des bonus personnels de Power depuis le tee, contexte catégoriel strict/partial, audit SQLite d'éligibilité et cartographie détaillée des capacités possédées.
+- Correction du tri des marques par comparaison normalisée, notamment pour le nom officiel `PALO`.
 - Alignement de l'éditeur d'inventaire sur l'ordre des clubs du jeu, conservation du défilement et saisie clavier de type tableur.
 - Calcul automatique de la progression des clubs dans l'éditeur visuel, avec cartes restantes, disponibilité d'amélioration et navigation clavier améliorée.
 - Ajout de l'éditeur visuel Tkinter dédié à l'inventaire, de son lanceur Windows, de l'édition en lot transactionnelle et du menu principal simplifié.

@@ -320,6 +320,32 @@ def test_catalog_sort_places_future_categories_last_and_sorts_them_alphabeticall
     assert [row.club_id for row in ordered] == ["known", "alpha", "accent", "zeta"]
 
 
+def test_real_catalog_uses_requested_brand_order_including_uppercase_palo(tmp_path):
+    editor = service(tmp_path)
+    rows = editor.load_rows()
+    observed = tuple(dict.fromkeys(row.brand for row in rows))
+    assert observed == (
+        "Corvid",
+        "Forester",
+        "Nautilus",
+        "PALO",
+        "Phoenix",
+        "Ryusei",
+        "Stanchion",
+        "Willoughsby",
+        "Mythical",
+    )
+
+
+def test_known_brand_matching_ignores_case_and_surrounding_spaces():
+    rows = (
+        catalog_row("palo", "Palo", "  PALO  ", "Putter"),
+        catalog_row("mythical", "Mythical", "mythical", "Putter"),
+        catalog_row("future", "Future", "Zephyr", "Putter"),
+    )
+    assert [row.club_id for row in InventoryEditorService.filter_rows(rows)] == ["palo", "mythical", "future"]
+
+
 def test_catalog_sort_names_is_case_and_accent_insensitive_and_survives_filtering():
     rows = (
         catalog_row("zulu", "zulu", "Corvid", "Putter"),

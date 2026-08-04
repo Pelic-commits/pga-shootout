@@ -2,6 +2,7 @@
 Bag comparison
 Level scenario: 12
 Evaluation mode: partial
+Terrain scenario: not provided
 Selected position: 1
 
 Composition

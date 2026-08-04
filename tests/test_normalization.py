@@ -73,6 +73,8 @@ class NormalizationPipelineTests(unittest.TestCase):
             "label:sand_bounce",
             "label:spin_boost",
             "label:stanchion_power",
+            "label:tee_off_power",
+            "label:texas_tee",
             "label:water_bounce",
             "label:wind_resist_75",
         }

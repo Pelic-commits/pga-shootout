@@ -58,6 +58,7 @@ class BagComparison:
     modifier_difference_right_minus_left: Mapping[str, float]
     metrics: tuple[ComparableMetric, ...]
     diagnostic: ComparisonDiagnostic
+    terrain: str | None = None
 
     @property
     def strict_failed(self) -> bool:
@@ -203,6 +204,7 @@ def compare_saved_bags(
     mode: EvaluationMode,
     user_dir: str | Path = "data/user",
     catalog_path: str | Path = "data/normalized/clubs_official.json",
+    terrain: str | None = None,
 ) -> BagComparison:
     if current_position < 1:
         raise BagComparisonError("Current position must be at least 1")
@@ -218,6 +220,7 @@ def compare_saved_bags(
         user_dir=user_dir,
         catalog_path=catalog_path,
         current_club_id=left_saved.club_ids[current_position - 1],
+        terrain=terrain,
     )
     right = evaluate_saved_bag(
         right_bag_id,
@@ -226,6 +229,7 @@ def compare_saved_bags(
         user_dir=user_dir,
         catalog_path=catalog_path,
         current_club_id=right_saved.club_ids[current_position - 1],
+        terrain=terrain,
     )
     left_stats = left.result.final_stats.as_dict()
     right_stats = right.result.final_stats.as_dict()
@@ -261,6 +265,7 @@ def compare_saved_bags(
         },
         metrics=metrics,
         diagnostic=diagnostic,
+        terrain=terrain,
     )
 
 
@@ -304,6 +309,7 @@ def render_bag_comparison(comparison: BagComparison) -> str:
         "Bag comparison",
         f"Level scenario: {comparison.level}",
         f"Evaluation mode: {comparison.mode.value}",
+        f"Terrain scenario: {comparison.terrain or 'not provided'}",
         f"Selected position: {comparison.left.current_position}",
         "",
         "Composition",

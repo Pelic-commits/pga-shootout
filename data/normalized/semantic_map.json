@@ -2474,14 +2474,36 @@
       "validation_status": "not_started"
     },
     "label:tee_off_power": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "tee_self_power_bonus",
+      "complexity": "parameterized",
+      "condition": {
+        "description": "shot terrain is tee",
+        "kind": "state_equals",
+        "parameters": {
+          "field": "terrain",
+          "required": true,
+          "value": "tee"
+        }
+      },
+      "dependencies": [
+        "source_club",
+        "ability_level_value",
+        "optional_terrain_context"
+      ],
       "group_id": "label:tee_off_power",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: When hitting from the tee, Sidewinder gains bonus Power.",
+        "The official level value is added to the source club's Power only when categorical terrain=tee.",
+        "A missing terrain is unresolved in partial mode and blocking in strict mode."
+      ],
+      "pattern_id": "self_stat_bonus",
+      "pattern_parameters": {
+        "stat": "power"
+      },
+      "priority": 10,
+      "validation_status": "validated_from_official_text"
     },
     "label:terrain_bonus": {
       "complexity": null,
@@ -2504,14 +2526,36 @@
       "validation_status": "not_started"
     },
     "label:texas_tee": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "tee_self_power_bonus",
+      "complexity": "parameterized",
+      "condition": {
+        "description": "shot terrain is tee",
+        "kind": "state_equals",
+        "parameters": {
+          "field": "terrain",
+          "required": true,
+          "value": "tee"
+        }
+      },
+      "dependencies": [
+        "source_club",
+        "ability_level_value",
+        "optional_terrain_context"
+      ],
       "group_id": "label:texas_tee",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Official text: Gains additional Power when hitting from the tee.",
+        "The official level value is added to the source club's Power only when categorical terrain=tee.",
+        "A missing terrain is unresolved in partial mode and blocking in strict mode."
+      ],
+      "pattern_id": "self_stat_bonus",
+      "pattern_parameters": {
+        "stat": "power"
+      },
+      "priority": 10,
+      "validation_status": "validated_from_official_text"
     },
     "label:three_heads": {
       "complexity": null,
@@ -2725,6 +2769,55 @@
   },
   "layer": "semantic_interpretation_placeholders",
   "patterns": {
+    "self_stat_bonus": {
+      "description": "Apply one level-scaled statistic bonus to the source club when the semantic condition matches.",
+      "parameters": [
+        "stat"
+      ],
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "apply_stat",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": {
+                "pattern_parameter": "stat"
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      }
+    },
     "delayed_all_stats_by_club_attribute": {
       "description": "Schedule one level-scaled all-stats effect for the next compatible club selected by an official club attribute.",
       "parameters": [

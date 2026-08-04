@@ -58,10 +58,12 @@ def alphabetical_key(value: str) -> str:
 def ordered_category_key(value: str, known_values: tuple[str, ...]) -> tuple[int, int, str]:
     """Place future unknown categories after known ones without ever failing."""
 
+    normalized_value = alphabetical_key(value.strip())
+    normalized_known = tuple(alphabetical_key(item.strip()) for item in known_values)
     try:
-        return 0, known_values.index(value), ""
+        return 0, normalized_known.index(normalized_value), ""
     except ValueError:
-        return 1, len(known_values), alphabetical_key(value)
+        return 1, len(known_values), normalized_value
 
 
 def cards_required_for_next_level(rarity: str, current_level: int | None) -> int | None:
