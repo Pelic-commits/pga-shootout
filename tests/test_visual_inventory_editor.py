@@ -3,12 +3,17 @@ import json
 from pathlib import Path
 import shutil
 import sqlite3
+from types import SimpleNamespace
 
 import pytest
 
 from pga_shootout.inventory_editor import (
+    BRAND_ORDER,
+    CLUB_TYPE_ORDER,
     InventoryEditorApp,
+    InventoryRow,
     InventoryEditorService,
+    UNKNOWN_CALCULATION,
     cards_required_for_next_level,
 )
 from pga_shootout.storage import USER_FILENAMES
@@ -41,6 +46,97 @@ def service(tmp_path: Path, *, without_blacksmith: bool = False) -> InventoryEdi
 
 def edit(rows, club_id, **changes):
     return tuple(replace(row, examined=True, **changes) if row.club_id == club_id else row for row in rows)
+
+
+def catalog_row(club_id: str, name: str, brand: str, club_type: str) -> InventoryRow:
+    return InventoryRow(
+        club_id=club_id,
+        name=name,
+        brand=brand,
+        club_type=club_type,
+        rarity="Common",
+        unlock_level=1,
+        allowed_levels=tuple(range(1, 13)),
+        examined=True,
+        owned=True,
+        current_level=8,
+        cards_owned=0,
+        cards_required=None,
+    )
+
+
+def fake_edit_app(rows: tuple[InventoryRow, ...]):
+    class FakeEntry:
+        def __init__(self):
+            self.value = ""
+            self.bindings = {}
+            self.destroyed = False
+            self.selection = None
+
+        def insert(self, _index, value):
+            self.value = value
+
+        def get(self):
+            return self.value
+
+        def place(self, **_kwargs):
+            pass
+
+        def focus_set(self):
+            pass
+
+        def selection_range(self, start, end):
+            self.selection = (start, end)
+
+        def icursor(self, _position):
+            pass
+
+        def bind(self, event, callback):
+            self.bindings[event] = callback
+
+        def destroy(self):
+            self.destroyed = True
+
+    class FakeTree:
+        def __init__(self):
+            self.selected = []
+            self.focused = None
+            self.has_focus = False
+
+        def exists(self, item):
+            return item in app.rows
+
+        def bbox(self, _item, _column):
+            return 0, 0, 100, 20
+
+        def selection_set(self, item):
+            self.selected.append(item)
+
+        def see(self, _item):
+            pass
+
+        def focus(self, item):
+            self.focused = item
+
+        def focus_set(self):
+            self.has_focus = True
+
+    entries = []
+
+    def entry_factory(_parent):
+        entry = FakeEntry()
+        entries.append(entry)
+        return entry
+
+    app = InventoryEditorApp.__new__(InventoryEditorApp)
+    app.rows = {row.club_id: row for row in rows}
+    app.errors = {}
+    app.tree = FakeTree()
+    app.ttk = SimpleNamespace(Entry=entry_factory)
+    app.root = SimpleNamespace(after_idle=lambda callback: callback())
+    app._visible_rows = lambda: tuple(app.rows.values())
+    app._refresh = lambda: None
+    return app, entries
 
 
 def catalog_snapshot(editor: InventoryEditorService):
@@ -196,9 +292,106 @@ def test_only_progression_inputs_are_editable_and_keyboard_navigation_is_stable(
     visible = ("alpha", "beta", "gamma")
     assert InventoryEditorApp.next_edit_target(visible, "alpha", 7, "next_cell") == ("alpha", 8)
     assert InventoryEditorApp.next_edit_target(visible, "alpha", 8, "next_cell") == ("beta", 7)
-    assert InventoryEditorApp.next_edit_target(visible, "alpha", 7, "next_row") == ("beta", 7)
-    assert InventoryEditorApp.next_edit_target(visible, "alpha", 8, "next_row") == ("beta", 8)
-    assert InventoryEditorApp.next_edit_target(visible, "gamma", 8, "next_row") is None
+    assert InventoryEditorApp.next_edit_target(visible, "alpha", 7, "stay") is None
+    assert InventoryEditorApp.next_edit_target(visible, "gamma", 8, "next_cell") is None
+
+
+def test_catalog_sort_uses_exact_brand_then_type_order():
+    rows = tuple(
+        catalog_row(f"{brand}-{club_type}", f"{brand} {club_type}", brand, club_type)
+        for brand in reversed(BRAND_ORDER)
+        for club_type in reversed(CLUB_TYPE_ORDER)
+    )
+    ordered = InventoryEditorService.filter_rows(rows)
+    observed_brands = tuple(dict.fromkeys(row.brand for row in ordered))
+    assert observed_brands == BRAND_ORDER
+    for brand in BRAND_ORDER:
+        assert tuple(row.club_type for row in ordered if row.brand == brand) == CLUB_TYPE_ORDER
+
+
+def test_catalog_sort_places_future_categories_last_and_sorts_them_alphabetically():
+    rows = (
+        catalog_row("zeta", "Zeta", "Zéphyr", "Utility"),
+        catalog_row("known", "Known", "Corvid", "Putter"),
+        catalog_row("accent", "Accent", "Éclipse", "Chipper"),
+        catalog_row("alpha", "Alpha", "Eagle", "Approach"),
+    )
+    ordered = InventoryEditorService.filter_rows(rows)
+    assert [row.club_id for row in ordered] == ["known", "alpha", "accent", "zeta"]
+
+
+def test_catalog_sort_names_is_case_and_accent_insensitive_and_survives_filtering():
+    rows = (
+        catalog_row("zulu", "zulu", "Corvid", "Putter"),
+        catalog_row("eclair", "Éclair", "Corvid", "Putter"),
+        catalog_row("alpha", "alpha", "Corvid", "Putter"),
+        catalog_row("other", "Other", "Forester", "Driver"),
+    )
+    assert [row.club_id for row in InventoryEditorService.filter_rows(rows)] == ["alpha", "eclair", "zulu", "other"]
+    filtered = InventoryEditorService.filter_rows(rows, brand="Corvid")
+    assert [row.club_id for row in filtered] == ["alpha", "eclair", "zulu"]
+
+
+def test_existing_cell_text_is_selected_for_immediate_replacement():
+    class FakeEntry:
+        def __init__(self):
+            self.calls = []
+
+        def selection_range(self, start, end):
+            self.calls.append(("selection", start, end))
+
+        def icursor(self, position):
+            self.calls.append(("cursor", position))
+
+    entry = FakeEntry()
+    InventoryEditorApp.select_existing_text(entry)
+    assert entry.calls == [("selection", 0, "end"), ("cursor", "end")]
+
+
+def test_enter_validates_recalculates_and_returns_focus_to_same_row():
+    first = catalog_row("first", "First", "Corvid", "Putter")
+    second = catalog_row("second", "Second", "Corvid", "Driver")
+    app, entries = fake_edit_app((first, second))
+    app._begin_edit("first", 7)
+    assert entries[0].selection == (0, "end")
+    entries[0].value = "9"
+    assert entries[0].bindings["<Return>"](None) == "break"
+    assert app.rows["first"].current_level == 9
+    assert app.rows["first"].next_threshold == 1_000
+    assert len(entries) == 1
+    assert app.tree.selected[-1] == "first"
+    assert app.tree.focused == "first"
+    assert app.tree.has_focus
+
+
+def test_tab_opens_next_editable_cell_and_escape_discards_its_value():
+    first = catalog_row("first", "First", "Corvid", "Putter")
+    second = catalog_row("second", "Second", "Corvid", "Driver")
+    app, entries = fake_edit_app((first, second))
+    app._begin_edit("first", 7)
+    entries[0].value = "9"
+    assert entries[0].bindings["<Tab>"](None) == "break"
+    assert app.rows["first"].current_level == 9
+    assert len(entries) == 2
+    assert entries[1].value == "0"
+    entries[1].value = "999"
+    entries[1].bindings["<Escape>"]()
+    assert app.rows["first"].cards_owned == 0
+    assert entries[1].destroyed
+
+
+def test_level_12_threshold_is_explicitly_unknown_and_never_persisted(tmp_path):
+    editor = service(tmp_path, without_blacksmith=True)
+    before = editor.database.load_user_bundle()
+    row = next(row for row in editor.load_rows() if row.club_id == "blacksmith")
+    row = replace(row, examined=True, owned=True, current_level=12, cards_owned=4, cards_required=999)
+    assert row.next_threshold is None
+    assert row.as_change()["cards_required_for_next_upgrade"] is None
+    app = InventoryEditorApp.__new__(InventoryEditorApp)
+    app.errors = {}
+    values = app._values(row)
+    assert values[8:12] == (UNKNOWN_CALCULATION,) * 4
+    assert editor.database.load_user_bundle() == before
 
 
 def test_launcher_opens_visual_editor_directly_without_main_menu():

@@ -49,12 +49,19 @@ clubs, utilisez directement l'éditeur visuel décrit ci-dessous.
 
 Le seuil suivant est calculé automatiquement à partir de la rareté et du niveau.
 Les colonnes **Progression**, **Cartes restantes** et **Amélioration disponible**
-se mettent à jour dès qu'un niveau ou un nombre de cartes est validé. `Tab`
-passe à la cellule modifiable suivante et `Entrée` à la même cellule de la ligne
-suivante, sans réinitialiser les filtres actifs. Si le niveau est inconnu,
+se mettent à jour dès qu'un niveau ou un nombre de cartes est validé. À
+l'ouverture d'une cellule, sa valeur est sélectionnée afin que la première frappe
+la remplace. `Tab` passe à la cellule modifiable suivante ; `Entrée` valide puis
+rend le focus au tableau sur la même ligne. Les filtres et la position de la liste
+sont conservés. Si le niveau est inconnu,
 l'éditeur conserve l'ancien seuil observé lorsqu'il existe ; sinon il affiche
-« — ». Le coût d'un passage de niveau 12 vers Elite reste inconnu tant qu'il
+« Inconnu ». Le coût d'un passage de niveau 12 vers Elite reste inconnu tant qu'il
 n'est pas présent dans les données validées.
+
+Les clubs suivent l'ordre du jeu : Corvid, Forester, Nautilus, Palo, Phoenix,
+Ryusei, Stanchion, Willoughsby, Mythical ; puis Putter, Driver, Wood, Hybrid,
+Iron et Wedge dans chaque marque. Les catégories futures inconnues apparaîtront
+ensuite par ordre alphabétique.
 
 L'éditeur affiche les 88 clubs officiels sur un écran unique. Une ligne jaune a
 été modifiée sans être enregistrée ; une ligne rouge contient une erreur avec une

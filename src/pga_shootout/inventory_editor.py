@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Iterable
+import unicodedata
 
 from .inventory_status import analyze_inventory_status, render_inventory_status
 from .storage import PgaDatabase
@@ -16,6 +17,20 @@ from .user_management import SqliteUserDataStore
 
 
 UNKNOWN = "—"
+UNKNOWN_CALCULATION = "Inconnu"
+
+BRAND_ORDER = (
+    "Corvid",
+    "Forester",
+    "Nautilus",
+    "Palo",
+    "Phoenix",
+    "Ryusei",
+    "Stanchion",
+    "Willoughsby",
+    "Mythical",
+)
+CLUB_TYPE_ORDER = ("Putter", "Driver", "Wood", "Hybrid", "Iron", "Wedge")
 
 # Number of copies needed to upgrade *to* each regular level.  Reference tables:
 # https://golfshootout.fandom.com/wiki/Rarity (and its per-rarity pages).
@@ -30,6 +45,23 @@ CARD_REQUIREMENTS_BY_TARGET_LEVEL: dict[str, dict[int, int]] = {
     "Legendary": {8: 2, 9: 4, 10: 6, 11: 8, 12: 10},
     "Mythical": {10: 2, 11: 3, 12: 4},
 }
+CARD_REQUIREMENTS_SOURCE = "PGA TOUR Golf Shootout Wiki — rarity upgrade tables"
+
+
+def alphabetical_key(value: str) -> str:
+    """Return a stable, case- and accent-insensitive key for display sorting."""
+
+    normalized = unicodedata.normalize("NFKD", value.casefold())
+    return "".join(character for character in normalized if not unicodedata.combining(character))
+
+
+def ordered_category_key(value: str, known_values: tuple[str, ...]) -> tuple[int, int, str]:
+    """Place future unknown categories after known ones without ever failing."""
+
+    try:
+        return 0, known_values.index(value), ""
+    except ValueError:
+        return 1, len(known_values), alphabetical_key(value)
 
 
 def cards_required_for_next_level(rarity: str, current_level: int | None) -> int | None:
@@ -209,7 +241,16 @@ class InventoryEditorService:
                 cards_owned=user["cards_owned"] if user else None,
                 cards_required=user["cards_required"] if user else None,
             ))
-        return tuple(result)
+        return tuple(sorted(result, key=self.row_sort_key))
+
+    @staticmethod
+    def row_sort_key(row: InventoryRow) -> tuple[Any, ...]:
+        return (
+            *ordered_category_key(row.brand, BRAND_ORDER),
+            *ordered_category_key(row.club_type, CLUB_TYPE_ORDER),
+            alphabetical_key(row.name),
+            row.club_id,
+        )
 
     @staticmethod
     def filter_rows(rows: Iterable[InventoryRow], *, search: str = "", brand: str = "Tous", club_type: str = "Tous", rarity: str = "Toutes", ownership: str = "Tous", incomplete_only: bool = False) -> tuple[InventoryRow, ...]:
@@ -231,7 +272,7 @@ class InventoryEditorService:
             if incomplete_only and row.complete:
                 continue
             result.append(row)
-        return tuple(result)
+        return tuple(sorted(result, key=InventoryEditorService.row_sort_key))
 
     def validate(self, rows: Iterable[InventoryRow]) -> dict[str, str]:
         rows = tuple(rows)
@@ -418,20 +459,25 @@ class InventoryEditorApp:
 
     def _values(self, row: InventoryRow) -> tuple[str, ...]:
         upgrade = row.upgrade_available
+        calculation_unknown = row.owned and (
+            row.cards_owned is None or row.next_threshold is None
+        )
         return (
             "☑" if row.owned else "☐", row.name, row.brand, row.club_type, row.rarity,
             str(row.unlock_level) if row.unlock_level is not None else UNKNOWN,
             str(row.current_level) if row.current_level is not None else UNKNOWN,
             str(row.cards_owned) if row.cards_owned is not None else UNKNOWN,
-            str(row.next_threshold) if row.next_threshold is not None else UNKNOWN,
-            row.progression,
-            str(row.cards_remaining) if row.cards_remaining is not None else UNKNOWN,
-            UNKNOWN if upgrade is None else ("Oui" if upgrade else "Non"), row.data_state,
+            str(row.next_threshold) if row.next_threshold is not None else (UNKNOWN_CALCULATION if row.owned else UNKNOWN),
+            UNKNOWN_CALCULATION if calculation_unknown else row.progression,
+            str(row.cards_remaining) if row.cards_remaining is not None else (UNKNOWN_CALCULATION if calculation_unknown else UNKNOWN),
+            (UNKNOWN_CALCULATION if calculation_unknown else UNKNOWN) if upgrade is None else ("Oui" if upgrade else "Non"), row.data_state,
             self.errors.get(row.club_id, ""),
         )
 
     def _refresh(self) -> None:
         selected = self.tree.selection()
+        vertical_position = self.tree.yview()[0] if self.tree.get_children() else 0.0
+        horizontal_position = self.tree.xview()[0] if self.tree.get_children() else 0.0
         self.tree.delete(*self.tree.get_children())
         original = {row.club_id: row for row in self.original}
         for row in self._visible_rows():
@@ -439,6 +485,8 @@ class InventoryEditorApp:
             self.tree.insert("", "end", iid=row.club_id, values=self._values(row), tags=tags)
         if selected and self.tree.exists(selected[0]):
             self.tree.selection_set(selected[0])
+        self.tree.yview_moveto(vertical_position)
+        self.tree.xview_moveto(horizontal_position)
         self.status.set(f"{len(self._visible_rows())} club(s) affiché(s) sur {len(self.rows)}.")
 
     def _click(self, event) -> None:
@@ -461,6 +509,8 @@ class InventoryEditorApp:
     def next_edit_target(visible_ids: tuple[str, ...], item: str, column_number: int, navigation: str) -> tuple[str, int] | None:
         if item not in visible_ids:
             return None
+        if navigation == "stay":
+            return None
         position = visible_ids.index(item)
         if navigation == "next_cell" and column_number == 7:
             return item, 8
@@ -478,6 +528,7 @@ class InventoryEditorApp:
         entry.insert(0, "" if current is None else str(current))
         entry.place(x=x, y=y, width=width, height=height)
         entry.focus_set()
+        self.select_existing_text(entry)
         finished = False
 
         def finish(_event=None, *, navigation: str | None = None) -> str | None:
@@ -500,9 +551,13 @@ class InventoryEditorApp:
                 self.tree.selection_set(target[0])
                 self.tree.see(target[0])
                 self.root.after_idle(lambda: self._begin_edit(*target))
+            elif navigation == "stay" and self.tree.exists(item):
+                self.tree.selection_set(item)
+                self.tree.focus(item)
+                self.tree.focus_set()
             return "break" if navigation else None
 
-        entry.bind("<Return>", lambda event: finish(event, navigation="next_row"))
+        entry.bind("<Return>", lambda event: finish(event, navigation="stay"))
         entry.bind("<Tab>", lambda event: finish(event, navigation="next_cell"))
         entry.bind("<FocusOut>", finish)
 
@@ -513,6 +568,13 @@ class InventoryEditorApp:
             self._refresh()
 
         entry.bind("<Escape>", cancel)
+
+    @staticmethod
+    def select_existing_text(entry) -> None:
+        """Select the current value once, while preserving normal later clicks."""
+
+        entry.selection_range(0, "end")
+        entry.icursor("end")
 
     def _cancel(self) -> None:
         from tkinter import messagebox
