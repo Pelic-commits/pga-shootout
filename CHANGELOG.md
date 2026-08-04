@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Ajout de l'éditeur visuel Tkinter dédié à l'inventaire, de son lanceur Windows, de l'édition en lot transactionnelle et du menu principal simplifié.
 - Ajout du catalogue SQLite immuable et versionné, du diff reproductible et de la vérification officielle du 4 août 2026.
 - Migration sauvegardée du profil JSON vers SQLite, export diagnostique et adaptateur conservant les objets métier du moteur.
 - Ajout de la synchronisation guidée en lot, du Data Dashboard et du contrat générique sérialisable des futures demandes d'optimisation.

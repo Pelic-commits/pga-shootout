@@ -32,10 +32,31 @@ possédez et les niveaux/cartes que vous connaissez. L'absence d'un club de votr
 inventaire ne signifie donc jamais qu'il est verrouillé.
 
 Au premier démarrage de cette version, les anciens JSON sont sauvegardés puis
-migrés automatiquement vers `data/pga_shootout.sqlite`. Pour actualiser plusieurs
-clubs, choisissez « Consulter ou modifier mes clubs », puis « Synchroniser mon
-inventaire ». Vous pouvez laisser niveau et cartes vides, examiner plusieurs
-clubs, contrôler le résumé, puis confirmer une seule fois ou annuler sans écrire.
+migrés automatiquement vers `data/pga_shootout.sqlite`. Pour actualiser vos
+clubs, utilisez directement l'éditeur visuel décrit ci-dessous.
+
+## Mettre à jour mon inventaire — parcours normal
+
+1. Double-cliquez sur **`GERER_MON_INVENTAIRE.bat`**.
+2. Recherchez un club par son nom ou filtrez par marque, type, rareté, possession
+   ou données incomplètes.
+3. Cliquez sur la case **Possédé**, puis double-cliquez sur Niveau, Cartes ou
+   Seuil suivant pour modifier la valeur. Une cellule vide signifie « inconnu ».
+4. Modifiez autant de clubs que nécessaire, puis cliquez sur **Enregistrer toutes
+   les modifications**.
+5. Vérifiez le résumé global et confirmez une seule fois.
+
+L'éditeur affiche les 88 clubs officiels sur un écran unique. Une ligne jaune a
+été modifiée sans être enregistrée ; une ligne rouge contient une erreur avec une
+explication française dans la dernière colonne. Le bouton d'annulation restaure
+instantanément toutes les valeurs chargées, sans toucher à la base.
+
+### Exemple — Blacksmith
+
+Recherchez `Blacksmith`, cochez **Possédé**, saisissez son niveau s'il est connu
+et laissez Cartes ou Seuil suivant vides si vous ne les connaissez pas. La valeur
+`0` saisie dans Cartes signifie réellement zéro et reste différente d'une cellule
+vide. Vous pouvez ensuite rechercher d'autres clubs avant d'enregistrer.
 
 La version et la provenance du catalogue apparaissent dans
 `docs/DATA_DASHBOARD.md`. Le catalogue actuel est une vérification du 4 août 2026
@@ -54,12 +75,10 @@ PGA Shootout Assistant
 
 Que souhaitez-vous faire ?
 
-1 - Tester un nouveau club dans un sac
-2 - Consulter ou modifier mes clubs
-3 - Créer ou modifier un sac
-4 - Vérifier mes données
-5 - Tester un club en mode Scénario
-6 - Quitter
+1 - Gérer mon inventaire
+2 - Gérer mes sacs
+3 - Tester un club dans un sac
+4 - Quitter
 ```
 
 Répondez toujours avec le numéro affiché. Une mauvaise saisie ne ferme pas l'application : le menu redemande simplement un choix valide.
@@ -68,71 +87,12 @@ Répondez toujours avec le numéro affiché. Une mauvaise saisie ne ferme pas l'
 
 Si des fichiers personnels historiques existent, l'application les sauvegarde et les migre dans SQLite sans les remplacer. Sur une installation neuve, l'assistant initialise des données personnelles valides. Il ne remplace jamais silencieusement une donnée existante.
 
-Lorsque moins de cinq clubs sont enregistrés ou qu'aucun sac n'existe, l'assistant propose la première configuration :
-
-1. rechercher et ajouter au moins cinq clubs possédés ;
-2. saisir leur niveau et leurs cartes ;
-3. nommer un premier sac ;
-4. choisir ses clubs aux positions 1 à 5 ;
-5. valider automatiquement les données ;
-6. tester immédiatement un autre club si vous le souhaitez.
-
-Vous pouvez reporter cette configuration et la reprendre plus tard avec les choix 2 et 3 du menu principal.
-
-## Ajouter ou modifier un club
-
-Choisissez **2 - Consulter ou modifier mes clubs**, puis **Ajouter ou modifier un club**.
-
-L'assistant demande :
-
-1. une partie du nom affiché dans le jeu ;
-2. le club correspondant parmi les résultats officiels ;
-3. son niveau actuel — appuyez directement sur Entrée s'il est inconnu ;
-4. le nombre de cartes possédées ;
-5. le nombre de cartes nécessaires à la prochaine amélioration.
-
-L'identifiant interne est choisi automatiquement. Le statut « amélioration disponible » est calculé à partir des cartes : vous ne le saisissez jamais vous-même.
-
-### Exemple — je viens d'obtenir Cyclotron
-
-```text
-Recherchez le club par son nom :
-> Cyclotron
-
-Club trouvé :
-1 - Cyclotron
-> 1
-
-Niveau actuel (laissez vide s'il est inconnu) :
-> 12
-
-Nombre de cartes possédées :
-> 46
-
-Cartes nécessaires à la prochaine amélioration :
-> 50
-
-Cyclotron a été enregistré et les données ont été validées.
-Amélioration non disponible.
-```
-
-Si Cyclotron était déjà enregistré, les nouvelles informations remplacent son ancienne entrée sans créer de doublon.
-
-### Exemple — je viens d'améliorer Cyclotron
-
-Refaites exactement le même parcours, recherchez Cyclotron, puis saisissez son nouveau niveau et ses nouveaux nombres de cartes. Une sauvegarde de l'état précédent est créée avant la modification.
-
-### Corriger une erreur
-
-Le même menu permet :
-
-- d'afficher les clubs connus ;
-- de marquer un club comme non possédé ;
-- de supprimer une entrée ajoutée par erreur après confirmation.
+Pour une première configuration, ouvrez d'abord l'éditeur visuel, indiquez au
+moins cinq clubs possédés, enregistrez-les, puis utilisez **2 - Gérer mes sacs**.
 
 ## Créer ou modifier un sac
 
-Choisissez **3 - Créer ou modifier un sac**.
+Choisissez **2 - Gérer mes sacs**.
 
 Pour créer un sac :
 
@@ -234,28 +194,20 @@ Prenez toujours en compte les avertissements :
 
 Vous pouvez demander l'explication détaillée d'un placement. Elle montre les statistiques de départ, les capacités appliquées, les contributions et les valeurs finales.
 
-## Vérifier ses données
-
-Le choix **4 - Vérifier mes données** affiche simplement :
-
-- le nombre de clubs enregistrés ;
-- le nombre de sacs ;
-- si les données sont valides ;
-- si l'inventaire est déclaré complet ou partiel.
-
-Chaque modification guidée déclenche également cette validation automatiquement. En cas d'erreur, l'ancienne version est restaurée.
-
 ## Sauvegardes et données personnelles
 
-Les données personnelles restent dans `data/user/`. Avant chaque modification, l'application copie les cinq fichiers dans :
+Les données personnelles normales sont dans `data/pga_shootout.sqlite`. Avant
+chaque enregistrement global, l'application crée une sauvegarde complète dans :
 
 ```text
-data/user/backups/AAAAJJMM-HHMMSS-microsecondes/
+data/backups/pga_shootout-AAAAJJMM-HHMMSS-microsecondes.sqlite
 ```
 
 Le catalogue officiel se trouve dans `data/normalized/` et la capture brute dans `data/raw/`. Les assistants ne les modifient jamais.
 
-Si des données existantes sont invalides au démarrage, l'application explique le problème et demande une confirmation avant de repartir avec des fichiers vides. Les anciens fichiers sont sauvegardés auparavant.
+Toutes les lignes sont enregistrées dans une transaction unique : si une erreur
+survient, aucune modification de la session n'est conservée. Les anciens JSON de
+`data/user/` restent disponibles uniquement pour import, export ou dépannage.
 
 ## Problèmes courants
 
@@ -266,6 +218,7 @@ Si des données existantes sont invalides au démarrage, l'application explique 
 | L'ancien environnement Python est incompatible | Le lanceur le conserve dans `.venv_incompatible` et en crée normalement un nouveau. Fermez les programmes Python si le déplacement échoue. |
 | Tous les placements sont exclus en mode Réel | Complétez les niveaux des six clubs concernés ou utilisez explicitement le mode Scénario. |
 | Aucun club n'est proposé pour un sac | Ajoutez au moins cinq clubs et marquez-les comme possédés. |
+| Une ligne devient rouge | Corrigez le champ indiqué dans la colonne Erreur ; les autres modifications restent en attente. |
 | Une capacité est non prise en charge | Conservez l'avertissement : son effet n'est pas assimilé à zéro. |
 | La fenêtre affiche une erreur | Lisez le message conservé à l'écran. Les données sont sauvegardées avant chaque modification. |
 
@@ -287,6 +240,9 @@ Ouvrir le menu principal sans le fichier `.bat` :
 ```powershell
 pga-shootout assistant
 ```
+
+L'ancien assistant textuel de gestion des clubs reste présent dans le code pour
+compatibilité et dépannage, mais il n'est plus proposé dans le parcours normal.
 
 Vérifier le projet et les données :
 

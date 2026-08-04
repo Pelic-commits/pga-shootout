@@ -37,6 +37,14 @@ class FakeRecommendation:
         return 0
 
 
+class FakeInventoryEditor:
+    calls = []
+
+    def __call__(self, **kwargs):
+        self.__class__.calls.append(kwargs)
+        return 0
+
+
 class UserManagementTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
@@ -183,6 +191,7 @@ class MainMenuTests(unittest.TestCase):
             )
         self.store.save_bag("Sac test", self.clubs[:5])
         FakeRecommendation.calls.clear()
+        FakeInventoryEditor.calls.clear()
 
     def app(self, answers, output):
         return PgaShootoutAssistant(
@@ -191,46 +200,54 @@ class MainMenuTests(unittest.TestCase):
             input_fn=AnswerStream(answers),
             output_fn=output.append,
             recommendation_factory=FakeRecommendation,
+            inventory_editor_factory=FakeInventoryEditor(),
         )
 
-    def test_returns_to_main_menu_after_inventory_menu(self):
+    def test_inventory_choice_opens_visual_editor_and_returns_to_main_menu(self):
         output = []
-        self.assertEqual(self.app(("2", "5", "6"), output).run(), 0)
+        self.assertEqual(self.app(("1", "4"), output).run(), 0)
         rendered = "\n".join(output)
-        self.assertIn("Gestion de mes clubs", rendered)
+        self.assertEqual(len(FakeInventoryEditor.calls), 1)
+        self.assertNotIn("Gestion de mes clubs", rendered)
         self.assertGreaterEqual(rendered.count("Que souhaitez-vous faire ?"), 2)
 
     def test_uses_existing_recommendation_engine_from_main_menu(self):
         output = []
-        self.assertEqual(self.app(("1", "6"), output).run(), 0)
+        self.assertEqual(self.app(("3", "4"), output).run(), 0)
         self.assertEqual(len(FakeRecommendation.calls), 1)
         self.assertIsNone(FakeRecommendation.calls[0]["forced_mode"])
         self.assertIn("Retour au menu principal", "\n".join(output))
 
-    def test_scenario_shortcut_forces_scenario_mode(self):
+    def test_main_menu_is_reduced_to_four_clear_product_actions(self):
         output = []
-        self.assertEqual(self.app(("5", "6"), output).run(), 0)
-        self.assertEqual(FakeRecommendation.calls[0]["forced_mode"], "scenario")
+        self.assertEqual(self.app(("4",), output).run(), 0)
+        rendered = "\n".join(output)
+        self.assertIn("Gérer mon inventaire", rendered)
+        self.assertIn("Gérer mes sacs", rendered)
+        self.assertIn("Tester un club dans un sac", rendered)
+        self.assertNotIn("mode Scénario", rendered)
 
-    def test_first_launch_creates_files_and_can_defer_setup(self):
+    def test_first_launch_creates_files_without_opening_old_text_setup(self):
         fresh_dir = Path(self.temporary.name) / "fresh"
         output = []
         app = PgaShootoutAssistant(
             user_dir=fresh_dir,
             catalog_path=CATALOG,
-            input_fn=AnswerStream(("2", "6")),
+            input_fn=AnswerStream(("4",)),
             output_fn=output.append,
             recommendation_factory=FakeRecommendation,
+            inventory_editor_factory=FakeInventoryEditor(),
         )
         self.assertEqual(app.run(), 0)
         self.assertEqual({item.name for item in fresh_dir.glob("*.json")}, set(USER_FILENAMES))
         self.assertIn("fichiers personnels manquants", "\n".join(output))
+        self.assertNotIn("première configuration", "\n".join(output))
 
     def test_invalid_existing_data_is_replaced_only_after_confirmation_and_is_backed_up(self):
         invalid = b"not valid json"
         (self.user_dir / "inventory.json").write_bytes(invalid)
         output = []
-        app = self.app(("1", "2", "6"), output)
+        app = self.app(("1", "4"), output)
         self.assertEqual(app.run(), 0)
         backups = sorted((self.user_dir / "backups").iterdir())
         inventory_backups = [item / "inventory.json" for item in backups if (item / "inventory.json").exists()]
@@ -239,32 +256,6 @@ class MainMenuTests(unittest.TestCase):
         rendered = "\n".join(output)
         self.assertIn("ne peuvent pas être utilisées", rendered)
         self.assertIn("anciens fichiers ont été sauvegardés", rendered)
-
-    def test_complete_first_setup_adds_clubs_creates_bag_runs_recommendation_and_returns(self):
-        fresh_dir = Path(self.temporary.name) / "complete-first-run"
-        answers = ["1"]
-        for name in ("Cyclotron", "High Flight", "Ember", "Maelstrom", "Sunstorm"):
-            answers.extend((name, "1", "12", "0", "1"))
-        answers.extend(("Mon premier sac", "1", "1", "1", "1", "1", "1", "6"))
-        output = []
-        app = PgaShootoutAssistant(
-            user_dir=fresh_dir,
-            catalog_path=CATALOG,
-            input_fn=AnswerStream(answers),
-            output_fn=output.append,
-            recommendation_factory=FakeRecommendation,
-        )
-        self.assertEqual(app.run(), 0)
-        completed = UserDataStore(fresh_dir, CATALOG)
-        self.assertEqual(len(completed.owned_inventory()), 5)
-        self.assertEqual(len(completed.bag_documents()), 1)
-        self.assertTrue(completed.validation().valid)
-        self.assertEqual(len(FakeRecommendation.calls), 1)
-        rendered = "\n".join(output)
-        self.assertIn("Cyclotron a été enregistré", rendered)
-        self.assertIn("Mon premier sac", rendered)
-        self.assertIn("Analyse de remplacement exécutée", rendered)
-        self.assertIn("Retour au menu principal", rendered)
 
     def test_management_layer_does_not_import_or_reference_rule_engine(self):
         sources = [

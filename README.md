@@ -6,6 +6,11 @@ Moteur Python piloté par les données pour reproduire les calculs de **PGA TOUR
 
 Installez Python 3.11 ou une version plus récente, puis double-cliquez sur **`DEMARRER_PGA_SHOOTOUT.bat`**. Le lanceur prépare l'application et ouvre les menus guidés en français. Voir [docs/FIRST_RUN.md](docs/FIRST_RUN.md).
 
+Pour mettre à jour directement les 88 clubs sur un seul écran, double-cliquez sur
+**`GERER_MON_INVENTAIRE.bat`**. L'éditeur Tkinter permet recherche, filtres,
+édition en lot, valeurs inconnues, validation par ligne et enregistrement
+transactionnel avec sauvegarde.
+
 ## État
 
 Le socle fournit des modèles immuables, un chargeur JSON, des conditions séparées des effets, un registre de mécanismes extensible, un moteur de règles minimal et un journal Explain détaillé. Aucune capacité propre à un club n’est codée en dur.

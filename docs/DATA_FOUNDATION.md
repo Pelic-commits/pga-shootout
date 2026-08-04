@@ -52,13 +52,14 @@ une transaction toutes les modifications confirmées. L'annulation ne touche pas
 la base. `pga-shootout data-export --output-dir <dossier>` produit les cinq JSON
 de diagnostic.
 
-## Synchroniser mon inventaire
+## Gérer mon inventaire
 
-Lancer `DEMARRER_PGA_SHOOTOUT.bat`, choisir « Consulter ou modifier mes clubs »,
-puis « Synchroniser mon inventaire ». La session permet recherche par nom,
-filtres marque/type/rareté, clubs nouveaux, non examinés ou incomplets. Les
-niveaux et cartes peuvent rester vides. Plusieurs clubs sont placés dans un
-résumé avant une confirmation unique ; aucun identifiant technique n'est demandé.
+Double-cliquer sur `GERER_MON_INVENTAIRE.bat`, ou choisir « Gérer mon inventaire »
+dans le menu principal. L'éditeur visuel affiche les 88 clubs et permet recherche,
+filtres marque/type/rareté/possession, données incomplètes, valeurs inconnues et
+édition directe de plusieurs lignes. Une confirmation unique présente le résumé,
+crée une sauvegarde complète puis applique toutes les lignes dans une transaction.
+L'ancien parcours textuel est réservé au dépannage avancé.
 
 ## Maintenance
 
