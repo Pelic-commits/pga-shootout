@@ -11,11 +11,13 @@
       "uncertainty_policy": "report_indeterminate",
       "expected_active_roles": ["attack_club", "putter"],
       "available_support_clubs": 3,
+      "allow_active_club_reuse": false,
       "sequence": [
         {
           "identifier": "attack",
           "name": "Atteindre le green",
           "active_role": "attack_club",
+          "club_constraints": [],
           "function": {"identifier": "reach_target_zone", "parameters": {"target_zone": "green"}},
           "context": {"values": {"terrain": "tee"}, "required_data": []},
           "requirements": [
@@ -41,6 +43,9 @@
           "identifier": "putt",
           "name": "Terminer depuis le green",
           "active_role": "putter",
+          "club_constraints": [
+            {"attribute": "type", "operator": "equals", "expected": "putter"}
+          ],
           "function": {"identifier": "finish", "parameters": {"start_zone": "green"}},
           "context": {"values": {"terrain": "green"}, "required_data": []},
           "requirements": [
@@ -74,11 +79,13 @@
       "uncertainty_policy": "report_indeterminate",
       "expected_active_roles": ["attack_club", "putter"],
       "available_support_clubs": 3,
+      "allow_active_club_reuse": false,
       "sequence": [
         {
           "identifier": "attack",
           "name": "Attaque directe du green",
           "active_role": "attack_club",
+          "club_constraints": [],
           "function": {"identifier": "reach_target_zone", "parameters": {"target_zone": "green"}},
           "context": {"values": {"terrain": "tee"}, "required_data": []},
           "requirements": [
@@ -104,6 +111,9 @@
           "identifier": "putt",
           "name": "Terminer depuis le green",
           "active_role": "putter",
+          "club_constraints": [
+            {"attribute": "type", "operator": "equals", "expected": "putter"}
+          ],
           "function": {"identifier": "finish", "parameters": {"start_zone": "green"}},
           "context": {"values": {"terrain": "green"}, "required_data": []},
           "requirements": [
@@ -137,11 +147,13 @@
       "uncertainty_policy": "report_indeterminate",
       "expected_active_roles": ["drive_club", "approach_club", "putter"],
       "available_support_clubs": 2,
+      "allow_active_club_reuse": false,
       "sequence": [
         {
           "identifier": "drive",
           "name": "Départ",
           "active_role": "drive_club",
+          "club_constraints": [],
           "function": {"identifier": "advance_toward_target", "parameters": {}},
           "context": {"values": {"terrain": "tee"}, "required_data": []},
           "requirements": [
@@ -167,6 +179,7 @@
           "identifier": "approach",
           "name": "Approche vers le green",
           "active_role": "approach_club",
+          "club_constraints": [],
           "function": {"identifier": "reach_target_zone", "parameters": {"target_zone": "green"}},
           "context": {"values": {}, "required_data": []},
           "requirements": [
@@ -192,6 +205,9 @@
           "identifier": "putt",
           "name": "Terminer depuis le green",
           "active_role": "putter",
+          "club_constraints": [
+            {"attribute": "type", "operator": "equals", "expected": "putter"}
+          ],
           "function": {"identifier": "finish", "parameters": {"start_zone": "green"}},
           "context": {"values": {"terrain": "green"}, "required_data": []},
           "requirements": [
@@ -225,11 +241,13 @@
       "uncertainty_policy": "report_indeterminate",
       "expected_active_roles": ["drive_club", "approach_club", "putter"],
       "available_support_clubs": 2,
+      "allow_active_club_reuse": false,
       "sequence": [
         {
           "identifier": "drive",
           "name": "Long départ",
           "active_role": "drive_club",
+          "club_constraints": [],
           "function": {"identifier": "advance_toward_target", "parameters": {}},
           "context": {"values": {"terrain": "tee"}, "required_data": []},
           "requirements": [
@@ -255,6 +273,7 @@
           "identifier": "approach",
           "name": "Longue approche vers le green",
           "active_role": "approach_club",
+          "club_constraints": [],
           "function": {"identifier": "reach_target_zone", "parameters": {"target_zone": "green"}},
           "context": {"values": {}, "required_data": []},
           "requirements": [
@@ -288,6 +307,9 @@
           "identifier": "putt",
           "name": "Terminer depuis le green",
           "active_role": "putter",
+          "club_constraints": [
+            {"attribute": "type", "operator": "equals", "expected": "putter"}
+          ],
           "function": {"identifier": "finish", "parameters": {"start_zone": "green"}},
           "context": {"values": {"terrain": "green"}, "required_data": []},
           "requirements": [

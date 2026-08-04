@@ -48,6 +48,8 @@ pga-shootout inventory-status --write-reports
 pga-shootout strategy-list
 pga-shootout strategy-show par4_long
 pga-shootout strategy-show par4_long --variant head_crosswind
+pga-shootout optimize-strategy par3 --partial --limit 20
+pga-shootout optimize-strategy par3 --partial --limit 20 --json
 pga-shootout evaluate-bag par3_divebomb --scenario-level 12 --partial
 pga-shootout evaluate-bag par3_divebomb --scenario-level 12 --strict
 pga-shootout compare-bags par3_divebomb par3_high_flight --scenario-level 12 --position 1 --partial
@@ -70,6 +72,8 @@ pga-shootout data-dashboard
 `inventory-status` recalcule l'état opérationnel des clubs possédés depuis le catalogue, le registre moteur et `data/user/`. La sortie humaine, la sortie JSON et les rapports `docs/INVENTORY_STATUS.md` / `docs/PROJECT_STATUS.md` partagent exactement le même audit.
 
 `strategy-list` et `strategy-show` consultent la bibliothèque déclarative de plans de jeu. Ces préréglages décrivent des séquences, des rôles et des exigences génériques ; ils ne déclenchent aucune règle particulière dans le moteur. Voir [docs/STRATEGY_MODEL.md](docs/STRATEGY_MODEL.md).
+
+`optimize-strategy` recherche des sacs ordonnés dans l'inventaire réel, les évalue étape par étape et conserve plusieurs compromis sans score global. La recherche initiale est explicitement partielle et réduite ; la portée réelle et la réussite du putt restent indéterminables. Voir [docs/STRATEGY_OPTIMIZER.md](docs/STRATEGY_OPTIMIZER.md).
 
 Le mode `strict` échoue sur une mécanique inconnue. Le mode `partial` conserve le résultat calculable et signale explicitement chaque élément non évalué.
 

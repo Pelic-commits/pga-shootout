@@ -54,10 +54,18 @@ class LocalObjective:
 
 
 @dataclass(frozen=True)
+class ClubConstraint:
+    attribute: str
+    operator: str
+    expected: Any
+
+
+@dataclass(frozen=True)
 class ShotStep:
     identifier: str
     name: str
     active_role: str
+    club_constraints: tuple[ClubConstraint, ...]
     function: ShotFunction
     context: StepContext
     requirements: tuple[OutcomeRequirement, ...]
@@ -76,6 +84,7 @@ class StrategyDefinition:
     uncertainty_policy: str
     expected_active_roles: tuple[str, ...]
     available_support_clubs: int
+    allow_active_club_reuse: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -94,6 +103,7 @@ class StrategyDefinition:
             uncertainty_policy=str(value.get("uncertainty_policy", "report_indeterminate")),
             expected_active_roles=tuple(str(item) for item in value.get("expected_active_roles", ())),
             available_support_clubs=int(value["available_support_clubs"]),
+            allow_active_club_reuse=bool(value.get("allow_active_club_reuse", False)),
         )
         _validate_strategy(result)
         return result
@@ -379,6 +389,10 @@ def _step_from_dict(value: Mapping[str, Any]) -> ShotStep:
         identifier=str(value["identifier"]),
         name=str(value["name"]),
         active_role=str(value["active_role"]),
+        club_constraints=tuple(
+            ClubConstraint(str(item["attribute"]), str(item["operator"]), item.get("expected"))
+            for item in value.get("club_constraints", ())
+        ),
         function=ShotFunction(str(function["identifier"]), dict(function.get("parameters", {}))),
         context=StepContext(
             dict(context.get("values", {})),

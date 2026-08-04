@@ -81,6 +81,7 @@ Un coup planifié, identifié par sa position dans la séquence et non par un ty
 Informations nécessaires :
 
 - identifiant stable dans la stratégie ;
+- rôle actif attendu et contraintes de club déclarées (`identity`, `brand`, `type` ou `rarity`) ;
 - fonction attendue ;
 - contexte catégoriel ou mesuré connu avant le coup ;
 - exigences de résultat ;
@@ -162,6 +163,8 @@ Contraintes applicables au club qui remplira une fonction :
 - possibilité ou interdiction de réutiliser le même club sur plusieurs étapes.
 
 Le modèle ne suppose pas qu'une approche utilise forcément un Wedge ou qu'un départ utilise forcément un Driver. Une contrainte de type n'existe que si elle est déclarée. Un Iron peut donc naturellement concurrencer un Wedge pour la même fonction.
+
+Dans le registre, ces contraintes sont portées par `ShotStep.club_constraints` sous forme `attribute / operator / expected`. Le champ `StrategyDefinition.allow_active_club_reuse` déclare séparément si un même club physique peut être affecté à plusieurs étapes. Un nom de rôle comme `putter` n'est jamais interprété silencieusement comme `type = putter` : cette contrainte doit apparaître dans les données.
 
 ### 3.9 StrategyAssignment
 
@@ -337,9 +340,12 @@ pga-shootout strategy-list
 pga-shootout strategy-show par4_long
 pga-shootout strategy-show par4_long --variant head_crosswind
 pga-shootout strategy-show par3 --json
+pga-shootout optimize-strategy par3 --partial --limit 20
 ```
 
 La consultation affiche la séquence, les rôles actifs, le nombre de supports disponibles, les variantes compatibles et toutes les données encore nécessaires à une évaluation complète.
+
+La recherche automatique qui consomme ce contrat est documentée dans [STRATEGY_OPTIMIZER.md](STRATEGY_OPTIMIZER.md). Elle ne change ni le Rule Engine ni le DSL.
 
 ## 11. Compatibilité contractuelle
 

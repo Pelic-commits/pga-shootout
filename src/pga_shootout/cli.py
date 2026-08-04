@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -40,6 +41,12 @@ from .catalog_store import catalog_versions, diff_catalog_versions, render_catal
 from .data_dashboard import build_data_dashboard, write_dashboard
 from .storage import PgaDatabase, migration_preview
 from .strategy import StrategyRegistry, render_strategy, render_strategy_list
+from .strategy_optimizer import (
+    StrategyOptimizationRequest,
+    StrategyOptimizer,
+    render_strategy_optimization,
+    render_strategy_optimization_json,
+)
 
 
 def _add_user_paths(parser: argparse.ArgumentParser) -> None:
@@ -222,6 +229,30 @@ def build_parser() -> argparse.ArgumentParser:
     )
     strategy_show_parser.add_argument("--registry", default="data/strategies/strategies.json")
     strategy_show_parser.add_argument("--json", action="store_true", help="emit structured JSON")
+    optimize_strategy_parser = subparsers.add_parser(
+        "optimize-strategy",
+        help="run the bounded generic bag search for one registered strategy",
+    )
+    optimize_strategy_parser.add_argument("strategy_id")
+    optimize_strategy_parser.add_argument("--limit", type=int, default=20, help="maximum retained results to display")
+    optimize_strategy_parser.add_argument("--json", action="store_true", help="emit structured JSON")
+    optimize_strategy_parser.add_argument("--variant", action="append", default=[], help="compatible strategy variant")
+    optimize_strategy_mode = optimize_strategy_parser.add_mutually_exclusive_group()
+    optimize_strategy_mode.add_argument(
+        "--partial",
+        action="store_true",
+        help="continue with explicitly unresolved mechanics (default)",
+    )
+    optimize_strategy_mode.add_argument(
+        "--strict",
+        action="store_true",
+        help="exclude candidates when a mechanic is unresolved",
+    )
+    optimize_strategy_parser.add_argument("--scenario-level", type=_level_value, help="explicit hypothetical level for owned clubs")
+    optimize_strategy_parser.add_argument("--max-evaluations", type=int, default=2000, help="explicit search safety limit")
+    optimize_strategy_parser.add_argument("--user-dir", default="data/pga_shootout.sqlite")
+    optimize_strategy_parser.add_argument("--catalog", default="data/normalized/clubs_official.json")
+    optimize_strategy_parser.add_argument("--registry", default="data/strategies/strategies.json")
     return parser
 
 
@@ -304,6 +335,25 @@ def main(argv: Sequence[str] | None = None) -> int:
             }, indent=2, ensure_ascii=False))
         else:
             print(render_strategy(strategy, compatible))
+    elif args.command == "optimize-strategy":
+        mode = EvaluationMode.STRICT if args.strict else EvaluationMode.PARTIAL
+        result = StrategyOptimizer(
+            user_data_path=args.user_dir,
+            catalog_path=args.catalog,
+            strategy_registry_path=args.registry,
+        ).optimize(
+            StrategyOptimizationRequest(
+                strategy_id=args.strategy_id,
+                variant_ids=tuple(args.variant),
+                limit=args.limit,
+                mode=mode,
+                scenario_level=args.scenario_level,
+                max_evaluations=args.max_evaluations,
+            )
+        )
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8")
+        print(render_strategy_optimization_json(result) if args.json else render_strategy_optimization(result))
     elif args.command == "evaluate-bag":
         mode = EvaluationMode.STRICT if args.strict else EvaluationMode.PARTIAL
         evaluation = evaluate_saved_bag(

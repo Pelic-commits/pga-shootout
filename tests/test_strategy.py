@@ -44,6 +44,7 @@ def test_registry_loads_the_four_data_driven_strategies_and_variant():
     assert tuple(item.identifier for item in registry.variants) == ("head_crosswind",)
     assert registry.get("par3").available_support_clubs == 3
     assert registry.get("par5").available_support_clubs == 2
+    assert not registry.get("par3").allow_active_club_reuse
 
 
 def test_definitions_and_variants_round_trip_through_json():
