@@ -1,0 +1,8 @@
+SELECT_SELF | DSL node source | APPLIED | inputs={"source_club_id": "hot_streak"} | outputs={"club": "Hot Streak"} | change={}
+READ_LEVEL_VALUE | DSL node level_value | APPLIED | inputs={"level": 9} | outputs={"value": 4.0} | change={}
+ADD_STAT | DSL node add_power | APPLIED | inputs={"delta": 4.0, "stat": "power", "target": "Hot Streak"} | outputs={"after": 15.0, "before": 11.0} | change={"power": 4.0}
+dsl_pipeline | terrain is tee | APPLIED | inputs={"context_field": "terrain", "expected": ["tee"], "observed": "tee"} | outputs={"condition_matched": true} | change={"power": 4.0}
+SELECT_SELF | DSL node source | APPLIED | inputs={"source_club_id": "hot_streak"} | outputs={"club": "Hot Streak"} | change={}
+READ_LEVEL_VALUE | DSL node level_value | APPLIED | inputs={"level": 9} | outputs={"value": -3.0} | change={}
+ADD_MODIFIER | DSL node add_modifier | APPLIED | inputs={"delta": -3.0, "modifier": "loft_angle_degrees", "target": "Hot Streak"} | outputs={"after": -3.0, "before": 0.0} | change={"loft_angle_degrees": -3.0}
+dsl_pipeline | semantic condition not available in official catalog | APPLIED | inputs={} | outputs={} | change={"loft_angle_degrees": -3.0}

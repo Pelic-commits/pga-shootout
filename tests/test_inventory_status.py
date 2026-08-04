@@ -32,17 +32,21 @@ class InventoryStatusTests(unittest.TestCase):
         self.assertEqual(len(report.newly_added_club_names), 54)
         self.assertFalse(report.inventory_complete)
         self.assertEqual(report.official_abilities, 138)
-        self.assertEqual(report.simulated_abilities, 56)
-        self.assertEqual(report.unresolved_abilities, 82)
-        self.assertEqual(report.fully_simulated_clubs, 25)
+        self.assertEqual(report.simulated_abilities, 81)
+        self.assertEqual(report.unresolved_abilities, 57)
+        self.assertEqual(report.fully_simulated_clubs, 35)
         self.assertEqual(report.known_user_levels, 72)
         self.assertEqual(
             (report.fully_comparable_clubs, report.warning_comparable_clubs, report.non_comparable_clubs),
-            (24, 14, 37),
+            (29, 21, 25),
         )
         self.assertEqual((report.global_clubs, report.global_abilities), (88, 162))
-        self.assertEqual((report.global_simulated_groups, report.global_simulated_abilities), (35, 57))
-        self.assertEqual(report.global_simulated_clubs, 39)
+        self.assertEqual((report.global_simulated_groups, report.global_simulated_abilities), (63, 86))
+        self.assertEqual(report.global_simulated_clubs, 56)
+        self.assertEqual(
+            (report.fully_optimizable_clubs, report.context_optimizable_clubs, report.warning_optimizable_clubs, report.non_optimizable_clubs),
+            (29, 6, 15, 25),
+        )
 
     def test_every_owned_ability_occurs_exactly_once(self):
         report = self.report()
@@ -113,7 +117,7 @@ class InventoryStatusTests(unittest.TestCase):
             item.bag_id: (item.simulated_abilities, item.official_abilities)
             for item in report.reference_bags
         }
-        self.assertEqual(coverage["par3_divebomb"], (6, 8))
+        self.assertEqual(coverage["par3_divebomb"], (7, 8))
         self.assertEqual(coverage["par3_high_flight"], (8, 9))
 
     def test_recommendations_are_inventory_driven_and_exclude_meteor(self):
@@ -121,10 +125,10 @@ class InventoryStatusTests(unittest.TestCase):
         self.assertEqual(len(report.next_lots), 3)
         self.assertEqual(
             tuple(item.identifier for item in report.next_lots),
-            ("wind_resistance", "chains", "terrain_conditions"),
+            ("official_data_conflicts", "semantic_dependencies", "geometry_physics"),
         )
         self.assertNotIn("meteor", {club_id for lot in report.next_lots for club_id in lot.club_ids})
-        self.assertEqual(tuple(item.expected_ability_gain for item in report.next_lots), (7, 4, 13))
+        self.assertEqual(tuple(item.expected_ability_gain for item in report.next_lots), (9, 13, 21))
 
     def test_real_inventory_eligibility_and_texas_tee_are_explainable(self):
         report = self.report()

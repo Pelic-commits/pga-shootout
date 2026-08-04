@@ -5,7 +5,7 @@ Choisissez le mode :
 Niveau de scénario :
 Niveau de scénario : 12
 Placement 1 — Divebomb → Cyclotron
-Catégorie : amélioration sans contrepartie
+Catégorie : compromis
 Placement 2 — Jumpstart → Cyclotron
 Catégorie : compromis
 Placement 3 — Steadfast → Cyclotron

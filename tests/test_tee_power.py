@@ -96,7 +96,10 @@ def test_sidewinder_tee_off_power_reuses_the_same_pipeline_in_partial_mode():
     )
     assert tee.modification == {"power": 5.0, "control": 0.0, "spin": 0.0}
     assert tee.applied
-    assert any("groundspin_x3" in message for message in evaluation.result.unresolved)
+    groundspin = next(
+        item for item in ability_contributions(evaluation) if item.ability_id == "sidewinder__groundspin_x3"
+    )
+    assert groundspin.modification["groundspin_multiplier"] == 3
 
 
 def test_compare_bags_propagates_terrain_and_attributes_tee_contribution(tmp_path):

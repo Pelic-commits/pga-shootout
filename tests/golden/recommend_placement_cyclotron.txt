@@ -1,5 +1,5 @@
-placement 1 divebomb->cyclotron pareto
-  evaluated 1 cyclotron: power=+1, control=+2, spin=+7
+placement 1 divebomb->cyclotron tradeoff
+  evaluated 1 cyclotron: power=+1, control=+2, spin=+7, wind_resistance_percent=-50
 placement 2 jumpstart->cyclotron tradeoff
   evaluated 1 divebomb: power=-4, spin=+6, bounce_reduction_percent=+20
   evaluated 2 cyclotron: power=+3, control=+2, spin=+8

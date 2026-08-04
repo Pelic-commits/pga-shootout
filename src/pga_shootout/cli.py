@@ -69,7 +69,7 @@ def _add_scenario_level(parser: argparse.ArgumentParser, *, required: bool) -> N
 def _add_simple_scenario(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--terrain",
-        choices=("tee", "fairway", "rough", "bunker", "green"),
+        choices=("tee", "fairway", "rough", "deep_rough", "sand", "bunker", "water", "green"),
         help="optional categorical terrain context",
     )
 

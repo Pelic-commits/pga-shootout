@@ -512,7 +512,13 @@ def _schedule_effect(
     current_name = state.current_entry.club.name
     amount = float(inputs["amount"])
     filter_field = str(parameters["filter_field"])
-    filter_value = str(parameters["filter_value"])
+    configured_values = parameters.get("filter_values")
+    if configured_values is None:
+        filter_values = (str(parameters["filter_value"]),)
+    elif isinstance(configured_values, Sequence) and not isinstance(configured_values, (str, bytes)):
+        filter_values = tuple(str(value) for value in configured_values)
+    else:
+        raise DslExecutionError("SCHEDULE_EFFECT filter_values must be a sequence")
     if filter_field not in {"brand", "club_type"}:
         raise DslExecutionError(f"SCHEDULE_EFFECT cannot filter on club field {filter_field!r}")
     if source != state.current_club_id:
@@ -525,7 +531,7 @@ def _schedule_effect(
                 "source": source_name,
                 "current_club": current_name,
                 "filter_field": filter_field,
-                "filter_value": filter_value,
+                "filter_values": list(filter_values),
                 "amount": amount,
             },
             explain_outputs={"scheduled": False},
@@ -534,11 +540,18 @@ def _schedule_effect(
     ability_id = str(inputs["ability_id"])
     ability_source = str(inputs["ability_source"])
     identifier = f"{ability_id}:next-compatible-shot"
-    trigger = Condition(
-        "current_club_attribute_equals",
-        {"field": filter_field, "value": filter_value},
-        description=f"current club {filter_field} equals {filter_value}",
-    )
+    if len(filter_values) == 1:
+        trigger = Condition(
+            "current_club_attribute_equals",
+            {"field": filter_field, "value": filter_values[0]},
+            description=f"current club {filter_field} equals {filter_values[0]}",
+        )
+    else:
+        trigger = Condition(
+            "current_club_attribute_in",
+            {"field": filter_field, "values": filter_values},
+            description=f"current club {filter_field} is one of {', '.join(filter_values)}",
+        )
     delayed = DelayedEffect(
         identifier=identifier,
         source=ability_source,
@@ -559,7 +572,7 @@ def _schedule_effect(
             "source": source_name,
             "current_club": current_name,
             "filter_field": filter_field,
-            "filter_value": filter_value,
+            "filter_values": list(filter_values),
             "amount": amount,
         },
         explain_outputs={"scheduled": True, "effect_id": identifier},
@@ -594,6 +607,9 @@ def _resolve(
     effect: Effect,
     bindings: Mapping[str, Any] | None = None,
 ) -> Any:
+    if isinstance(value, Mapping) and isinstance(value.get("nodes"), list):
+        # Nested programs resolve against their own preceding nodes at execution time.
+        return value
     if isinstance(value, Mapping) and set(value) == {"from"}:
         reference = str(value["from"])
         if reference.startswith("effect."):

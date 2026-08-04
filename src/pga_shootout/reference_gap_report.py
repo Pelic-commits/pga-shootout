@@ -8,6 +8,7 @@ import re
 from typing import Any, Mapping
 
 from .loader import load_raw_json
+from .bag_evaluation import semantic_support
 from .registry import default_mechanism_registry
 from .user_data import load_user_data
 from .user_gap_report import _club_records, _official_texts
@@ -59,12 +60,18 @@ class ReferenceGapReport:
         return value
 
 
-def _status(semantic: Mapping[str, Any], official_text: str, handlers: set[str]) -> str:
-    mechanic = semantic.get("mechanic_id")
-    if isinstance(mechanic, str) and mechanic in handlers:
+def _status(semantic: Mapping[str, Any], patterns: Mapping[str, Any], official_text: str, handlers: set[str]) -> str:
+    fully_supported, partially_supported, _programs = semantic_support(semantic, patterns, handlers)
+    if fully_supported:
         return "implemented"
-    if mechanic:
+    if partially_supported:
         return "partial"
+    qualification = semantic.get("qualification")
+    if isinstance(qualification, Mapping):
+        status = str(qualification.get("status", "ambiguous"))
+        if status in {"simple_context_required", "history_required", "physics_required"}:
+            return "scenario_required"
+        return status if status in REFERENCE_STATUSES else "ambiguous"
     text = official_text.casefold()
     if re.search(r"\b(random|randomly|transform|swap|replace)\w*\b", text):
         return "unsupported"
@@ -144,7 +151,8 @@ def analyze_reference_gaps(
     raw = load_raw_json(raw_catalog_path)
     clubs = catalog.get("clubs") if isinstance(catalog, Mapping) else None
     semantics = semantic_map.get("entries") if isinstance(semantic_map, Mapping) else None
-    if not isinstance(clubs, Mapping) or not isinstance(semantics, Mapping):
+    patterns = semantic_map.get("patterns") if isinstance(semantic_map, Mapping) else None
+    if not isinstance(clubs, Mapping) or not isinstance(semantics, Mapping) or not isinstance(patterns, Mapping):
         raise ValueError("Normalized catalog and semantic map are required")
 
     bundle = load_user_data(user_dir)
@@ -173,7 +181,7 @@ def analyze_reference_gaps(
             official_text = descriptions.get(official_label, "")
             values = ability.get("values_by_level", {})
             has_values = isinstance(values, Mapping) and any(value is not None for value in values.values())
-            status = _status(semantic, official_text, handlers)
+            status = _status(semantic, patterns, official_text, handlers)
             pattern = semantic.get("pattern_id") or (
                 f"mechanic:{semantic['mechanic_id']}" if semantic.get("mechanic_id") else f"unqualified:{label_id}"
             )

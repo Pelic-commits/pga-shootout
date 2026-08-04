@@ -102,47 +102,48 @@ def ability_contributions(evaluation: BagEvaluation) -> tuple[AbilityContributio
     contributions = []
     for bag_entry in evaluation.state.bag.entries:
         for ability in bag_entry.club.abilities:
-            for effect in ability.effects:
-                journal = tuple(entry for entry in evaluation.result.explain if entry.source == effect.source)
-                leaves = tuple(entry for entry in journal if entry.mechanism != "dsl_pipeline")
-                modification = {
-                    stat: sum(entry.modification.get(stat, 0.0) for entry in leaves if entry.applied)
-                    for stat in ("power", "control", "spin")
+            sources = tuple(dict.fromkeys(effect.source for effect in ability.effects))
+            journal = tuple(entry for entry in evaluation.result.explain if entry.source in sources)
+            leaves = tuple(entry for entry in journal if entry.mechanism != "dsl_pipeline")
+            modification = {
+                stat: sum(entry.modification.get(stat, 0.0) for entry in leaves if entry.applied)
+                for stat in ("power", "control", "spin")
+            }
+            modifier_names = {
+                name
+                for entry in leaves
+                for name, value in entry.modification.items()
+                if name not in modification and value != 0
+            }
+            modification.update(
+                {
+                    name: sum(entry.modification.get(name, 0.0) for entry in leaves if entry.applied)
+                    for name in sorted(modifier_names)
                 }
-                modifier_names = {
-                    name
-                    for entry in leaves
-                    for name in entry.modification
-                    if name not in modification
-                }
-                modification.update(
-                    {
-                        name: sum(entry.modification.get(name, 0.0) for entry in leaves if entry.applied)
-                        for name in sorted(modifier_names)
-                    }
+            )
+            unresolved = tuple(dict.fromkeys(entry.message for entry in journal if entry.message.startswith("Unresolved")))
+            scheduled = tuple(
+                item.identifier
+                for item in evaluation.result.scheduled_effects
+                if item.source in sources
+            )
+            mechanisms = tuple(dict.fromkeys(effect.mechanism for effect in ability.effects))
+            contributions.append(
+                AbilityContribution(
+                    source_club_id=bag_entry.club.identifier,
+                    ability_id=ability.identifier,
+                    source=sources[0],
+                    mechanism=mechanisms[0] if len(mechanisms) == 1 else "composed",
+                    modification=modification,
+                    evaluated=bool(journal),
+                    applied=bool(scheduled) or any(
+                        entry.applied and any(value != 0 for value in entry.modification.values())
+                        for entry in leaves
+                    ),
+                    unresolved=unresolved,
+                    scheduled_effect_ids=scheduled,
                 )
-                unresolved = tuple(entry.message for entry in journal if entry.message.startswith("Unresolved"))
-                scheduled = tuple(
-                    item.identifier
-                    for item in evaluation.result.scheduled_effects
-                    if item.source == effect.source
-                )
-                contributions.append(
-                    AbilityContribution(
-                        source_club_id=bag_entry.club.identifier,
-                        ability_id=ability.identifier,
-                        source=effect.source,
-                        mechanism=effect.mechanism,
-                        modification=modification,
-                        evaluated=bool(journal),
-                        applied=bool(scheduled) or any(
-                            entry.applied and any(value != 0 for value in entry.modification.values())
-                            for entry in leaves
-                        ),
-                        unresolved=unresolved,
-                        scheduled_effect_ids=scheduled,
-                    )
-                )
+            )
     return tuple(contributions)
 
 

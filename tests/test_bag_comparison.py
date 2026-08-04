@@ -48,6 +48,7 @@ class BagComparisonTests(unittest.TestCase):
         self.assertEqual(
             [(change.source, change.mechanism) for change in comparison.left.applied_changes],
             [
+                ("Divebomb / divebomb__corvid_wind_resist", "ADD_MODIFIER"),
                 ("Jumpstart / jumpstart__power_boost", "ADD_STAT"),
                 ("Steadfast / steadfast__bag_rarity_boost", "ADD_STAT"),
                 ("Steadfast / steadfast__bag_rarity_boost", "ADD_STAT"),
@@ -88,7 +89,7 @@ class BagComparisonTests(unittest.TestCase):
             {
                 "bounce_reduction_percent": 40.0,
                 "loft_angle_degrees": 5.0,
-                "wind_resistance_percent": 75.0,
+                "wind_resistance_percent": 25.0,
             },
         )
         self.assertEqual(comparison.lost_modifier_impact, {})

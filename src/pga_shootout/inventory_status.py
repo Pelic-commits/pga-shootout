@@ -8,7 +8,7 @@ from pathlib import Path
 import re
 from typing import Any, Mapping
 
-from .bag_evaluation import _semantic_program
+from .bag_evaluation import _semantic_effect_specs, semantic_support
 from .coverage import analyze_coverage
 from .loader import load_raw_json
 from .reference_gap_report import analyze_reference_gaps
@@ -28,6 +28,7 @@ ABILITY_STATUSES = frozenset(
         "history_required",
         "physics_required",
         "qualified_not_implemented",
+        "partial",
         "unsupported",
     }
 )
@@ -51,6 +52,8 @@ class InventoryAbilityStatus:
     reusable_primitives: tuple[str, ...]
     required_primitive: str | None
     similar_occurrence_ids: tuple[str, ...]
+    qualification_category: str
+    validation_experiment: str | None
 
 
 @dataclass(frozen=True)
@@ -68,6 +71,8 @@ class InventoryClubStatus:
     static_optimizer_usability: str
     comparison_eligibility: str
     eligibility_reasons: tuple[str, ...]
+    optimizer_eligibility: str
+    optimizer_eligibility_reasons: tuple[str, ...]
     abilities: tuple[InventoryAbilityStatus, ...]
 
 
@@ -112,6 +117,10 @@ class InventoryStatusReport:
     fully_comparable_clubs: int
     warning_comparable_clubs: int
     non_comparable_clubs: int
+    fully_optimizable_clubs: int
+    context_optimizable_clubs: int
+    warning_optimizable_clubs: int
+    non_optimizable_clubs: int
     global_groups: int
     global_simulated_groups: int
     global_abilities: int
@@ -219,6 +228,9 @@ def _potential_metrics(program_metrics: tuple[str, ...], label_id: str, text: st
         ("loft", "loft_angle_degrees"),
         ("wind resist", "wind_resistance_percent"),
         ("bounce", "bounce_reduction_percent"),
+        ("groundspin", "groundspin_multiplier"),
+        ("gravity", "gravity_reduction_percent"),
+        ("aim arrow", "aim_arrow_speed_multiplier"),
         ("fade", "fade_multiplier"),
         ("draw", "draw_multiplier"),
         ("range", "range"),
@@ -254,14 +266,18 @@ def _primitive_profile(family: str, program: Mapping[str, Any] | None) -> tuple[
 
 
 def _context_requirements(semantic: Mapping[str, Any]) -> tuple[str, ...]:
-    condition = semantic.get("condition")
-    if not isinstance(condition, Mapping):
-        return ()
-    parameters = condition.get("parameters")
-    if not isinstance(parameters, Mapping) or not parameters.get("required"):
-        return ()
-    field = parameters.get("field")
-    return (str(field),) if isinstance(field, str) else ()
+    requirements: list[str] = []
+    for spec in _semantic_effect_specs(semantic):
+        condition = spec.get("condition")
+        if not isinstance(condition, Mapping):
+            continue
+        parameters = condition.get("parameters")
+        if not isinstance(parameters, Mapping) or not parameters.get("required"):
+            continue
+        field = parameters.get("field")
+        if isinstance(field, str) and field not in requirements:
+            requirements.append(field)
+    return tuple(requirements)
 
 
 def _unqualified_family(label_id: str, text: str) -> str:
@@ -290,6 +306,14 @@ def _unqualified_family(label_id: str, text: str) -> str:
 
 
 def _unimplemented_status(semantic: Mapping[str, Any], label_id: str, text: str) -> tuple[str, str, tuple[str, ...]]:
+    qualification = semantic.get("qualification")
+    if isinstance(qualification, Mapping):
+        status = str(qualification.get("status", "ambiguous"))
+        reason = str(qualification.get("reason", "No qualification reason was recorded."))
+        required = qualification.get("required_data", ())
+        if not isinstance(required, list):
+            required = []
+        return status, reason, tuple(str(item) for item in required)
     validation = str(semantic.get("validation_status", "not_started"))
     if validation not in ("", "not_started"):
         return (
@@ -395,64 +419,60 @@ def _club_eligibility(
     return "fully_comparable", ()
 
 
+def _optimizer_eligibility(
+    current_level: int | None,
+    abilities: tuple[InventoryAbilityStatus, ...],
+) -> tuple[str, tuple[str, ...]]:
+    if current_level is None:
+        return "not_optimizable", ("missing_user_level",)
+    unresolved = tuple(item for item in abilities if not item.engine_supported)
+    contexts = tuple(item for item in abilities if item.engine_supported and item.required_data)
+    if unresolved:
+        reasons = tuple(dict.fromkeys(f"{item.occurrence_id}:{item.status}" for item in unresolved))
+        if not any(item.engine_supported for item in abilities):
+            return "not_optimizable", reasons
+        return "optimizable_with_warning", reasons
+    if contexts:
+        return "optimizable_with_context", tuple(
+            f"{item.occurrence_id}:context:{','.join(item.required_data)}" for item in contexts
+        )
+    return "fully_optimizable", ()
+
+
 def _roadmap_lots(clubs: tuple[InventoryClubStatus, ...]) -> tuple[DevelopmentLot, ...]:
     candidates = (
         (
-            "static_modifiers",
-            "Qualify owned-club static modifiers",
-            {"static_bounce_modifier", "static_shot_control_modifier"},
-            "medium",
-            ("metric and stacking validation",),
-            "Adds deterministic comparison metrics using the existing target-selection and modifier pipeline.",
+            "official_data_conflicts",
+            "Resolve official text/table conflicts",
+            {"official_text_table_conflict"},
+            "validation",
+            ("in-game value capture", "official source reconciliation"),
+            "Removes blockers where the engine deliberately refuses to choose between contradictory official values.",
         ),
         (
-            "wind_resistance",
-            "Expose wind resistance as an objective modifier",
-            {"wind_resistance"},
-            "medium",
-            ("scope validation", "stacking validation"),
-            "Improves owned par-3 clubs without requiring a full wind simulation for the static descriptor.",
+            "semantic_dependencies",
+            "Validate dependency and stacking semantics",
+            {"true_semantic_ambiguity"},
+            "validation",
+            ("minimal in-game comparison", "stacking or provenance decision"),
+            "Qualifies base-versus-final copying, cross-ability dependencies and stacking without guessing.",
         ),
         (
-            "chains",
-            "Implement next-shot chains",
-            {"chain_next_shot"},
-            "medium-high",
-            ("history trigger validation", "duration and consumption validation"),
-            "Covers the largest remaining owned-club cluster after deterministic static modifiers.",
-        ),
-        (
-            "terrain_conditions",
-            "Implement simple terrain conditions",
-            {"terrain_condition"},
-            "medium-high",
-            ("optional terrain context", "official condition validation"),
-            "Adds the next reusable scenario contract after the static comparator patterns.",
-        ),
-        (
-            "trajectory_physics",
-            "Qualify deterministic trajectory modifiers",
-            {"trajectory_physics"},
-            "high",
+            "geometry_physics",
+            "Measure geometry and trajectory effects",
+            {"geometry_or_trajectory_required"},
+            "experimental-high",
             ("validated physics contract", "in-game measurements"),
-            "Covers the remaining owned deterministic trajectory abilities once their physical meaning is validated.",
-        ),
-        (
-            "tree_proximity",
-            "Qualify tree-proximity bonuses",
-            {"terrain_proximity_bonus"},
-            "high",
-            ("in-game distance formula validation", "optional tree-proximity context"),
-            "Completes the remaining Outset ability once the official up-to formula is measured.",
+            "Covers proximity, collision, timing and speed/distance effects only after measurable contracts exist.",
         ),
     )
     result: list[DevelopmentLot] = []
-    for identifier, title, families, difficulty, requirements, reason in candidates:
+    for identifier, title, categories, difficulty, requirements, reason in candidates:
         selected = [
             (club, ability)
             for club in clubs
             for ability in club.abilities
-            if not ability.engine_supported and ability.technical_family in families
+            if not ability.engine_supported and ability.qualification_category in categories
         ]
         selected_ids = {ability.occurrence_id for _, ability in selected}
         club_ids = tuple(dict.fromkeys(club.club_id for club, _ in selected))
@@ -537,9 +557,9 @@ def analyze_inventory_status(
             semantic = semantics[f"label:{label_id}"]
             official_name = official_labels[index]
             official_text = official_texts.get(official_name, "")
-            mechanic_id = semantic.get("mechanic_id")
-            supported = isinstance(mechanic_id, str) and mechanic_id in handler_names
-            program = _semantic_program(semantic, patterns) if supported else None
+            effect_specs = _semantic_effect_specs(semantic)
+            supported, partially_supported, programs = semantic_support(semantic, patterns, handler_names)
+            program = programs[0] if len(programs) == 1 else {"effects": list(programs)}
             family = _technical_family(semantic, label_id, official_text)
             metrics = _potential_metrics(_program_metrics(program, semantic), label_id, official_text)
             primitives, required_primitive = _primitive_profile(family, program)
@@ -572,6 +592,21 @@ def analyze_inventory_status(
                     required = ()
             else:
                 status, reason, required = _unimplemented_status(semantic, label_id, official_text)
+                if partially_supported and status != "partial":
+                    status = "partial"
+                    reason = "At least one exact component is simulated; another component remains explicitly unresolved."
+
+            qualification = semantic.get("qualification")
+            qualification_category = (
+                str(qualification.get("category", "implemented"))
+                if isinstance(qualification, Mapping)
+                else ("implemented" if supported else "unclassified")
+            )
+            validation_experiment = (
+                str(qualification["experiment"])
+                if isinstance(qualification, Mapping) and qualification.get("experiment")
+                else None
+            )
 
             abilities.append(
                 InventoryAbilityStatus(
@@ -591,6 +626,8 @@ def analyze_inventory_status(
                     reusable_primitives=primitives,
                     required_primitive=required_primitive,
                     similar_occurrence_ids=tuple(behavior_occurrences.get(family, ())),
+                    qualification_category=qualification_category,
+                    validation_experiment=validation_experiment,
                 )
             )
 
@@ -598,12 +635,18 @@ def analyze_inventory_status(
         fully_simulated = bool(abilities) and simulated == len(abilities)
         ability_tuple = tuple(abilities)
         eligibility, eligibility_reasons = _club_eligibility(inventory_entry.current_level, ability_tuple)
+        optimizer_eligibility, optimizer_reasons = _optimizer_eligibility(inventory_entry.current_level, ability_tuple)
         compare_usability = {
             "fully_comparable": "yes",
             "comparable_with_warning": "partially",
             "not_comparable": "no",
         }[eligibility]
-        optimizer_usability = compare_usability
+        optimizer_usability = {
+            "fully_optimizable": "yes",
+            "optimizable_with_context": "with-context",
+            "optimizable_with_warning": "with-warning",
+            "not_optimizable": "no",
+        }[optimizer_eligibility]
         club_results.append(
             InventoryClubStatus(
                 club_id=inventory_entry.club_id,
@@ -619,6 +662,8 @@ def analyze_inventory_status(
                 static_optimizer_usability=optimizer_usability,
                 comparison_eligibility=eligibility,
                 eligibility_reasons=eligibility_reasons,
+                optimizer_eligibility=optimizer_eligibility,
+                optimizer_eligibility_reasons=optimizer_reasons,
                 abilities=ability_tuple,
             )
         )
@@ -652,6 +697,10 @@ def analyze_inventory_status(
         fully_comparable_clubs=sum(club.comparison_eligibility == "fully_comparable" for club in clubs),
         warning_comparable_clubs=sum(club.comparison_eligibility == "comparable_with_warning" for club in clubs),
         non_comparable_clubs=sum(club.comparison_eligibility == "not_comparable" for club in clubs),
+        fully_optimizable_clubs=sum(club.optimizer_eligibility == "fully_optimizable" for club in clubs),
+        context_optimizable_clubs=sum(club.optimizer_eligibility == "optimizable_with_context" for club in clubs),
+        warning_optimizable_clubs=sum(club.optimizer_eligibility == "optimizable_with_warning" for club in clubs),
+        non_optimizable_clubs=sum(club.optimizer_eligibility == "not_optimizable" for club in clubs),
         global_groups=coverage.total_groups,
         global_simulated_groups=coverage.implemented_groups,
         global_abilities=coverage.total_occurrences,
@@ -675,6 +724,10 @@ def render_inventory_status(report: InventoryStatusReport) -> str:
         f"Fully comparable clubs: {report.fully_comparable_clubs}/{report.inventory_clubs}",
         f"Comparable with warning: {report.warning_comparable_clubs}/{report.inventory_clubs}",
         f"Not currently comparable: {report.non_comparable_clubs}/{report.inventory_clubs}",
+        f"Fully optimizable: {report.fully_optimizable_clubs}/{report.inventory_clubs}",
+        f"Optimizable with context: {report.context_optimizable_clubs}/{report.inventory_clubs}",
+        f"Optimizable with warning: {report.warning_optimizable_clubs}/{report.inventory_clubs}",
+        f"Not optimizable: {report.non_optimizable_clubs}/{report.inventory_clubs}",
         f"Known user levels: {report.known_user_levels}/{report.inventory_clubs}",
         "",
         "Clubs",
@@ -685,7 +738,8 @@ def render_inventory_status(report: InventoryStatusReport) -> str:
             f"- {club.name} [{club.brand} / {club.club_type} / {club.rarity}] "
             f"level={level}; abilities={club.simulated_abilities}/{club.official_abilities}; "
             f"eligibility={club.comparison_eligibility}; reasons={','.join(club.eligibility_reasons) or 'none'}; "
-            f"compare-bags={club.compare_bags_usability}; optimizer={club.static_optimizer_usability}"
+            f"compare-bags={club.compare_bags_usability}; optimizer={club.optimizer_eligibility}; "
+            f"optimizer-reasons={','.join(club.optimizer_eligibility_reasons) or 'none'}"
         )
     lines.extend(["", f"Unresolved engine abilities ({report.unresolved_abilities})"])
     for club in report.clubs:
@@ -735,6 +789,10 @@ def render_inventory_markdown(report: InventoryStatusReport) -> str:
         f"| Fully comparable owned clubs | {report.fully_comparable_clubs}/{report.inventory_clubs} |",
         f"| Comparable with warning | {report.warning_comparable_clubs}/{report.inventory_clubs} |",
         f"| Not currently comparable | {report.non_comparable_clubs}/{report.inventory_clubs} |",
+        f"| Fully optimizable | {report.fully_optimizable_clubs}/{report.inventory_clubs} |",
+        f"| Optimizable with context | {report.context_optimizable_clubs}/{report.inventory_clubs} |",
+        f"| Optimizable with warning | {report.warning_optimizable_clubs}/{report.inventory_clubs} |",
+        f"| Not optimizable | {report.non_optimizable_clubs}/{report.inventory_clubs} |",
         "",
         "## Inventory changes since the retained JSON baseline",
         "",
@@ -742,7 +800,7 @@ def render_inventory_markdown(report: InventoryStatusReport) -> str:
         "",
         "## Clubs",
         "",
-        "| Club | Brand | Type | Rarity | User level | Abilities | Fully simulated | Eligibility | Reasons | compare-bags | Static optimizer |",
+        "| Club | Brand | Type | Rarity | User level | Abilities | Fully simulated | Comparison | Reasons | Optimizer | Optimizer reasons |",
         "|---|---|---|---|---:|---:|---|---|---|---|---|",
     ]
     for club in report.clubs:
@@ -751,7 +809,7 @@ def render_inventory_markdown(report: InventoryStatusReport) -> str:
             f"| {club.name} (`{club.club_id}`) | {club.brand} | {club.club_type} | {club.rarity} | {level} | "
             f"{club.simulated_abilities}/{club.official_abilities} | {'yes' if club.fully_simulated else 'no'} | "
             f"`{club.comparison_eligibility}` | {_markdown_escape(', '.join(club.eligibility_reasons) or 'none')} | "
-            f"{club.compare_bags_usability} | {club.static_optimizer_usability} |"
+            f"`{club.optimizer_eligibility}` | {_markdown_escape(', '.join(club.optimizer_eligibility_reasons) or 'none')} |"
         )
     for club in report.clubs:
         lines.extend(
@@ -759,20 +817,20 @@ def render_inventory_markdown(report: InventoryStatusReport) -> str:
                 "",
                 f"### {club.name}",
                 "",
-                "| Official ability | Official text | Activates | Status | Potential metrics/behavior | Importance | Reason | Needed data | Existing primitives | New primitive | Same behavior in catalog | Technical family |",
-                "|---|---|---:|---|---|---|---|---|---|---|---|---|",
+                "| Official ability | Official text | Activates | Status | Classification | Potential metrics/behavior | Importance | Reason | Needed data | Existing primitives | New primitive | Same behavior in catalog | Technical family | Validation experiment |",
+                "|---|---|---:|---|---|---|---|---|---|---|---|---|---|---|",
             ]
         )
         for ability in club.abilities:
             lines.append(
                 f"| {ability.official_name} (`{ability.occurrence_id}`) | {_markdown_escape(ability.official_text)} | "
-                f"{ability.activation_level or 'unknown'} | `{ability.status}` | "
+                f"{ability.activation_level or 'unknown'} | `{ability.status}` | `{ability.qualification_category}` | "
                 f"{', '.join(f'`{metric}`' for metric in ability.metrics) or 'none'} | `{ability.importance}` | {_markdown_escape(ability.reason)} | "
                 f"{', '.join(f'`{item}`' for item in ability.required_data) or 'none'} | "
                 f"{', '.join(f'`{item}`' for item in ability.reusable_primitives) or 'none'} | "
                 f"{f'`{ability.required_primitive}`' if ability.required_primitive else 'none'} | "
                 f"{', '.join(f'`{item}`' for item in ability.similar_occurrence_ids) or 'none'} | "
-                f"`{ability.technical_family}` |"
+                f"`{ability.technical_family}` | {_markdown_escape(ability.validation_experiment or 'none')} |"
             )
     lines.extend(["", "## Reference bags (regression only)", "", "| Bag | Supported abilities | Coverage |", "|---|---:|---:|"])
     for bag in report.reference_bags:

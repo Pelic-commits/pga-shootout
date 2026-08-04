@@ -28,10 +28,10 @@ class MechanicCoverageTests(unittest.TestCase):
     def test_current_coverage_reflects_qualified_pipelines(self):
         report = analyze_coverage(NORMALIZED)
         self.assertEqual(report.registered_handlers, ("add_stat", "add_all_stats", "dsl_pipeline"))
-        self.assertEqual(report.implemented_groups, 35)
-        self.assertEqual(report.occurrence_coverage_percent, 35.19)
-        self.assertEqual(report.club_coverage_percent, 44.32)
-        self.assertEqual(report.unclassified_groups, 90)
+        self.assertEqual(report.implemented_groups, 63)
+        self.assertEqual(report.occurrence_coverage_percent, 53.09)
+        self.assertEqual(report.club_coverage_percent, 63.64)
+        self.assertEqual(report.unclassified_groups, 0)
 
     def test_ranking_is_reproducible_and_uses_real_gain(self):
         first = analyze_coverage(NORMALIZED)
@@ -65,6 +65,7 @@ class MechanicCoverageTests(unittest.TestCase):
                 complexity="generic",
                 dependencies=[],
                 interpretation_status="validated",
+                program={"nodes": [{"id": "source", "operation": "SELECT_SELF", "inputs": {"source_club_id": {"from": "effect.source_club_id"}}}]},
             )
             semantic_path.write_text(json.dumps(semantic), encoding="utf-8")
 

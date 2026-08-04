@@ -124,6 +124,77 @@ def _semantic_program(
     return materialized
 
 
+def _semantic_effect_specs(semantic: Mapping[str, Any]) -> tuple[Mapping[str, Any], ...]:
+    """Return one or more declarative effect specifications for an ability."""
+
+    configured = semantic.get("effects") if not semantic.get("mechanic_id") else None
+    if configured is None:
+        return (semantic,)
+    if not isinstance(configured, list) or not all(isinstance(item, Mapping) for item in configured):
+        raise BagEvaluationError("Semantic effects must be a list of objects")
+    return tuple(configured)
+
+
+def semantic_support(
+    semantic: Mapping[str, Any],
+    semantic_patterns: Mapping[str, Any],
+    handler_names: set[str] | tuple[str, ...],
+) -> tuple[bool, bool, tuple[Mapping[str, Any] | None, ...]]:
+    """Return full support, partial support and materialized programs."""
+
+    handlers = set(handler_names)
+    specs = _semantic_effect_specs(semantic)
+    programs = tuple(_semantic_program(spec, semantic_patterns) for spec in specs)
+    supported_parts = tuple(
+        isinstance(spec.get("mechanic_id"), str)
+        and str(spec["mechanic_id"]) in handlers
+        and program is not None
+        for spec, program in zip(specs, programs, strict=True)
+    )
+    return all(supported_parts), any(supported_parts), programs
+
+
+def _semantic_condition(spec: Mapping[str, Any], level: int | str, source_club_id: str) -> Condition:
+    configured = spec.get("condition")
+    if not isinstance(configured, Mapping):
+        return Condition("always", description="semantic condition not available in official catalog")
+    parameters = configured.get("parameters", {})
+    if not isinstance(parameters, Mapping):
+        raise BagEvaluationError("Invalid semantic condition parameters")
+    resolved = dict(parameters)
+    resolved = {
+        key: source_club_id if value == "$source_club_id" else value
+        for key, value in resolved.items()
+    }
+    overrides = configured.get("parameters_by_level", {})
+    if isinstance(overrides, Mapping):
+        level_override = overrides.get(str(level))
+        if level_override is not None:
+            if not isinstance(level_override, Mapping):
+                raise BagEvaluationError(f"Invalid semantic condition override for level {level!r}")
+            resolved.update(level_override)
+    return Condition(
+        str(configured.get("kind", "always")),
+        resolved,
+        str(configured.get("description", "")),
+    )
+
+
+def _effect_level_value(
+    spec: Mapping[str, Any],
+    scalar: float | None,
+    components: Mapping[str, float],
+) -> float | None:
+    component = spec.get("level_value_component")
+    if component is not None:
+        value = components.get(str(component))
+        return float(value) if value is not None else None
+    constant = spec.get("constant_level_value")
+    if isinstance(constant, (int, float)) and not isinstance(constant, bool):
+        return float(constant)
+    return scalar
+
+
 def _abilities_at_level(
     club_data: Mapping[str, Any],
     level: int | str,
@@ -138,15 +209,20 @@ def _abilities_at_level(
             continue
         occurrence_id = str(item["occurrence_id"])
         label_id = str(item.get("label_id", occurrence_id))
-        mechanism = item.get("mechanism")
-        parameters = dict(item.get("effect_parameters", {}))
         semantic = (semantic_entries or {}).get(f"label:{label_id}", {})
-        program = _semantic_program(semantic, semantic_patterns or {}) if isinstance(semantic, Mapping) else None
-        if not mechanism and isinstance(semantic, Mapping) and semantic.get("mechanic_id") and program is not None:
-            level_value = _official_level_scalar(value) if isinstance(value, Mapping) else None
-            level_components = _official_level_components(value) if isinstance(value, Mapping) else {}
-            if level_value is not None or level_components:
-                mechanism = str(semantic["mechanic_id"])
+        scalar = _official_level_scalar(value) if isinstance(value, Mapping) else None
+        level_components = _official_level_components(value) if isinstance(value, Mapping) else {}
+        effects: list[Effect] = []
+        specs = _semantic_effect_specs(semantic) if isinstance(semantic, Mapping) else ({},)
+        for spec in specs:
+            direct_mechanism = item.get("mechanism")
+            mechanism = direct_mechanism or spec.get("mechanic_id")
+            program = _semantic_program(spec, semantic_patterns or {})
+            level_value = _effect_level_value(spec, scalar, level_components)
+            parameters = dict(item.get("effect_parameters", {}))
+            if direct_mechanism:
+                pass
+            elif mechanism and program is not None and (level_value is not None or level_components or spec.get("allow_valueless")):
                 parameters = {
                     "program": program,
                     "source_club_id": str(club_data["id"]),
@@ -157,27 +233,17 @@ def _abilities_at_level(
                 }
                 if level_value is not None:
                     parameters["level_value"] = level_value
-        if not mechanism:
-            mechanism = f"unsupported:{label_id}"
-        semantic_condition = semantic.get("condition") if isinstance(semantic, Mapping) else None
-        if isinstance(semantic_condition, Mapping):
-            condition_parameters = semantic_condition.get("parameters", {})
-            if not isinstance(condition_parameters, Mapping):
-                raise BagEvaluationError(f"Invalid semantic condition parameters for {label_id!r}")
-            condition = Condition(
-                str(semantic_condition.get("kind", "always")),
-                dict(condition_parameters),
-                str(semantic_condition.get("description", "")),
+            else:
+                mechanism = f"unsupported:{label_id}"
+            effects.append(
+                Effect(
+                    mechanism=str(mechanism),
+                    parameters=parameters,
+                    condition=_semantic_condition(spec, level, str(club_data["id"])),
+                    source=f"{club_data['name']} / {occurrence_id}",
+                )
             )
-        else:
-            condition = Condition("always", description="semantic condition not available in official catalog")
-        effect = Effect(
-            mechanism=str(mechanism),
-            parameters=dict(parameters),
-            condition=condition,
-            source=f"{club_data['name']} / {occurrence_id}",
-        )
-        abilities.append(Ability(identifier=occurrence_id, text=label_id, effects=(effect,)))
+        abilities.append(Ability(identifier=occurrence_id, text=label_id, effects=tuple(effects)))
     return tuple(abilities)
 
 

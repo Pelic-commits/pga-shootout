@@ -41,51 +41,17 @@ class NormalizationPipelineTests(unittest.TestCase):
 
         self.assertEqual(len(catalog["groups"]), 125)
         self.assertTrue(all(group["mechanic_id"] is None for group in catalog["groups"].values()))
-        qualified_ids = {
-            "label:adjacent_power",
-            "label:alloy",
-            "label:bag_control",
-            "label:bag_bounce_reduction",
-            "label:bag_loft_angle_10",
-            "label:bag_rarity_boost",
-            "label:bag_recklessness",
-            "label:bag_spin_bonus",
-            "label:bag_wind_resist",
-            "label:bounce_reduction_boost",
-            "label:brand_loyalty",
-            "label:brand_loyalty_x",
-            "label:bounce_reduction",
-            "label:chains_into_putters",
-            "label:chains_into_wedges",
-            "label:chains_into_willoughsby",
-            "label:control_boost",
-            "label:driver_loyalty",
-            "label:fade_draw_x2",
-            "label:exclusion_zone",
-            "label:fellowship",
-            "label:forester_power",
-            "label:iron_wedge_exclusion",
-            "label:loft_angle_5",
-            "label:nautilus_boost",
-            "label:phoenix_power",
-            "label:plasma_arc_x",
-            "label:power_boost",
-            "label:sand_bounce",
-            "label:spin_boost",
-            "label:stanchion_power",
-            "label:tee_off_power",
-            "label:texas_tee",
-            "label:water_bounce",
-            "label:wind_resist_75",
-        }
-        for group_id in qualified_ids:
-            qualified = semantic["entries"][group_id]
-            self.assertEqual(qualified["mechanic_id"], "dsl_pipeline")
-            expected_complexity = "stateful" if group_id.startswith("label:chains_into_") else "parameterized"
-            self.assertEqual(qualified["complexity"], expected_complexity)
-        placeholders = [entry for group_id, entry in semantic["entries"].items() if group_id not in qualified_ids]
-        self.assertTrue(all(entry["complexity"] is None for entry in placeholders))
-        self.assertTrue(all(entry["dependencies"] is None for entry in placeholders))
+        self.assertTrue(
+            all(
+                entry.get("mechanic_id") or entry.get("effects") or entry.get("qualification")
+                for entry in semantic["entries"].values()
+            )
+        )
+        self.assertEqual(semantic["entries"]["label:chains_into_corvid"]["mechanic_id"], "dsl_pipeline")
+        self.assertEqual(
+            semantic["entries"]["label:wind_resistance_100"]["qualification"]["category"],
+            "official_text_table_conflict",
+        )
 
     def test_regeneration_preserves_existing_semantic_qualification(self):
         with tempfile.TemporaryDirectory() as directory:

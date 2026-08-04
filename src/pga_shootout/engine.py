@@ -148,6 +148,7 @@ class RuleEngine:
                         message="applied" if applies else "condition not satisfied",
                     )
                 )
+                journal[-1] = self._with_condition_details(journal[-1], effect, state, applies)
             except (UnknownConditionError, UnknownMechanismError, MechanismExecutionError) as exc:
                 message = f"Unresolved {exc.__class__.__name__}: {exc}"
                 unresolved.append(message)
@@ -160,6 +161,7 @@ class RuleEngine:
                         message=message,
                     )
                 )
+                journal[-1] = self._with_condition_details(journal[-1], effect, state, False)
                 if mode is EvaluationMode.STRICT:
                     result = EvaluationResult(
                         base_stats=base,
@@ -184,4 +186,35 @@ class RuleEngine:
             scheduled_effects=tuple(scheduled_effects),
             pending_effects=tuple([*remaining_effects, *scheduled_effects]),
             consumed_effect_ids=tuple(consumed_effect_ids),
+        )
+
+    @staticmethod
+    def _with_condition_details(
+        entry: ExplainEntry,
+        effect: Effect,
+        state: GameState,
+        matched: bool,
+    ) -> ExplainEntry:
+        """Expose generic scenario-condition facts without coupling Explain to a family."""
+
+        parameters = dict(effect.condition.parameters)
+        field = parameters.get("field")
+        if not isinstance(field, str):
+            return entry
+        expected = parameters.get("values", parameters.get("value"))
+        inputs = dict(entry.inputs)
+        inputs.update({"context_field": field, "expected": expected, "observed": getattr(state, field, None)})
+        outputs = dict(entry.outputs)
+        outputs["condition_matched"] = matched
+        return ExplainEntry(
+            source=entry.source,
+            mechanism=entry.mechanism,
+            condition=entry.condition,
+            applied=entry.applied,
+            before=entry.before,
+            modification=entry.modification,
+            after=entry.after,
+            message=entry.message,
+            inputs=inputs,
+            outputs=outputs,
         )

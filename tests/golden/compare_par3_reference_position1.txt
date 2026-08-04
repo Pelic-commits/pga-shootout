@@ -25,9 +25,10 @@ Static modifiers (difference = right - left)
 Metric                              Left  Right  Diff
 Bounce reduction (percent)              0     40    +40
 Launch angle adjustment (degrees)       0      5     +5
-Wind resistance (percent)               0     75    +75
+Wind resistance (percent)              50     75    +25
 
 Applied ability changes - left
+  Divebomb / divebomb__corvid_wind_resist / ADD_MODIFIER: wind_resistance_percent +50
   Jumpstart / jumpstart__power_boost / ADD_STAT: power +4
   Steadfast / steadfast__bag_rarity_boost / ADD_STAT: power +4
   Steadfast / steadfast__bag_rarity_boost / ADD_STAT: control +4
@@ -55,8 +56,7 @@ Scheduled effects - right (0):
 Bonuses gained by right vs left: spin +6
 Bonuses lost by right vs left: power -1, control -4
 
-Unresolved bonuses - left (2):
-  Unresolved UnknownMechanismError: unsupported:corvid_wind_resist
+Unresolved bonuses - left (1):
   Unresolved UnknownMechanismError: unsupported:power_shot
 Unresolved bonuses - right (1):
   Unresolved UnknownMechanismError: unsupported:power_shot
@@ -66,15 +66,15 @@ No aggregate score: user preference weights and real club levels are not yet val
 Confidence diagnostic (objective facts; no score)
 Metrics compared: power, control, spin, bounce_reduction_percent, loft_angle_degrees, wind_resistance_percent
 Left bag (par3_divebomb):
-  Simulated abilities: 6/8
-  Non-simulated abilities: 2
-  Classified gaps: ambiguous=0, scenario_required=1, unsupported=1, partial=0
-  Contributions: resolved=6, effective=3, ignored=3, unresolved=2
+  Simulated abilities: 7/8
+  Non-simulated abilities: 1
+  Classified gaps: ambiguous=0, scenario_required=1, unsupported=0, partial=0
+  Contributions: resolved=7, effective=4, ignored=3, unresolved=1
   Unknown user levels: divebomb, jumpstart, steadfast, ember, sunstorm
 Right bag (par3_high_flight):
   Simulated abilities: 8/9
   Non-simulated abilities: 1
-  Classified gaps: ambiguous=0, scenario_required=0, unsupported=1, partial=0
+  Classified gaps: ambiguous=0, scenario_required=1, unsupported=0, partial=0
   Contributions: resolved=8, effective=8, ignored=0, unresolved=1
   Unknown user levels: high_flight, cyclotron, ember, maelstrom, sunstorm
 ========================================================================

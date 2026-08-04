@@ -71,6 +71,21 @@ METRIC_DEFINITIONS: Mapping[str, MetricDefinition] = {
     "wind_resistance_percent": MetricDefinition(
         "wind_resistance_percent", "Wind resistance", MetricKind.STATIC_MODIFIER, "percent"
     ),
+    "groundspin_multiplier": MetricDefinition(
+        "groundspin_multiplier", "Groundspin", MetricKind.STATIC_MODIFIER, "multiplier"
+    ),
+    "groundspin_increase_percent": MetricDefinition(
+        "groundspin_increase_percent", "Groundspin increase", MetricKind.STATIC_MODIFIER, "percent"
+    ),
+    "aim_arrow_speed_multiplier": MetricDefinition(
+        "aim_arrow_speed_multiplier", "Aim arrow speed", MetricKind.STATIC_MODIFIER, "multiplier"
+    ),
+    "gravity_reduction_percent": MetricDefinition(
+        "gravity_reduction_percent", "Gravity reduction", MetricKind.STATIC_MODIFIER, "percent"
+    ),
+    "wind_speed_toward_hole_mph": MetricDefinition(
+        "wind_speed_toward_hole_mph", "Wind toward hole", MetricKind.STATIC_MODIFIER, "mph"
+    ),
 }
 
 

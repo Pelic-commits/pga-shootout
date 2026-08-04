@@ -145,9 +145,9 @@ class PlacementRecommendationTests(unittest.TestCase):
         result = self.analyze()
         statuses = {item.replacement.position: item.status for item in result.candidates}
 
-        self.assertEqual(statuses[1], RecommendationStatus.PARETO)
+        self.assertEqual(statuses[1], RecommendationStatus.TRADEOFF)
         self.assertEqual(statuses[2], RecommendationStatus.TRADEOFF)
-        self.assertIn(RecommendationStatus.TRADEOFF, statuses.values())
+        self.assertEqual(set(statuses.values()), {RecommendationStatus.TRADEOFF})
 
     def test_declared_indispensable_ability_prevents_pareto_qualification(self):
         result = PlacementRecommendationService(

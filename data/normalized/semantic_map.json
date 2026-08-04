@@ -1,13 +1,24 @@
 {
   "entries": {
     "label:ability_mirror": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "stateful",
+      "dependencies": [
+        "validated_trigger_lifetime"
+      ],
       "group_id": "label:ability_mirror",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "state_duration_or_trigger_unknown",
+        "experiment": "Trigger the effect once, change club, repeat it, and observe persistence, reset, and stacking separately.",
+        "reason": "The trigger is identifiable, but duration, reset, consumption, or stacking semantics are not fully specified by the official text.",
+        "required_data": [
+          "validated_trigger_lifetime"
+        ],
+        "status": "history_required"
+      },
       "validation_status": "not_started"
     },
     "label:adjacent_power": {
@@ -102,43 +113,87 @@
       "validation_status": "official_text_validated"
     },
     "label:adventure": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "stateful",
+      "dependencies": [
+        "validated_trigger_lifetime"
+      ],
       "group_id": "label:adventure",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "state_duration_or_trigger_unknown",
+        "experiment": "Trigger the effect once, change club, repeat it, and observe persistence, reset, and stacking separately.",
+        "reason": "The trigger is identifiable, but duration, reset, consumption, or stacking semantics are not fully specified by the official text.",
+        "required_data": [
+          "validated_trigger_lifetime"
+        ],
+        "status": "history_required"
+      },
       "validation_status": "not_started"
     },
     "label:alien_relic_left": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "in_game_validation"
+      ],
       "group_id": "label:alien_relic_left",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "true_semantic_ambiguity",
+        "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
+        "reason": "Ability duplication, level provenance, wrapping, ordering, and recursion are not validated.",
+        "required_data": [
+          "in_game_validation"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:alien_relic_right": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "in_game_validation"
+      ],
       "group_id": "label:alien_relic_right",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "true_semantic_ambiguity",
+        "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
+        "reason": "Ability duplication, level provenance, wrapping, ordering, and recursion are not validated.",
+        "required_data": [
+          "in_game_validation"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:alien_world": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:alien_world",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:alloy": {
@@ -183,13 +238,24 @@
       "validation_status": "validated_from_official_text"
     },
     "label:aura_of_death": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "in_game_validation"
+      ],
       "group_id": "label:aura_of_death",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "true_semantic_ambiguity",
+        "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
+        "reason": "The text does not establish base-versus-final source stats or ability-order interactions.",
+        "required_data": [
+          "in_game_validation"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:bag_bounce_reduction": {
@@ -405,24 +471,229 @@
       "validation_status": "validated_from_official_text"
     },
     "label:bag_rough_power": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "terrain_stat_bonus",
+      "complexity": "parameterized",
+      "condition": {
+        "description": "terrain is rough or deep rough",
+        "kind": "state_in",
+        "parameters": {
+          "field": "terrain",
+          "required": true,
+          "values": [
+            "rough",
+            "deep_rough"
+          ]
+        }
+      },
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:bag_rough_power",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "targets",
+            "inputs": {
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ALL",
+            "parameters": {
+              "include_source": true
+            }
+          },
+          {
+            "id": "each_target",
+            "inputs": {
+              "items": {
+                "from": "targets.clubs"
+              }
+            },
+            "operation": "FOR_EACH",
+            "parameters": {
+              "binding": "target",
+              "program": {
+                "nodes": [
+                  {
+                    "id": "add_power",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": "power"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:bag_sand_bonus": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "terrain_stat_bonus",
+      "complexity": "parameterized",
+      "condition": {
+        "description": "terrain is sand",
+        "kind": "state_in",
+        "parameters": {
+          "field": "terrain",
+          "required": true,
+          "values": [
+            "sand"
+          ]
+        }
+      },
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:bag_sand_bonus",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "targets",
+            "inputs": {
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ALL",
+            "parameters": {
+              "include_source": true
+            }
+          },
+          {
+            "id": "each_target",
+            "inputs": {
+              "items": {
+                "from": "targets.clubs"
+              }
+            },
+            "operation": "FOR_EACH",
+            "parameters": {
+              "binding": "target",
+              "program": {
+                "nodes": [
+                  {
+                    "id": "add_power",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": "power"
+                    }
+                  },
+                  {
+                    "id": "add_control",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": "control"
+                    }
+                  },
+                  {
+                    "id": "add_spin",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": "spin"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:bag_spin_bonus": {
       "complexity": "parameterized",
@@ -512,53 +783,108 @@
       "validation_status": "official_text_validated"
     },
     "label:bag_tree_bonus": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:bag_tree_bonus",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:bag_tree_passing": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:bag_tree_passing",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:bag_water_bonus": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:bag_water_bonus",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:bag_water_bounce": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:bag_water_bounce",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:bag_wind_power": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "in_game_validation"
+      ],
       "group_id": "label:bag_wind_power",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "true_semantic_ambiguity",
+        "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
+        "reason": "The rounding rule for incomplete wind-speed intervals and interaction with wind-changing abilities are not specified.",
+        "required_data": [
+          "in_game_validation"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:bag_wind_resist": {
@@ -595,24 +921,144 @@
       "validation_status": "validated_from_official_text"
     },
     "label:beast_strength": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "random_or_transformation_model"
+      ],
       "group_id": "label:beast_strength",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "random_or_transformational",
+        "reason": "The ability performs random selection, destruction, replacement, or bag transformation outside deterministic comparison.",
+        "required_data": [
+          "random_or_transformation_model"
+        ],
+        "status": "unsupported"
+      },
       "validation_status": "not_started"
     },
     "label:blazing_flight": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "composed_tee_power_and_loft",
+      "complexity": "parameterized",
+      "dependencies": [
+        "source_club",
+        "ability_level_value",
+        "terrain"
+      ],
+      "effects": [
+        {
+          "condition": {
+            "description": "terrain is tee",
+            "kind": "state_in",
+            "parameters": {
+              "field": "terrain",
+              "required": true,
+              "values": [
+                "tee"
+              ]
+            }
+          },
+          "level_value_component": "power_bonus",
+          "mechanic_id": "dsl_pipeline",
+          "program": {
+            "nodes": [
+              {
+                "id": "source",
+                "inputs": {
+                  "source_club_id": {
+                    "from": "effect.source_club_id"
+                  }
+                },
+                "operation": "SELECT_SELF"
+              },
+              {
+                "id": "level_value",
+                "inputs": {
+                  "level": {
+                    "from": "effect.ability_level"
+                  },
+                  "level_value": {
+                    "from": "effect.level_value"
+                  }
+                },
+                "operation": "READ_LEVEL_VALUE"
+              },
+              {
+                "id": "add_power",
+                "inputs": {
+                  "delta": {
+                    "from": "level_value.value"
+                  },
+                  "target": {
+                    "from": "source.club"
+                  }
+                },
+                "operation": "ADD_STAT",
+                "parameters": {
+                  "stat": "power"
+                }
+              }
+            ],
+            "version": "1.0"
+          }
+        },
+        {
+          "constant_level_value": -3,
+          "mechanic_id": "dsl_pipeline",
+          "program": {
+            "nodes": [
+              {
+                "id": "source",
+                "inputs": {
+                  "source_club_id": {
+                    "from": "effect.source_club_id"
+                  }
+                },
+                "operation": "SELECT_SELF"
+              },
+              {
+                "id": "level_value",
+                "inputs": {
+                  "level": {
+                    "from": "effect.ability_level"
+                  },
+                  "level_value": {
+                    "from": "effect.level_value"
+                  }
+                },
+                "operation": "READ_LEVEL_VALUE"
+              },
+              {
+                "id": "add_modifier",
+                "inputs": {
+                  "delta": {
+                    "from": "level_value.value"
+                  },
+                  "target": {
+                    "from": "source.club"
+                  }
+                },
+                "operation": "ADD_MODIFIER",
+                "parameters": {
+                  "modifier": "loft_angle_degrees"
+                }
+              }
+            ],
+            "version": "1.0"
+          }
+        }
+      ],
       "group_id": "label:blazing_flight",
-      "interpretation_status": "uninterpreted",
+      "interpretation_status": "implemented_from_official_text",
       "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "notes": [
+        "The tee Power and unconditional -3 degree loft components are separate effects."
+      ],
+      "priority": 5,
+      "validation_status": "official_text_validated"
     },
     "label:bounce_reduction": {
       "complexity": "parameterized",
@@ -682,44 +1128,182 @@
       "validation_status": "validated_from_official_text"
     },
     "label:boundary_bonus": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:boundary_bonus",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:boundary_rush": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:boundary_rush",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:boundary_rush_75": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:boundary_rush_75",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:brand_fairway_rush": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "composed_partial",
+      "complexity": "special",
+      "dependencies": [
+        "physics_contract"
+      ],
+      "effects": [
+        {
+          "level_value_component": "power_bonus",
+          "mechanic_id": "dsl_pipeline",
+          "program": {
+            "nodes": [
+              {
+                "id": "source",
+                "inputs": {
+                  "source_club_id": {
+                    "from": "effect.source_club_id"
+                  }
+                },
+                "operation": "SELECT_SELF"
+              },
+              {
+                "id": "level_value",
+                "inputs": {
+                  "level": {
+                    "from": "effect.ability_level"
+                  },
+                  "level_value": {
+                    "from": "effect.level_value"
+                  }
+                },
+                "operation": "READ_LEVEL_VALUE"
+              },
+              {
+                "id": "candidates",
+                "inputs": {
+                  "source": {
+                    "from": "source.club"
+                  }
+                },
+                "operation": "SELECT_ALL",
+                "parameters": {
+                  "include_source": true
+                }
+              },
+              {
+                "id": "matching",
+                "inputs": {
+                  "clubs": {
+                    "from": "candidates.clubs"
+                  },
+                  "source": {
+                    "from": "source.club"
+                  }
+                },
+                "operation": "MATCH_BRAND"
+              },
+              {
+                "id": "each_target",
+                "inputs": {
+                  "items": {
+                    "from": "matching.clubs"
+                  }
+                },
+                "operation": "FOR_EACH",
+                "parameters": {
+                  "binding": "target",
+                  "program": {
+                    "nodes": [
+                      {
+                        "id": "add_power",
+                        "inputs": {
+                          "delta": {
+                            "from": "level_value.value"
+                          },
+                          "target": {
+                            "from": "iteration.target"
+                          }
+                        },
+                        "operation": "ADD_STAT",
+                        "parameters": {
+                          "stat": "power"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "version": "1.0"
+          }
+        },
+        {
+          "allow_valueless": true,
+          "mechanic_id": null
+        }
+      ],
       "group_id": "label:brand_fairway_rush",
-      "interpretation_status": "uninterpreted",
+      "interpretation_status": "partially_implemented_from_official_text",
       "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "notes": [
+        "The Willoughsby Power component is exact; fairway speed/distance still requires a physics contract."
+      ],
+      "priority": 4,
+      "qualification": {
+        "category": "clear_component_plus_physics",
+        "experiment": "Measure the speed/distance or tree-collision component independently in game.",
+        "reason": "The Willoughsby Power component is exact; fairway speed/distance still requires a physics contract.",
+        "required_data": [
+          "physics_contract"
+        ],
+        "status": "partial"
+      },
+      "validation_status": "official_text_partially_validated"
     },
     "label:brand_loyalty": {
       "complexity": "parameterized",
@@ -956,33 +1540,163 @@
       "validation_status": "needs_in_game_validation"
     },
     "label:chains_into_corvid": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "delayed_all_stats_by_club_attribute",
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:chains_into_corvid",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "schedule",
+            "inputs": {
+              "ability_id": {
+                "from": "effect.ability_id"
+              },
+              "ability_source": {
+                "from": "effect.ability_source"
+              },
+              "amount": {
+                "from": "level_value.value"
+              },
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SCHEDULE_EFFECT",
+            "parameters": {
+              "effect_mechanism": "add_all_stats",
+              "filter_field": "brand",
+              "filter_values": [
+                "corvid"
+              ]
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:chains_into_irons_putters_wedges_drivers": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "delayed_all_stats_by_club_attribute",
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:chains_into_irons_putters_wedges_drivers",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "schedule",
+            "inputs": {
+              "ability_id": {
+                "from": "effect.ability_id"
+              },
+              "ability_source": {
+                "from": "effect.ability_source"
+              },
+              "amount": {
+                "from": "level_value.value"
+              },
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SCHEDULE_EFFECT",
+            "parameters": {
+              "effect_mechanism": "add_all_stats",
+              "filter_field": "club_type",
+              "filter_values": [
+                "iron",
+                "putter",
+                "wedge",
+                "driver"
+              ]
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:chains_into_itself": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "official_data_resolution"
+      ],
       "group_id": "label:chains_into_itself",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "official_text_table_conflict",
+        "experiment": "Compare the displayed in-game ability value and resulting modifier at the conflicting level.",
+        "reason": "The official text says +2 to all stats while the level table contains +6 and +7.",
+        "required_data": [
+          "official_data_resolution"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:chains_into_putters": {
@@ -1058,34 +1772,343 @@
       "validation_status": "implemented_with_minimal_delayed_policy"
     },
     "label:chains_into_woods_hybrids": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "delayed_all_stats_by_club_attribute",
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:chains_into_woods_hybrids",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "schedule",
+            "inputs": {
+              "ability_id": {
+                "from": "effect.ability_id"
+              },
+              "ability_source": {
+                "from": "effect.ability_source"
+              },
+              "amount": {
+                "from": "level_value.value"
+              },
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SCHEDULE_EFFECT",
+            "parameters": {
+              "effect_mechanism": "add_all_stats",
+              "filter_field": "club_type",
+              "filter_values": [
+                "wood",
+                "hybrid"
+              ]
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:combined_power": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "matching_neighbor_count_stat_bonus",
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:combined_power",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "targets",
+            "inputs": {
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ALL",
+            "parameters": {
+              "include_source": true
+            }
+          },
+          {
+            "id": "each_target",
+            "inputs": {
+              "items": {
+                "from": "targets.clubs"
+              }
+            },
+            "operation": "FOR_EACH",
+            "parameters": {
+              "binding": "target",
+              "program": {
+                "nodes": [
+                  {
+                    "id": "neighbors",
+                    "inputs": {
+                      "origin": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "SELECT_ADJACENT",
+                    "parameters": {
+                      "directions": [
+                        "left",
+                        "right"
+                      ],
+                      "distance": 1
+                    }
+                  },
+                  {
+                    "id": "same_brand",
+                    "inputs": {
+                      "clubs": {
+                        "from": "neighbors.clubs"
+                      },
+                      "source": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "MATCH_BRAND"
+                  },
+                  {
+                    "id": "count",
+                    "inputs": {
+                      "items": {
+                        "from": "same_brand.clubs"
+                      }
+                    },
+                    "operation": "COUNT"
+                  },
+                  {
+                    "id": "scaled",
+                    "inputs": {
+                      "amount": {
+                        "from": "level_value.value"
+                      },
+                      "factor": {
+                        "from": "count.value"
+                      }
+                    },
+                    "operation": "SCALE"
+                  },
+                  {
+                    "id": "apply",
+                    "inputs": {
+                      "delta": {
+                        "from": "scaled.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": "power"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:combined_spin": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "matching_neighbor_count_stat_bonus",
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:combined_spin",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "targets",
+            "inputs": {
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ALL",
+            "parameters": {
+              "include_source": true
+            }
+          },
+          {
+            "id": "each_target",
+            "inputs": {
+              "items": {
+                "from": "targets.clubs"
+              }
+            },
+            "operation": "FOR_EACH",
+            "parameters": {
+              "binding": "target",
+              "program": {
+                "nodes": [
+                  {
+                    "id": "neighbors",
+                    "inputs": {
+                      "origin": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "SELECT_ADJACENT",
+                    "parameters": {
+                      "directions": [
+                        "left",
+                        "right"
+                      ],
+                      "distance": 1
+                    }
+                  },
+                  {
+                    "id": "same_brand",
+                    "inputs": {
+                      "clubs": {
+                        "from": "neighbors.clubs"
+                      },
+                      "source": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "MATCH_BRAND"
+                  },
+                  {
+                    "id": "count",
+                    "inputs": {
+                      "items": {
+                        "from": "same_brand.clubs"
+                      }
+                    },
+                    "operation": "COUNT"
+                  },
+                  {
+                    "id": "scaled",
+                    "inputs": {
+                      "amount": {
+                        "from": "level_value.value"
+                      },
+                      "factor": {
+                        "from": "count.value"
+                      }
+                    },
+                    "operation": "SCALE"
+                  },
+                  {
+                    "id": "apply",
+                    "inputs": {
+                      "delta": {
+                        "from": "scaled.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": "spin"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:control_boost": {
       "complexity": "parameterized",
@@ -1161,14 +2184,102 @@
       "validation_status": "official_text_validated"
     },
     "label:corvid_wind_resist": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "brand_static_modifier",
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:corvid_wind_resist",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "candidates",
+            "inputs": {
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ALL",
+            "parameters": {
+              "include_source": true
+            }
+          },
+          {
+            "id": "matching",
+            "inputs": {
+              "clubs": {
+                "from": "candidates.clubs"
+              },
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "MATCH_BRAND"
+          },
+          {
+            "id": "each_target",
+            "inputs": {
+              "items": {
+                "from": "matching.clubs"
+              }
+            },
+            "operation": "FOR_EACH",
+            "parameters": {
+              "binding": "target",
+              "program": {
+                "nodes": [
+                  {
+                    "id": "apply_modifier",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_MODIFIER",
+                    "parameters": {
+                      "modifier": "wind_resistance_percent"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:driver_loyalty": {
       "complexity": "parameterized",
@@ -1286,23 +2397,45 @@
       "validation_status": "official_text_validated"
     },
     "label:electrodynamics_0_2ft": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "official_data_resolution"
+      ],
       "group_id": "label:electrodynamics_0_2ft",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "official_text_table_conflict",
+        "experiment": "Compare the displayed in-game ability value and resulting modifier at the conflicting level.",
+        "reason": "The official text uses feet while normalized table values are marked as metres, and the chain-hit increment duration is stateful.",
+        "required_data": [
+          "official_data_resolution"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:emerald_rush_75": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:emerald_rush_75",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:exclusion_zone": {
@@ -1374,14 +2507,151 @@
       "validation_status": "validated_from_official_text"
     },
     "label:fairway_affinity": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "brand_terrain_stat_bonus",
+      "complexity": "parameterized",
+      "condition": {
+        "description": "terrain is fairway; Elite also accepts tee",
+        "kind": "state_in",
+        "parameters": {
+          "field": "terrain",
+          "required": true,
+          "values": [
+            "fairway"
+          ]
+        },
+        "parameters_by_level": {
+          "Elite": {
+            "values": [
+              "fairway",
+              "tee"
+            ]
+          }
+        }
+      },
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:fairway_affinity",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "candidates",
+            "inputs": {
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ALL",
+            "parameters": {
+              "include_source": true
+            }
+          },
+          {
+            "id": "matching",
+            "inputs": {
+              "clubs": {
+                "from": "candidates.clubs"
+              },
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "MATCH_BRAND"
+          },
+          {
+            "id": "each_target",
+            "inputs": {
+              "items": {
+                "from": "matching.clubs"
+              }
+            },
+            "operation": "FOR_EACH",
+            "parameters": {
+              "binding": "target",
+              "program": {
+                "nodes": [
+                  {
+                    "id": "add_power",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": "power"
+                    }
+                  },
+                  {
+                    "id": "add_control",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": "control"
+                    }
+                  },
+                  {
+                    "id": "add_spin",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": "spin"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:fellowship": {
       "complexity": "parameterized",
@@ -1407,33 +2677,226 @@
       "validation_status": "validated_from_official_text"
     },
     "label:first_gear": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "positioned_bag_composed_modifier",
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_components"
+      ],
+      "effects": [
+        {
+          "condition": {
+            "description": "source club is in the leftmost bag position",
+            "kind": "bag_position_equals",
+            "parameters": {
+              "position": "leftmost",
+              "source_club_id": "$source_club_id"
+            }
+          },
+          "level_value_component": "control_bonus",
+          "mechanic_id": "dsl_pipeline",
+          "program": {
+            "nodes": [
+              {
+                "id": "source",
+                "inputs": {
+                  "source_club_id": {
+                    "from": "effect.source_club_id"
+                  }
+                },
+                "operation": "SELECT_SELF"
+              },
+              {
+                "id": "level_value",
+                "inputs": {
+                  "level": {
+                    "from": "effect.ability_level"
+                  },
+                  "level_value": {
+                    "from": "effect.level_value"
+                  }
+                },
+                "operation": "READ_LEVEL_VALUE"
+              },
+              {
+                "id": "targets",
+                "inputs": {
+                  "source": {
+                    "from": "source.club"
+                  }
+                },
+                "operation": "SELECT_ALL",
+                "parameters": {
+                  "include_source": true
+                }
+              },
+              {
+                "id": "each_target",
+                "inputs": {
+                  "items": {
+                    "from": "targets.clubs"
+                  }
+                },
+                "operation": "FOR_EACH",
+                "parameters": {
+                  "binding": "target",
+                  "program": {
+                    "nodes": [
+                      {
+                        "id": "add_control",
+                        "inputs": {
+                          "delta": {
+                            "from": "level_value.value"
+                          },
+                          "target": {
+                            "from": "iteration.target"
+                          }
+                        },
+                        "operation": "ADD_STAT",
+                        "parameters": {
+                          "stat": "control"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "version": "1.0"
+          }
+        },
+        {
+          "condition": {
+            "description": "source club is in the leftmost bag position",
+            "kind": "bag_position_equals",
+            "parameters": {
+              "position": "leftmost",
+              "source_club_id": "$source_club_id"
+            }
+          },
+          "level_value_component": "bounce_reduction",
+          "mechanic_id": "dsl_pipeline",
+          "program": {
+            "nodes": [
+              {
+                "id": "source",
+                "inputs": {
+                  "source_club_id": {
+                    "from": "effect.source_club_id"
+                  }
+                },
+                "operation": "SELECT_SELF"
+              },
+              {
+                "id": "level_value",
+                "inputs": {
+                  "level": {
+                    "from": "effect.ability_level"
+                  },
+                  "level_value": {
+                    "from": "effect.level_value"
+                  }
+                },
+                "operation": "READ_LEVEL_VALUE"
+              },
+              {
+                "id": "targets",
+                "inputs": {
+                  "source": {
+                    "from": "source.club"
+                  }
+                },
+                "operation": "SELECT_ALL",
+                "parameters": {
+                  "include_source": true
+                }
+              },
+              {
+                "id": "each_target",
+                "inputs": {
+                  "items": {
+                    "from": "targets.clubs"
+                  }
+                },
+                "operation": "FOR_EACH",
+                "parameters": {
+                  "binding": "target",
+                  "program": {
+                    "nodes": [
+                      {
+                        "id": "apply_modifier",
+                        "inputs": {
+                          "delta": {
+                            "from": "level_value.value"
+                          },
+                          "target": {
+                            "from": "iteration.target"
+                          }
+                        },
+                        "operation": "ADD_MODIFIER",
+                        "parameters": {
+                          "modifier": "bounce_reduction_percent"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "version": "1.0"
+          }
+        }
+      ],
       "group_id": "label:first_gear",
-      "interpretation_status": "uninterpreted",
+      "interpretation_status": "implemented_from_official_text",
       "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "notes": [
+        "The two official table components are evaluated as separate effects."
+      ],
+      "priority": 5,
+      "validation_status": "official_text_validated"
     },
     "label:fission": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "stateful",
+      "dependencies": [
+        "validated_trigger_lifetime"
+      ],
       "group_id": "label:fission",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "state_duration_or_trigger_unknown",
+        "experiment": "Trigger the effect once, change club, repeat it, and observe persistence, reset, and stacking separately.",
+        "reason": "The trigger is identifiable, but duration, reset, consumption, or stacking semantics are not fully specified by the official text.",
+        "required_data": [
+          "validated_trigger_lifetime"
+        ],
+        "status": "history_required"
+      },
       "validation_status": "not_started"
     },
     "label:flight_training": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:flight_training",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:forester_power": {
@@ -1540,103 +3003,426 @@
       "validation_status": "official_text_validated"
     },
     "label:forester_power_elite": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "composed_partial",
+      "complexity": "special",
+      "dependencies": [
+        "physics_contract"
+      ],
+      "effects": [
+        {
+          "level_value_component": "amount",
+          "mechanic_id": "dsl_pipeline",
+          "program": {
+            "nodes": [
+              {
+                "id": "source",
+                "inputs": {
+                  "source_club_id": {
+                    "from": "effect.source_club_id"
+                  }
+                },
+                "operation": "SELECT_SELF"
+              },
+              {
+                "id": "level_value",
+                "inputs": {
+                  "level": {
+                    "from": "effect.ability_level"
+                  },
+                  "level_value": {
+                    "from": "effect.level_value"
+                  }
+                },
+                "operation": "READ_LEVEL_VALUE"
+              },
+              {
+                "id": "candidates",
+                "inputs": {
+                  "source": {
+                    "from": "source.club"
+                  }
+                },
+                "operation": "SELECT_ALL",
+                "parameters": {
+                  "include_source": true
+                }
+              },
+              {
+                "id": "matching",
+                "inputs": {
+                  "clubs": {
+                    "from": "candidates.clubs"
+                  },
+                  "source": {
+                    "from": "source.club"
+                  }
+                },
+                "operation": "MATCH_BRAND"
+              },
+              {
+                "id": "each_target",
+                "inputs": {
+                  "items": {
+                    "from": "matching.clubs"
+                  }
+                },
+                "operation": "FOR_EACH",
+                "parameters": {
+                  "binding": "target",
+                  "program": {
+                    "nodes": [
+                      {
+                        "id": "add_power",
+                        "inputs": {
+                          "delta": {
+                            "from": "level_value.value"
+                          },
+                          "target": {
+                            "from": "iteration.target"
+                          }
+                        },
+                        "operation": "ADD_STAT",
+                        "parameters": {
+                          "stat": "power"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "version": "1.0"
+          }
+        },
+        {
+          "allow_valueless": true,
+          "mechanic_id": null
+        }
+      ],
       "group_id": "label:forester_power_elite",
-      "interpretation_status": "uninterpreted",
+      "interpretation_status": "partially_implemented_from_official_text",
       "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "notes": [
+        "The Forester Power component is exact; tree passing still requires collision semantics."
+      ],
+      "priority": 4,
+      "qualification": {
+        "category": "clear_component_plus_physics",
+        "experiment": "Measure the speed/distance or tree-collision component independently in game.",
+        "reason": "The Forester Power component is exact; tree passing still requires collision semantics.",
+        "required_data": [
+          "physics_contract"
+        ],
+        "status": "partial"
+      },
+      "validation_status": "official_text_partially_validated"
     },
     "label:gem_ball_bonus": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "in_game_validation"
+      ],
       "group_id": "label:gem_ball_bonus",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "true_semantic_ambiguity",
+        "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
+        "reason": "The source and stacking order of Gem Ball bonuses are outside the official club table.",
+        "required_data": [
+          "in_game_validation"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:gravity_reduction": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "positioned_self_static_modifier",
+      "complexity": "parameterized",
+      "condition": {
+        "description": "source club is in the rightmost bag position",
+        "kind": "bag_position_equals",
+        "parameters": {
+          "position": "rightmost",
+          "source_club_id": "$source_club_id"
+        }
+      },
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:gravity_reduction",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "add_modifier",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_MODIFIER",
+            "parameters": {
+              "modifier": "gravity_reduction_percent"
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:gravity_reduction_x": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "stateful",
+      "dependencies": [
+        "validated_trigger_lifetime"
+      ],
       "group_id": "label:gravity_reduction_x",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "state_duration_or_trigger_unknown",
+        "experiment": "Trigger the effect once, change club, repeat it, and observe persistence, reset, and stacking separately.",
+        "reason": "The trigger is identifiable, but duration, reset, consumption, or stacking semantics are not fully specified by the official text.",
+        "required_data": [
+          "validated_trigger_lifetime"
+        ],
+        "status": "history_required"
+      },
       "validation_status": "not_started"
     },
     "label:green_grip": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:green_grip",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:ground_rush": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:ground_rush",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:groundspin_x3": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "self_static_modifier",
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:groundspin_x3",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "add_modifier",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_MODIFIER",
+            "parameters": {
+              "modifier": "groundspin_multiplier"
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:groundspin_x4": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "self_static_modifier",
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:groundspin_x4",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "add_modifier",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_MODIFIER",
+            "parameters": {
+              "modifier": "groundspin_multiplier"
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:hollow_earth": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "stateful",
+      "dependencies": [
+        "validated_trigger_lifetime"
+      ],
       "group_id": "label:hollow_earth",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "state_duration_or_trigger_unknown",
+        "experiment": "Trigger the effect once, change club, repeat it, and observe persistence, reset, and stacking separately.",
+        "reason": "The trigger is identifiable, but duration, reset, consumption, or stacking semantics are not fully specified by the official text.",
+        "required_data": [
+          "validated_trigger_lifetime"
+        ],
+        "status": "history_required"
+      },
       "validation_status": "not_started"
     },
     "label:home_turf_southwind": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "in_game_validation"
+      ],
       "group_id": "label:home_turf_southwind",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "true_semantic_ambiguity",
+        "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
+        "reason": "The official course identity and exact doubling stage of Forester Power must be validated.",
+        "required_data": [
+          "in_game_validation"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:iron_wedge_exclusion": {
@@ -1673,24 +3459,120 @@
       "validation_status": "validated_from_official_text"
     },
     "label:loft_angle_10": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "self_static_modifier",
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:loft_angle_10",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "add_modifier",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_MODIFIER",
+            "parameters": {
+              "modifier": "loft_angle_degrees"
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:loft_angle_3": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "self_static_modifier",
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:loft_angle_3",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "add_modifier",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_MODIFIER",
+            "parameters": {
+              "modifier": "loft_angle_degrees"
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:loft_angle_5": {
       "complexity": "parameterized",
@@ -1722,33 +3604,131 @@
       "validation_status": "validated_from_official_text"
     },
     "label:ludicrous_mode": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "bag_environment_modifier",
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:ludicrous_mode",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "targets",
+            "inputs": {
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ALL",
+            "parameters": {
+              "include_source": true
+            }
+          },
+          {
+            "id": "each_target",
+            "inputs": {
+              "items": {
+                "from": "targets.clubs"
+              }
+            },
+            "operation": "FOR_EACH",
+            "parameters": {
+              "binding": "target",
+              "program": {
+                "nodes": [
+                  {
+                    "id": "apply_modifier",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_MODIFIER",
+                    "parameters": {
+                      "modifier": "wind_speed_toward_hole_mph"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:magnetism_0_15ft": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "official_data_resolution"
+      ],
       "group_id": "label:magnetism_0_15ft",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "official_text_table_conflict",
+        "experiment": "Compare the displayed in-game ability value and resulting modifier at the conflicting level.",
+        "reason": "The official text uses feet while normalized table values are marked as metres.",
+        "required_data": [
+          "official_data_resolution"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:momentum": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:momentum",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:nautilus_boost": {
@@ -1805,63 +3785,435 @@
       "validation_status": "validated_from_official_text"
     },
     "label:off_green_power": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "terrain_stat_bonus",
+      "complexity": "parameterized",
+      "condition": {
+        "description": "terrain is not green",
+        "kind": "state_not_in",
+        "parameters": {
+          "field": "terrain",
+          "required": true,
+          "values": [
+            "green"
+          ]
+        }
+      },
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:off_green_power",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "add_power",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "power"
+            }
+          },
+          {
+            "id": "add_control",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "control"
+            }
+          },
+          {
+            "id": "add_spin",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "spin"
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:overaim": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "type_count_scaled_stat_bonus",
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:overaim",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "candidates",
+            "inputs": {
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ALL",
+            "parameters": {
+              "include_source": true
+            }
+          },
+          {
+            "id": "drivers",
+            "inputs": {
+              "clubs": {
+                "from": "candidates.clubs"
+              }
+            },
+            "operation": "MATCH_TYPE",
+            "parameters": {
+              "expected": "driver",
+              "operator": "equals"
+            }
+          },
+          {
+            "id": "driver_count",
+            "inputs": {
+              "items": {
+                "from": "drivers.clubs"
+              }
+            },
+            "operation": "COUNT"
+          },
+          {
+            "id": "scaled",
+            "inputs": {
+              "amount": {
+                "from": "level_value.value"
+              },
+              "factor": {
+                "from": "driver_count.value"
+              }
+            },
+            "operation": "SCALE"
+          },
+          {
+            "id": "apply_source",
+            "inputs": {
+              "delta": {
+                "from": "scaled.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "control"
+            }
+          },
+          {
+            "id": "each_driver",
+            "inputs": {
+              "items": {
+                "from": "drivers.clubs"
+              }
+            },
+            "operation": "FOR_EACH",
+            "parameters": {
+              "binding": "target",
+              "program": {
+                "nodes": [
+                  {
+                    "id": "apply_target",
+                    "inputs": {
+                      "delta": {
+                        "from": "scaled.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": "control"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:overdrive": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "type_count_scaled_stat_bonus",
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:overdrive",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "candidates",
+            "inputs": {
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ALL",
+            "parameters": {
+              "include_source": true
+            }
+          },
+          {
+            "id": "drivers",
+            "inputs": {
+              "clubs": {
+                "from": "candidates.clubs"
+              }
+            },
+            "operation": "MATCH_TYPE",
+            "parameters": {
+              "expected": "driver",
+              "operator": "equals"
+            }
+          },
+          {
+            "id": "driver_count",
+            "inputs": {
+              "items": {
+                "from": "drivers.clubs"
+              }
+            },
+            "operation": "COUNT"
+          },
+          {
+            "id": "scaled",
+            "inputs": {
+              "amount": {
+                "from": "level_value.value"
+              },
+              "factor": {
+                "from": "driver_count.value"
+              }
+            },
+            "operation": "SCALE"
+          },
+          {
+            "id": "apply_source",
+            "inputs": {
+              "delta": {
+                "from": "scaled.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "power"
+            }
+          },
+          {
+            "id": "each_driver",
+            "inputs": {
+              "items": {
+                "from": "drivers.clubs"
+              }
+            },
+            "operation": "FOR_EACH",
+            "parameters": {
+              "binding": "target",
+              "program": {
+                "nodes": [
+                  {
+                    "id": "apply_target",
+                    "inputs": {
+                      "delta": {
+                        "from": "scaled.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_STAT",
+                    "parameters": {
+                      "stat": "power"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:palo_control_on_hit_x": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "stateful",
+      "dependencies": [
+        "validated_trigger_lifetime"
+      ],
       "group_id": "label:palo_control_on_hit_x",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "state_duration_or_trigger_unknown",
+        "experiment": "Trigger the effect once, change club, repeat it, and observe persistence, reset, and stacking separately.",
+        "reason": "The trigger is identifiable, but duration, reset, consumption, or stacking semantics are not fully specified by the official text.",
+        "required_data": [
+          "validated_trigger_lifetime"
+        ],
+        "status": "history_required"
+      },
       "validation_status": "not_started"
     },
     "label:perfect_shot_bag_power": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "stateful",
+      "dependencies": [
+        "validated_trigger_lifetime"
+      ],
       "group_id": "label:perfect_shot_bag_power",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "state_duration_or_trigger_unknown",
+        "experiment": "Trigger the effect once, change club, repeat it, and observe persistence, reset, and stacking separately.",
+        "reason": "The trigger is identifiable, but duration, reset, consumption, or stacking semantics are not fully specified by the official text.",
+        "required_data": [
+          "validated_trigger_lifetime"
+        ],
+        "status": "history_required"
+      },
       "validation_status": "not_started"
     },
     "label:perfect_shot_terrain_bonus_boost": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "stateful",
+      "dependencies": [
+        "validated_trigger_lifetime"
+      ],
       "group_id": "label:perfect_shot_terrain_bonus_boost",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "state_duration_or_trigger_unknown",
+        "experiment": "Trigger the effect once, change club, repeat it, and observe persistence, reset, and stacking separately.",
+        "reason": "The trigger is identifiable, but duration, reset, consumption, or stacking semantics are not fully specified by the official text.",
+        "required_data": [
+          "validated_trigger_lifetime"
+        ],
+        "status": "history_required"
+      },
       "validation_status": "not_started"
     },
     "label:phoenix_power": {
@@ -2069,94 +4421,485 @@
       "validation_status": "official_text_validated"
     },
     "label:power_shot": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:power_shot",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:random_boost_x": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "random_or_transformation_model"
+      ],
       "group_id": "label:random_boost_x",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "random_or_transformational",
+        "reason": "The ability performs random selection, destruction, replacement, or bag transformation outside deterministic comparison.",
+        "required_data": [
+          "random_or_transformation_model"
+        ],
+        "status": "unsupported"
+      },
       "validation_status": "not_started"
     },
     "label:rocket_boosters": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "in_game_validation"
+      ],
       "group_id": "label:rocket_boosters",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "true_semantic_ambiguity",
+        "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
+        "reason": "The text does not establish whether neighboring base stats or final ability-modified stats are copied.",
+        "required_data": [
+          "in_game_validation"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:rough_bonus": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "terrain_stat_bonus",
+      "complexity": "parameterized",
+      "condition": {
+        "description": "terrain is rough or deep rough",
+        "kind": "state_in",
+        "parameters": {
+          "field": "terrain",
+          "required": true,
+          "values": [
+            "rough",
+            "deep_rough"
+          ]
+        }
+      },
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:rough_bonus",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "add_power",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "power"
+            }
+          },
+          {
+            "id": "add_control",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "control"
+            }
+          },
+          {
+            "id": "add_spin",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "spin"
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:rough_boosters": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "in_game_validation"
+      ],
       "group_id": "label:rough_boosters",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "true_semantic_ambiguity",
+        "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
+        "reason": "At Elite the behavior changes from categorical rough to nearby-area scaling, whose formula is not specified.",
+        "required_data": [
+          "in_game_validation"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:rough_power": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "terrain_stat_bonus",
+      "complexity": "parameterized",
+      "condition": {
+        "description": "terrain is rough or deep rough",
+        "kind": "state_in",
+        "parameters": {
+          "field": "terrain",
+          "required": true,
+          "values": [
+            "rough",
+            "deep_rough"
+          ]
+        }
+      },
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:rough_power",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "add_power",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "power"
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:sacrifice": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "random_or_transformation_model"
+      ],
       "group_id": "label:sacrifice",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "random_or_transformational",
+        "reason": "The ability performs random selection, destruction, replacement, or bag transformation outside deterministic comparison.",
+        "required_data": [
+          "random_or_transformation_model"
+        ],
+        "status": "unsupported"
+      },
       "validation_status": "not_started"
     },
     "label:sand_bonus": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "terrain_weighted_stat_bonus",
+      "complexity": "parameterized",
+      "condition": {
+        "description": "terrain is sand",
+        "kind": "state_in",
+        "parameters": {
+          "field": "terrain",
+          "required": true,
+          "values": [
+            "sand"
+          ]
+        }
+      },
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:sand_bonus",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "half",
+            "inputs": {
+              "amount": {
+                "from": "level_value.value"
+              },
+              "factor": 0.5
+            },
+            "operation": "SCALE"
+          },
+          {
+            "id": "add_power",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "power"
+            }
+          },
+          {
+            "id": "add_control",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "control"
+            }
+          },
+          {
+            "id": "add_spin",
+            "inputs": {
+              "delta": {
+                "from": "half.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "spin"
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:sand_bonus_x": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "terrain_stat_bonus",
+      "complexity": "parameterized",
+      "condition": {
+        "description": "terrain is sand",
+        "kind": "state_in",
+        "parameters": {
+          "field": "terrain",
+          "required": true,
+          "values": [
+            "sand"
+          ]
+        }
+      },
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:sand_bonus_x",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "add_power",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "power"
+            }
+          },
+          {
+            "id": "add_control",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "control"
+            }
+          },
+          {
+            "id": "add_spin",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": "spin"
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:sand_bounce": {
       "complexity": "parameterized",
@@ -2188,73 +4931,149 @@
       "validation_status": "validated_from_official_text"
     },
     "label:scottsdale_boosters": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "in_game_validation"
+      ],
       "group_id": "label:scottsdale_boosters",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "true_semantic_ambiguity",
+        "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
+        "reason": "The exact doubling stage of Phoenix Power and official course identity must be validated.",
+        "required_data": [
+          "in_game_validation"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:shared_growth": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "in_game_validation"
+      ],
       "group_id": "label:shared_growth",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "true_semantic_ambiguity",
+        "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
+        "reason": "Whether copied Tree Bonus uses the source level, target level, or evaluated source contribution is not specified.",
+        "required_data": [
+          "in_game_validation"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:shoreline_rush": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:shoreline_rush",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:shuffle_up": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "random_or_transformation_model"
+      ],
       "group_id": "label:shuffle_up",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "random_or_transformational",
+        "reason": "The ability performs random selection, destruction, replacement, or bag transformation outside deterministic comparison.",
+        "required_data": [
+          "random_or_transformation_model"
+        ],
+        "status": "unsupported"
+      },
       "validation_status": "not_started"
     },
     "label:smoke_x": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "in_game_validation"
+      ],
       "group_id": "label:smoke_x",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "true_semantic_ambiguity",
+        "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
+        "reason": "With two matching neighbors, whether the source bonus stacks once or twice is not specified.",
+        "required_data": [
+          "in_game_validation"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:solidarity": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "in_game_validation"
+      ],
       "group_id": "label:solidarity",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "true_semantic_ambiguity",
+        "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
+        "reason": "Interactions between multi-brand identity and every brand filter require a validated matching contract.",
+        "required_data": [
+          "in_game_validation"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:sparks_x": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "in_game_validation"
+      ],
       "group_id": "label:sparks_x",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "true_semantic_ambiguity",
+        "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
+        "reason": "With two matching neighbors, whether the source bonus stacks once or twice is not specified.",
+        "required_data": [
+          "in_game_validation"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:spin_boost": {
@@ -2434,44 +5253,125 @@
       "validation_status": "official_text_validated"
     },
     "label:stat_fusion": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "in_game_validation"
+      ],
       "group_id": "label:stat_fusion",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "true_semantic_ambiguity",
+        "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
+        "reason": "The text does not establish whether neighboring base stats or final ability-modified stats are copied.",
+        "required_data": [
+          "in_game_validation"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:steam_x": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "in_game_validation"
+      ],
       "group_id": "label:steam_x",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "true_semantic_ambiguity",
+        "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
+        "reason": "With two matching neighbors, whether the source bonus stacks once or twice is not specified.",
+        "required_data": [
+          "in_game_validation"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:super_fireball": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "in_game_validation"
+      ],
       "group_id": "label:super_fireball",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "true_semantic_ambiguity",
+        "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
+        "reason": "The Fireball changes and the stage at which their percentage is increased are not specified here.",
+        "required_data": [
+          "in_game_validation"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:swing_speed_x2": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "self_static_modifier",
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:swing_speed_x2",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "add_modifier",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_MODIFIER",
+            "parameters": {
+              "modifier": "aim_arrow_speed_multiplier"
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:tee_off_power": {
       "behavior_id": "tee_self_power_bonus",
@@ -2506,23 +5406,45 @@
       "validation_status": "validated_from_official_text"
     },
     "label:terrain_bonus": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "in_game_validation"
+      ],
       "group_id": "label:terrain_bonus",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "true_semantic_ambiguity",
+        "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
+        "reason": "The listed terrain bonuses use proximity/terrain formulas that are not present in the official table.",
+        "required_data": [
+          "in_game_validation"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:terrain_resist_50": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "official_data_resolution"
+      ],
       "group_id": "label:terrain_resist_50",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "official_text_table_conflict",
+        "experiment": "Compare the displayed in-game ability value and resulting modifier at the conflicting level.",
+        "reason": "The shared label contains level-varying values and an Elite 60% value that conflicts with one club text stating 50%.",
+        "required_data": [
+          "official_data_resolution"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:texas_tee": {
@@ -2558,93 +5480,350 @@
       "validation_status": "validated_from_official_text"
     },
     "label:three_heads": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "random_or_transformation_model"
+      ],
       "group_id": "label:three_heads",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "random_or_transformational",
+        "reason": "The ability performs random selection, destruction, replacement, or bag transformation outside deterministic comparison.",
+        "required_data": [
+          "random_or_transformation_model"
+        ],
+        "status": "unsupported"
+      },
       "validation_status": "not_started"
     },
     "label:top_gear": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "positioned_bag_composed_modifier",
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_components"
+      ],
+      "effects": [
+        {
+          "condition": {
+            "description": "source club is in the rightmost bag position",
+            "kind": "bag_position_equals",
+            "parameters": {
+              "position": "rightmost",
+              "source_club_id": "$source_club_id"
+            }
+          },
+          "level_value_component": "power_bonus",
+          "mechanic_id": "dsl_pipeline",
+          "program": {
+            "nodes": [
+              {
+                "id": "source",
+                "inputs": {
+                  "source_club_id": {
+                    "from": "effect.source_club_id"
+                  }
+                },
+                "operation": "SELECT_SELF"
+              },
+              {
+                "id": "level_value",
+                "inputs": {
+                  "level": {
+                    "from": "effect.ability_level"
+                  },
+                  "level_value": {
+                    "from": "effect.level_value"
+                  }
+                },
+                "operation": "READ_LEVEL_VALUE"
+              },
+              {
+                "id": "targets",
+                "inputs": {
+                  "source": {
+                    "from": "source.club"
+                  }
+                },
+                "operation": "SELECT_ALL",
+                "parameters": {
+                  "include_source": true
+                }
+              },
+              {
+                "id": "each_target",
+                "inputs": {
+                  "items": {
+                    "from": "targets.clubs"
+                  }
+                },
+                "operation": "FOR_EACH",
+                "parameters": {
+                  "binding": "target",
+                  "program": {
+                    "nodes": [
+                      {
+                        "id": "add_power",
+                        "inputs": {
+                          "delta": {
+                            "from": "level_value.value"
+                          },
+                          "target": {
+                            "from": "iteration.target"
+                          }
+                        },
+                        "operation": "ADD_STAT",
+                        "parameters": {
+                          "stat": "power"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "version": "1.0"
+          }
+        },
+        {
+          "condition": {
+            "description": "source club is in the rightmost bag position",
+            "kind": "bag_position_equals",
+            "parameters": {
+              "position": "rightmost",
+              "source_club_id": "$source_club_id"
+            }
+          },
+          "level_value_component": "groundspin_increase",
+          "mechanic_id": "dsl_pipeline",
+          "program": {
+            "nodes": [
+              {
+                "id": "source",
+                "inputs": {
+                  "source_club_id": {
+                    "from": "effect.source_club_id"
+                  }
+                },
+                "operation": "SELECT_SELF"
+              },
+              {
+                "id": "level_value",
+                "inputs": {
+                  "level": {
+                    "from": "effect.ability_level"
+                  },
+                  "level_value": {
+                    "from": "effect.level_value"
+                  }
+                },
+                "operation": "READ_LEVEL_VALUE"
+              },
+              {
+                "id": "targets",
+                "inputs": {
+                  "source": {
+                    "from": "source.club"
+                  }
+                },
+                "operation": "SELECT_ALL",
+                "parameters": {
+                  "include_source": true
+                }
+              },
+              {
+                "id": "each_target",
+                "inputs": {
+                  "items": {
+                    "from": "targets.clubs"
+                  }
+                },
+                "operation": "FOR_EACH",
+                "parameters": {
+                  "binding": "target",
+                  "program": {
+                    "nodes": [
+                      {
+                        "id": "apply_modifier",
+                        "inputs": {
+                          "delta": {
+                            "from": "level_value.value"
+                          },
+                          "target": {
+                            "from": "iteration.target"
+                          }
+                        },
+                        "operation": "ADD_MODIFIER",
+                        "parameters": {
+                          "modifier": "groundspin_increase_percent"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "version": "1.0"
+          }
+        }
+      ],
       "group_id": "label:top_gear",
-      "interpretation_status": "uninterpreted",
+      "interpretation_status": "implemented_from_official_text",
       "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "notes": [
+        "The two official table components are evaluated as separate effects."
+      ],
+      "priority": 5,
+      "validation_status": "official_text_validated"
     },
     "label:tree_bonus": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:tree_bonus",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:tree_bonus_x": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:tree_bonus_x",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:tree_passing": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:tree_passing",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:trumpet_blast": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "random_or_transformation_model"
+      ],
       "group_id": "label:trumpet_blast",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "random_or_transformational",
+        "reason": "The ability performs random selection, destruction, replacement, or bag transformation outside deterministic comparison.",
+        "required_data": [
+          "random_or_transformation_model"
+        ],
+        "status": "unsupported"
+      },
       "validation_status": "not_started"
     },
     "label:volt_bounce": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "stateful",
+      "dependencies": [
+        "validated_trigger_lifetime"
+      ],
       "group_id": "label:volt_bounce",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "state_duration_or_trigger_unknown",
+        "experiment": "Trigger the effect once, change club, repeat it, and observe persistence, reset, and stacking separately.",
+        "reason": "The trigger is identifiable, but duration, reset, consumption, or stacking semantics are not fully specified by the official text.",
+        "required_data": [
+          "validated_trigger_lifetime"
+        ],
+        "status": "history_required"
+      },
       "validation_status": "not_started"
     },
     "label:water_bonus": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:water_bonus",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:water_bonus_x": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:water_bonus_x",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:water_bounce": {
@@ -2677,34 +5856,104 @@
       "validation_status": "validated_from_official_text"
     },
     "label:water_rush": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:water_rush",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:wild_rush_speed": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "validated_geometry_or_physics"
+      ],
       "group_id": "label:wild_rush_speed",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "geometry_or_trajectory_required",
+        "experiment": "Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases.",
+        "reason": "The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain.",
+        "required_data": [
+          "validated_geometry_or_physics"
+        ],
+        "status": "physics_required"
+      },
       "validation_status": "not_started"
     },
     "label:wind_resist": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "self_static_modifier",
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:wind_resist",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
+      ],
+      "priority": 5,
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "add_modifier",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_MODIFIER",
+            "parameters": {
+              "modifier": "wind_resistance_percent"
+            }
+          }
+        ],
+        "version": "1.0"
+      },
+      "validation_status": "official_text_validated"
     },
     "label:wind_resist_75": {
       "complexity": "parameterized",
@@ -2737,43 +5986,62 @@
       "validation_status": "validated_from_official_text"
     },
     "label:wind_resistance_100": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "special",
+      "dependencies": [
+        "official_data_resolution"
+      ],
       "group_id": "label:wind_resistance_100",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "official_text_table_conflict",
+        "experiment": "Compare the displayed in-game ability value and resulting modifier at the conflicting level.",
+        "reason": "The official text says 100% while the normalized level table contains 85%.",
+        "required_data": [
+          "official_data_resolution"
+        ],
+        "status": "ambiguous"
+      },
       "validation_status": "not_started"
     },
     "label:wind_up_toy": {
-      "complexity": null,
-      "dependencies": null,
+      "complexity": "stateful",
+      "dependencies": [
+        "validated_trigger_lifetime"
+      ],
       "group_id": "label:wind_up_toy",
       "interpretation_status": "uninterpreted",
       "mechanic_id": null,
       "notes": [],
       "priority": null,
+      "qualification": {
+        "category": "state_duration_or_trigger_unknown",
+        "experiment": "Trigger the effect once, change club, repeat it, and observe persistence, reset, and stacking separately.",
+        "reason": "The trigger is identifiable, but duration, reset, consumption, or stacking semantics are not fully specified by the official text.",
+        "required_data": [
+          "validated_trigger_lifetime"
+        ],
+        "status": "history_required"
+      },
       "validation_status": "not_started"
     },
     "label:zephyr_x_mph": {
-      "complexity": null,
-      "dependencies": null,
+      "behavior_id": "bag_environment_modifier",
+      "complexity": "parameterized",
+      "dependencies": [
+        "ordered_bag",
+        "source_club",
+        "ability_level_value"
+      ],
       "group_id": "label:zephyr_x_mph",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
-      "priority": null,
-      "validation_status": "not_started"
-    }
-  },
-  "layer": "semantic_interpretation_placeholders",
-  "patterns": {
-    "self_stat_bonus": {
-      "description": "Apply one level-scaled statistic bonus to the source club when the semantic condition matches.",
-      "parameters": [
-        "stat"
+      "interpretation_status": "implemented_from_official_text",
+      "mechanic_id": "dsl_pipeline",
+      "notes": [
+        "Qualified from the exact official text and normalized per-level values during the coverage campaign."
       ],
+      "priority": 5,
       "program": {
         "nodes": [
           {
@@ -2798,86 +6066,56 @@
             "operation": "READ_LEVEL_VALUE"
           },
           {
-            "id": "apply_stat",
+            "id": "targets",
             "inputs": {
-              "delta": {
-                "from": "level_value.value"
-              },
-              "target": {
-                "from": "source.club"
-              }
-            },
-            "operation": "ADD_STAT",
-            "parameters": {
-              "stat": {
-                "pattern_parameter": "stat"
-              }
-            }
-          }
-        ],
-        "version": "1.0"
-      }
-    },
-    "delayed_all_stats_by_club_attribute": {
-      "description": "Schedule one level-scaled all-stats effect for the next compatible club selected by an official club attribute.",
-      "parameters": [
-        "filter_field",
-        "filter_value"
-      ],
-      "program": {
-        "nodes": [
-          {
-            "id": "source",
-            "inputs": {
-              "source_club_id": {
-                "from": "effect.source_club_id"
-              }
-            },
-            "operation": "SELECT_SELF"
-          },
-          {
-            "id": "level_value",
-            "inputs": {
-              "level": {
-                "from": "effect.ability_level"
-              },
-              "level_value": {
-                "from": "effect.level_value"
-              }
-            },
-            "operation": "READ_LEVEL_VALUE"
-          },
-          {
-            "id": "schedule",
-            "inputs": {
-              "ability_id": {
-                "from": "effect.ability_id"
-              },
-              "ability_source": {
-                "from": "effect.ability_source"
-              },
-              "amount": {
-                "from": "level_value.value"
-              },
               "source": {
                 "from": "source.club"
               }
             },
-            "operation": "SCHEDULE_EFFECT",
+            "operation": "SELECT_ALL",
             "parameters": {
-              "effect_mechanism": "add_all_stats",
-              "filter_field": {
-                "pattern_parameter": "filter_field"
-              },
-              "filter_value": {
-                "pattern_parameter": "filter_value"
+              "include_source": true
+            }
+          },
+          {
+            "id": "each_target",
+            "inputs": {
+              "items": {
+                "from": "targets.clubs"
+              }
+            },
+            "operation": "FOR_EACH",
+            "parameters": {
+              "binding": "target",
+              "program": {
+                "nodes": [
+                  {
+                    "id": "apply_modifier",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_MODIFIER",
+                    "parameters": {
+                      "modifier": "wind_speed_toward_hole_mph"
+                    }
+                  }
+                ]
               }
             }
           }
         ],
         "version": "1.0"
-      }
-    },
+      },
+      "validation_status": "official_text_validated"
+    }
+  },
+  "layer": "semantic_interpretation_placeholders",
+  "patterns": {
     "absent_types_stat_bonus": {
       "description": "Apply a level-scaled stat bonus to configured targets only when the ordered bag contains none of the configured club types.",
       "parameters": [
@@ -3264,6 +6502,66 @@
         "version": "1.0"
       }
     },
+    "delayed_all_stats_by_club_attribute": {
+      "description": "Schedule one level-scaled all-stats effect for the next compatible club selected by an official club attribute.",
+      "parameters": [
+        "filter_field",
+        "filter_value"
+      ],
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "schedule",
+            "inputs": {
+              "ability_id": {
+                "from": "effect.ability_id"
+              },
+              "ability_source": {
+                "from": "effect.ability_source"
+              },
+              "amount": {
+                "from": "level_value.value"
+              },
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SCHEDULE_EFFECT",
+            "parameters": {
+              "effect_mechanism": "add_all_stats",
+              "filter_field": {
+                "pattern_parameter": "filter_field"
+              },
+              "filter_value": {
+                "pattern_parameter": "filter_value"
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      }
+    },
     "filtered_bag_multi_stat_bonus": {
       "description": "Apply one level value to configured statistics on every club matching configured rarities.",
       "parameters": [
@@ -3362,6 +6660,99 @@
                             }
                           }
                         ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      }
+    },
+    "filtered_static_modifier_targets": {
+      "description": "Apply one additive static modifier value to every bag club matching configured club types.",
+      "parameters": [
+        "club_types",
+        "modifier"
+      ],
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "candidates",
+            "inputs": {
+              "source": {
+                "from": "source.club"
+              }
+            },
+            "operation": "SELECT_ALL",
+            "parameters": {
+              "include_source": true
+            }
+          },
+          {
+            "id": "matches",
+            "inputs": {
+              "clubs": {
+                "from": "candidates.clubs"
+              }
+            },
+            "operation": "MATCH_TYPE",
+            "parameters": {
+              "expected": {
+                "pattern_parameter": "club_types"
+              },
+              "operator": "in"
+            }
+          },
+          {
+            "id": "apply_to_matches",
+            "inputs": {
+              "items": {
+                "from": "matches.clubs"
+              }
+            },
+            "operation": "FOR_EACH",
+            "parameters": {
+              "binding": "target",
+              "program": {
+                "nodes": [
+                  {
+                    "id": "add_modifier",
+                    "inputs": {
+                      "delta": {
+                        "from": "level_value.value"
+                      },
+                      "target": {
+                        "from": "iteration.target"
+                      }
+                    },
+                    "operation": "ADD_MODIFIER",
+                    "parameters": {
+                      "modifier": {
+                        "pattern_parameter": "modifier"
                       }
                     }
                   }
@@ -3485,6 +6876,55 @@
         "version": "1.0"
       }
     },
+    "self_stat_bonus": {
+      "description": "Apply one level-scaled statistic bonus to the source club when the semantic condition matches.",
+      "parameters": [
+        "stat"
+      ],
+      "program": {
+        "nodes": [
+          {
+            "id": "source",
+            "inputs": {
+              "source_club_id": {
+                "from": "effect.source_club_id"
+              }
+            },
+            "operation": "SELECT_SELF"
+          },
+          {
+            "id": "level_value",
+            "inputs": {
+              "level": {
+                "from": "effect.ability_level"
+              },
+              "level_value": {
+                "from": "effect.level_value"
+              }
+            },
+            "operation": "READ_LEVEL_VALUE"
+          },
+          {
+            "id": "apply_stat",
+            "inputs": {
+              "delta": {
+                "from": "level_value.value"
+              },
+              "target": {
+                "from": "source.club"
+              }
+            },
+            "operation": "ADD_STAT",
+            "parameters": {
+              "stat": {
+                "pattern_parameter": "stat"
+              }
+            }
+          }
+        ],
+        "version": "1.0"
+      }
+    },
     "static_modifier_targets": {
       "description": "Apply one additive static modifier value to every selected club.",
       "parameters": [
@@ -3533,99 +6973,6 @@
             "inputs": {
               "items": {
                 "from": "targets.clubs"
-              }
-            },
-            "operation": "FOR_EACH",
-            "parameters": {
-              "binding": "target",
-              "program": {
-                "nodes": [
-                  {
-                    "id": "add_modifier",
-                    "inputs": {
-                      "delta": {
-                        "from": "level_value.value"
-                      },
-                      "target": {
-                        "from": "iteration.target"
-                      }
-                    },
-                    "operation": "ADD_MODIFIER",
-                    "parameters": {
-                      "modifier": {
-                        "pattern_parameter": "modifier"
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        ],
-        "version": "1.0"
-      }
-    },
-    "filtered_static_modifier_targets": {
-      "description": "Apply one additive static modifier value to every bag club matching configured club types.",
-      "parameters": [
-        "club_types",
-        "modifier"
-      ],
-      "program": {
-        "nodes": [
-          {
-            "id": "source",
-            "inputs": {
-              "source_club_id": {
-                "from": "effect.source_club_id"
-              }
-            },
-            "operation": "SELECT_SELF"
-          },
-          {
-            "id": "level_value",
-            "inputs": {
-              "level": {
-                "from": "effect.ability_level"
-              },
-              "level_value": {
-                "from": "effect.level_value"
-              }
-            },
-            "operation": "READ_LEVEL_VALUE"
-          },
-          {
-            "id": "candidates",
-            "inputs": {
-              "source": {
-                "from": "source.club"
-              }
-            },
-            "operation": "SELECT_ALL",
-            "parameters": {
-              "include_source": true
-            }
-          },
-          {
-            "id": "matches",
-            "inputs": {
-              "clubs": {
-                "from": "candidates.clubs"
-              }
-            },
-            "operation": "MATCH_TYPE",
-            "parameters": {
-              "expected": {
-                "pattern_parameter": "club_types"
-              },
-              "operator": "in"
-            }
-          },
-          {
-            "id": "apply_to_matches",
-            "inputs": {
-              "items": {
-                "from": "matches.clubs"
               }
             },
             "operation": "FOR_EACH",

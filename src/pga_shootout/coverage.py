@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from .loader import load_raw_json
+from .bag_evaluation import _semantic_effect_specs, semantic_support
 from .registry import default_mechanism_registry
 
 
@@ -67,6 +68,8 @@ def analyze_coverage(
     labels = _load_object(root / "ability_labels.json", "labels")
     groups = _load_object(root / "mechanics_catalog.json", "groups")
     semantic_entries = _load_object(root / "semantic_map.json", "entries")
+    semantic_document = load_raw_json(root / "semantic_map.json")
+    semantic_patterns = semantic_document.get("patterns", {}) if isinstance(semantic_document, dict) else {}
     handlers = tuple(handler_names if handler_names is not None else default_mechanism_registry().names)
 
     if set(groups) != set(semantic_entries):
@@ -90,13 +93,19 @@ def analyze_coverage(
 
     for group_id, group in groups.items():
         semantic = semantic_entries[group_id]
-        mechanic_id = semantic.get("mechanic_id") or group.get("mechanic_id")
+        fully_supported, partially_supported, _programs = semantic_support(semantic, semantic_patterns, set(handlers))
+        configured_mechanics = tuple(
+            str(spec.get("mechanic_id"))
+            for spec in _semantic_effect_specs(semantic)
+            if isinstance(spec.get("mechanic_id"), str)
+        )
+        mechanic_id = semantic.get("mechanic_id") or (configured_mechanics[0] if fully_supported and configured_mechanics else group.get("mechanic_id"))
         difficulty = semantic.get("complexity")
         if difficulty not in allowed_complexities:
             difficulty = "unclassified"
         raw_dependencies = semantic.get("dependencies")
         dependencies = tuple(str(value) for value in raw_dependencies) if isinstance(raw_dependencies, list) else None
-        handler_exists = isinstance(mechanic_id, str) and mechanic_id in handlers
+        handler_exists = fully_supported
         occurrence_ids = tuple(str(value) for value in group["occurrence_ids"])
         club_ids = tuple(str(value) for value in group["club_ids"])
         if handler_exists:
@@ -115,7 +124,7 @@ def analyze_coverage(
                 "coverage_percent": 100.0 if handler_exists else 0.0,
                 "difficulty": difficulty,
                 "dependencies": dependencies,
-                "interpretation_status": str(semantic.get("interpretation_status", "unknown")),
+                "interpretation_status": str(semantic.get("interpretation_status", "partial" if partially_supported else "unknown")),
                 "estimated_gain_occurrences": 0 if handler_exists else len(occurrence_ids),
                 "estimated_gain_clubs": 0 if handler_exists else len(club_ids),
             }

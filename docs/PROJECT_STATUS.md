@@ -7,7 +7,7 @@
 - Loads official club statistics, user inventory and saved bags.
 - Evaluates supported deterministic bag abilities in strict or partial mode.
 - Compares bags metric by metric with attributed contributions and a factual completeness diagnostic.
-- Supports 56/138 owned-club abilities (40.58%).
+- Supports 81/138 owned-club abilities (58.70%).
 
 ## What it does not do
 
@@ -18,10 +18,10 @@
 ## Inventory
 
 - Known clubs: 75; inventory complete: no.
-- Fully simulated clubs: 25/75.
-- Fully comparable clubs: 24/75: Homestead, Commonlaw, Kinship, Sandsend, Steadfast, Jumpstart, Cyclotron, High Flight, Cloudcatcher, Rook, Mirage, Lodestar, Into the Breach, Conqueror, Earthquake, Sunstorm, Galvanizer, Lowball, Maelstrom, Endeavor, People's Champion, Rampart, Saber, Steward.
-- Comparable with warning: 14/75.
-- Not currently comparable: 37/75.
+- Fully simulated clubs: 35/75.
+- Fully comparable clubs: 29/75: Homestead, Commonlaw, Kinship, Sandsend, Steadfast, Jumpstart, Cyclotron, High Flight, Cloudcatcher, Rook, Mirage, Lodestar, Into the Breach, Conqueror, Earthquake, Conspiracy, Divebomb, Into the Blue, Sunstorm, Triumph, Galvanizer, Lowball, Maelstrom, Navigator, Endeavor, People's Champion, Rampart, Saber, Steward.
+- Comparable with warning: 21/75.
+- Not currently comparable: 25/75.
 - Known current levels: 72/75.
 
 ## compare-bags
@@ -38,12 +38,12 @@ Meteor remains a future, experimentally blocked subject. Alien Relic and Alien W
 
 ## Next three development lots
 
-1. **Expose wind resistance as an objective modifier** — Into the Blue, Jetstream, Obelisk, Stormbringer, XLR8R; +7 owned abilities; difficulty medium; requires scope validation, stacking validation.
-2. **Implement next-shot chains** — Conspiracy, Sparky, Navigator; +4 owned abilities; difficulty medium-high; requires history trigger validation, duration and consumption validation.
-3. **Implement simple terrain conditions** — Groundskeep, Color Theory, Dunecrawler, Hydroforce, Obelisk, Overgrowth, Ranger, Rebound, Trailblazer, Leviathan, Bushwhacker, Hero, New Frontier; +13 owned abilities; difficulty medium-high; requires optional terrain context, official condition validation.
+1. **Resolve official text/table conflicts** — Dunecrawler, Homecoming, Hydroforce, Obelisk, Sparky, Stormbringer, Sandblast, Windstrike; +9 owned abilities; difficulty validation; requires in-game value capture, official source reconciliation.
+2. **Validate dependency and stacking semantics** — Color Theory, Jetstream, Oakheart, Overgrowth, Pantheon, Ranger, Catalyst, Crystallize, Fusion, Rising Flame, Boomstick; +13 owned abilities; difficulty validation; requires minimal in-game comparison, stacking or provenance decision.
+3. **Measure geometry and trajectory effects** — Neon Impulse, Skyfury, Green Demon, Outset, Eagle's Landing, Dunecrawler, Edgewalker, Ember, Huntsman, Hydroforce, Ironbark, Oakheart, Trailblazer, Flamethrower, Leviathan, Windstrike, Meanderer, Rolling Stone; +21 owned abilities; difficulty experimental-high; requires validated physics contract, in-game measurements.
 
 ## Secondary global coverage
 
-- Groups: 35/125.
-- Ability occurrences: 57/162 (35.19%).
-- Clubs touched by at least one supported group: 39/88.
+- Groups: 63/125.
+- Ability occurrences: 86/162 (53.09%).
+- Clubs touched by at least one supported group: 56/88.

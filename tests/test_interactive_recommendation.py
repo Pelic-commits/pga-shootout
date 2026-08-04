@@ -76,8 +76,8 @@ class InteractiveRecommendationTests(unittest.TestCase):
         _, output = self.run_app(self.scenario_answers())
         rendered = "\n".join(output)
 
-        self.assertIn("Catégorie : amélioration sans contrepartie", rendered)
         self.assertIn("Catégorie : compromis", rendered)
+        self.assertIn("Wind resistance -50 percent", rendered)
         self.assertIn("Avertissements :", rendered)
         self.assertIn("Le niveau 12 est hypothétique", rendered)
         self.assertIn("L'inventaire utilisateur est incomplet", rendered)

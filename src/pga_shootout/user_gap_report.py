@@ -9,6 +9,7 @@ import re
 from typing import Any, Mapping
 
 from .loader import load_raw_json
+from .bag_evaluation import semantic_support
 from .registry import default_mechanism_registry
 from .user_data import load_user_data
 
@@ -93,10 +94,18 @@ def _official_texts(raw_club: Mapping[str, Any]) -> dict[str, str]:
     return descriptions
 
 
-def _status(semantic: Mapping[str, Any], text: str, handler_names: set[str]) -> str:
-    mechanic = semantic.get("mechanic_id")
-    if isinstance(mechanic, str) and mechanic in handler_names:
+def _status(semantic: Mapping[str, Any], patterns: Mapping[str, Any], text: str, handler_names: set[str]) -> str:
+    fully_supported, partially_supported, _programs = semantic_support(semantic, patterns, handler_names)
+    if fully_supported:
         return "implemented"
+    if partially_supported:
+        return "qualified_not_implemented"
+    qualification = semantic.get("qualification")
+    if isinstance(qualification, Mapping):
+        status = str(qualification.get("status", "ambiguous"))
+        if status in {"simple_context_required", "history_required", "physics_required"}:
+            return "scenario_required"
+        return status if status in ALLOWED_STATUSES else "ambiguous"
     if semantic.get("validation_status") not in (None, "not_started"):
         return "qualified_not_implemented"
     normalized = text.casefold()
@@ -138,7 +147,8 @@ def analyze_user_gaps(
     raw = load_raw_json(raw_catalog_path)
     clubs = catalog.get("clubs") if isinstance(catalog, Mapping) else None
     entries = semantic.get("entries") if isinstance(semantic, Mapping) else None
-    if not isinstance(clubs, Mapping) or not isinstance(entries, Mapping):
+    patterns = semantic.get("patterns") if isinstance(semantic, Mapping) else None
+    if not isinstance(clubs, Mapping) or not isinstance(entries, Mapping) or not isinstance(patterns, Mapping):
         raise ValueError("Normalized club catalog and semantic map are required")
 
     bundle = load_user_data(user_dir)
@@ -162,7 +172,7 @@ def analyze_user_gaps(
             semantic_entry = entries[group_id]
             label = display_labels[index]
             official_text = descriptions.get(label, "")
-            status = _status(semantic_entry, official_text, handlers)
+            status = _status(semantic_entry, patterns, official_text, handlers)
             abilities.append(
                 AbilityGap(
                     occurrence_id=str(ability["occurrence_id"]),

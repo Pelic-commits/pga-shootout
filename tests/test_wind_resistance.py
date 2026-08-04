@@ -146,7 +146,7 @@ class WindResistanceTests(unittest.TestCase):
             if item.definition.identifier == "wind_resistance_percent"
         )
         self.assertEqual(metric.definition.unit, "percent")
-        self.assertEqual((metric.left_final, metric.right_final, metric.difference_right_minus_left), (0, 75, 75))
+        self.assertEqual((metric.left_final, metric.right_final, metric.difference_right_minus_left), (50, 75, 25))
         contribution = next(
             item for item in comparison.right.ability_contributions
             if item.ability_id == "high_flight__wind_resist_75"
@@ -173,7 +173,8 @@ class WindResistanceTests(unittest.TestCase):
                 summarize_bag_evaluation(plain, 1), summarize_bag_evaluation(rook, 2)
             )
         }
-        self.assertEqual(metrics["wind_resistance_percent"].right_final, 20)
+        # Rook's bag-wide +20 stacks with Divebomb's Corvid +50 on Divebomb.
+        self.assertEqual(metrics["wind_resistance_percent"].right_final, 70)
 
     def test_high_flight_explain_matches_golden(self):
         state = build_game_state(self.bag("high_flight", "cyclotron"), CATALOG, 12, "high_flight")
