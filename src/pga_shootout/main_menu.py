@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .interactive_recommendation import InteractiveRecommendationApp
 from .inventory_editor import run_inventory_editor
+from .strategy_optimizer_gui import run_strategy_optimizer_gui
 from .user_management import BagAssistant, GuidedPrompts, SqliteUserDataStore, UserDataStore, UserManagementError
 
 
@@ -21,6 +22,7 @@ class PgaShootoutAssistant(GuidedPrompts):
         output_fn=print,
         recommendation_factory: Callable[..., object] = InteractiveRecommendationApp,
         inventory_editor_factory: Callable[..., int] = run_inventory_editor,
+        strategy_optimizer_factory: Callable[..., int] = run_strategy_optimizer_gui,
     ) -> None:
         super().__init__(input_fn, output_fn)
         path = Path(user_dir)
@@ -32,6 +34,7 @@ class PgaShootoutAssistant(GuidedPrompts):
         self.bags = BagAssistant(self.store, self.input, self.output)
         self.recommendation_factory = recommendation_factory
         self.inventory_editor_factory = inventory_editor_factory
+        self.strategy_optimizer_factory = strategy_optimizer_factory
 
     def run(self) -> int:
         self.output("PGA Shootout Assistant")
@@ -53,10 +56,11 @@ class PgaShootoutAssistant(GuidedPrompts):
         while True:
             choice = self.choose(
                 "Que souhaitez-vous faire ?",
-                ("inventory", "bags", "recommend", "quit"),
+                ("inventory", "bags", "optimize", "recommend", "quit"),
                 lambda item: {
                     "inventory": "Gérer mon inventaire",
                     "bags": "Gérer mes sacs",
+                    "optimize": "Optimiser mes sacs",
                     "recommend": "Tester un club dans un sac",
                     "quit": "Quitter",
                 }[item],
@@ -70,6 +74,8 @@ class PgaShootoutAssistant(GuidedPrompts):
                     self._open_inventory_editor()
                 elif choice == "bags":
                     self.bags.run()
+                elif choice == "optimize":
+                    self._optimize()
                 else:
                     self._recommend()
             except (UserManagementError, KeyError, ValueError, OSError) as error:
@@ -85,6 +91,13 @@ class PgaShootoutAssistant(GuidedPrompts):
                 legacy_user_dir=self.store.legacy_user_dir,
                 manifest_path=self.store.manifest_path,
             )
+        self.output("Retour au menu principal.")
+
+    def _optimize(self) -> None:
+        self.strategy_optimizer_factory(
+            user_data_path=self.store.user_dir,
+            catalog_path=self.store.catalog_path,
+        )
         self.output("Retour au menu principal.")
 
     def _recommend(self, *, forced_mode: str | None = None) -> None:

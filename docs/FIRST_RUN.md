@@ -9,6 +9,9 @@
 
 C'est tout. Il n'est pas nécessaire de connaître Python, Git, PowerShell ou JSON. Le premier démarrage peut prendre quelques minutes et nécessite une connexion Internet. Les démarrages suivants sont plus rapides.
 
+Pour ouvrir directement l'optimiseur graphique, utilisez ensuite
+**`OPTIMISER_MES_SACS.bat`**.
+
 ## Ce que prépare le lanceur
 
 Le lanceur travaille uniquement dans le dossier du projet. Il :
@@ -94,11 +97,47 @@ Que souhaitez-vous faire ?
 
 1 - Gérer mon inventaire
 2 - Gérer mes sacs
-3 - Tester un club dans un sac
-4 - Quitter
+3 - Optimiser mes sacs
+4 - Tester un club dans un sac
+5 - Quitter
 ```
 
 Répondez toujours avec le numéro affiché. Une mauvaise saisie ne ferme pas l'application : le menu redemande simplement un choix valide.
+
+## Optimiser mes sacs — parcours normal
+
+1. Double-cliquez sur **`OPTIMISER_MES_SACS.bat`**, ou choisissez
+   **3 - Optimiser mes sacs** dans le menu principal.
+2. Choisissez une stratégie par son nom, par exemple **Sac Par 3**.
+3. Conservez le mode **Réel** pour utiliser vos niveaux enregistrés.
+4. Choisissez 5, 10 ou 20 propositions, puis cliquez sur
+   **Lancer l'analyse**.
+5. Sélectionnez une proposition dans la liste de gauche.
+6. Consultez à droite les onglets des étapes, les statistiques finales et
+   **Pourquoi ces clubs ?**.
+7. Utilisez **Exporter en JSON**, **Exporter en texte** ou
+   **Copier le résumé du sac** si nécessaire.
+
+Pendant le calcul, la barre animée et le message « Analyse en cours… » indiquent
+que l'application travaille. La fenêtre reste utilisable et interdit un second
+lancement simultané.
+
+Les propositions ne sont pas présentées comme un meilleur sac absolu. La portée
+réelle et la réussite du putt ne sont pas encore modélisées, et la recherche est
+intelligemment réduite plutôt qu'exhaustive. L'encart jaune rappelle toujours
+ces limites. Les statistiques `Power`, `Control` et `Spin` affichent la valeur de
+base, la valeur finale et leur différence. Une statistique absente apparaît
+`—`, jamais zéro. Les onglets utilisent les noms lisibles des étapes définis par
+la stratégie ; un club peut donc avoir des valeurs différentes entre le départ,
+l'approche et le putt.
+
+Le mode **Scénario** applique uniquement le niveau hypothétique saisi. Il ne
+modifie pas votre inventaire. Les options avancées permettent de réduire ou
+d'augmenter la limite de sécurité du calcul ; elles peuvent normalement rester
+fermées.
+
+Le bouton **Gérer mon inventaire** ouvre l'éditeur visuel existant sans fermer
+l'optimiseur.
 
 ## Tout premier lancement
 
@@ -269,6 +308,6 @@ pga-shootout validate-data data/raw/pga_club_stats_extract_v2_2026-07-21.json da
 python -m unittest discover -s tests
 ```
 
-Les commandes historiques `recommend-interactive`, `recommend-placement`, `recommend-replacement`, `compare-bags` et `evaluate-bag` restent compatibles.
+Les commandes historiques `optimize-strategy`, `recommend-interactive`, `recommend-placement`, `recommend-replacement`, `compare-bags` et `evaluate-bag` restent compatibles pour les usages avancés.
 
 La modification manuelle des fichiers JSON reste possible pour le dépannage ou l'import en masse, mais elle n'est plus requise. Toujours conserver des guillemets doubles, enregistrer en UTF-8 et lancer `pga-shootout user-validate` après une modification manuelle.

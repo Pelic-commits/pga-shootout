@@ -13,6 +13,11 @@ transactionnel avec sauvegarde. Les seuils de progression, cartes restantes et
 améliorations disponibles sont calculés automatiquement ; seuls le niveau et les
 cartes possédées sont saisis.
 
+Pour obtenir des propositions de sacs sans terminal, double-cliquez sur
+**`OPTIMISER_MES_SACS.bat`**. La fenêtre Tkinter permet de choisir une stratégie,
+de lancer l'analyse sur l'inventaire réel, d'examiner les statistiques et
+synergies des cinq clubs, puis d'exporter les résultats en JSON ou en texte.
+
 ## État
 
 Le socle fournit des modèles immuables, un chargeur JSON, des conditions séparées des effets, un registre de mécanismes extensible, un moteur de règles minimal et un journal Explain détaillé. Aucune capacité propre à un club n’est codée en dur.
@@ -36,7 +41,7 @@ Valider la provenance et la structure des données importées :
 pga-shootout validate-data data/raw/pga_club_stats_extract_v2_2026-07-21.json data/normalized/clubs_official.json
 ```
 
-## CLI
+## CLI avancée
 
 ```powershell
 pga-shootout inspect data/raw/pga_club_stats_extract_v2_2026-07-21.json

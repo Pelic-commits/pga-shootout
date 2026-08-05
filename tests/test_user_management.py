@@ -45,6 +45,14 @@ class FakeInventoryEditor:
         return 0
 
 
+class FakeStrategyOptimizer:
+    calls = []
+
+    def __call__(self, **kwargs):
+        self.__class__.calls.append(kwargs)
+        return 0
+
+
 class UserManagementTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
@@ -192,6 +200,7 @@ class MainMenuTests(unittest.TestCase):
         self.store.save_bag("Sac test", self.clubs[:5])
         FakeRecommendation.calls.clear()
         FakeInventoryEditor.calls.clear()
+        FakeStrategyOptimizer.calls.clear()
 
     def app(self, answers, output):
         return PgaShootoutAssistant(
@@ -201,11 +210,12 @@ class MainMenuTests(unittest.TestCase):
             output_fn=output.append,
             recommendation_factory=FakeRecommendation,
             inventory_editor_factory=FakeInventoryEditor(),
+            strategy_optimizer_factory=FakeStrategyOptimizer(),
         )
 
     def test_inventory_choice_opens_visual_editor_and_returns_to_main_menu(self):
         output = []
-        self.assertEqual(self.app(("1", "4"), output).run(), 0)
+        self.assertEqual(self.app(("1", "5"), output).run(), 0)
         rendered = "\n".join(output)
         self.assertEqual(len(FakeInventoryEditor.calls), 1)
         self.assertNotIn("Gestion de mes clubs", rendered)
@@ -213,14 +223,20 @@ class MainMenuTests(unittest.TestCase):
 
     def test_uses_existing_recommendation_engine_from_main_menu(self):
         output = []
-        self.assertEqual(self.app(("3", "4"), output).run(), 0)
+        self.assertEqual(self.app(("4", "5"), output).run(), 0)
         self.assertEqual(len(FakeRecommendation.calls), 1)
         self.assertIsNone(FakeRecommendation.calls[0]["forced_mode"])
         self.assertIn("Retour au menu principal", "\n".join(output))
 
-    def test_main_menu_is_reduced_to_four_clear_product_actions(self):
+    def test_optimizer_choice_opens_visual_strategy_optimizer(self):
         output = []
-        self.assertEqual(self.app(("4",), output).run(), 0)
+        self.assertEqual(self.app(("3", "5"), output).run(), 0)
+        self.assertEqual(len(FakeStrategyOptimizer.calls), 1)
+        self.assertIn("Retour au menu principal", "\n".join(output))
+
+    def test_main_menu_has_five_clear_product_actions(self):
+        output = []
+        self.assertEqual(self.app(("5",), output).run(), 0)
         rendered = "\n".join(output)
         self.assertIn("Gérer mon inventaire", rendered)
         self.assertIn("Gérer mes sacs", rendered)
@@ -233,10 +249,11 @@ class MainMenuTests(unittest.TestCase):
         app = PgaShootoutAssistant(
             user_dir=fresh_dir,
             catalog_path=CATALOG,
-            input_fn=AnswerStream(("4",)),
+            input_fn=AnswerStream(("5",)),
             output_fn=output.append,
             recommendation_factory=FakeRecommendation,
             inventory_editor_factory=FakeInventoryEditor(),
+            strategy_optimizer_factory=FakeStrategyOptimizer(),
         )
         self.assertEqual(app.run(), 0)
         self.assertEqual({item.name for item in fresh_dir.glob("*.json")}, set(USER_FILENAMES))
@@ -247,7 +264,7 @@ class MainMenuTests(unittest.TestCase):
         invalid = b"not valid json"
         (self.user_dir / "inventory.json").write_bytes(invalid)
         output = []
-        app = self.app(("1", "4"), output)
+        app = self.app(("1", "5"), output)
         self.assertEqual(app.run(), 0)
         backups = sorted((self.user_dir / "backups").iterdir())
         inventory_backups = [item / "inventory.json" for item in backups if (item / "inventory.json").exists()]

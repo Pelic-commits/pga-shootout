@@ -6,6 +6,10 @@ ne contient aucune branche liée à cet identifiant : il lit la séquence, les
 contraintes de clubs actifs, les objectifs locaux, les contextes et le nombre de
 places de support dans le registre.
 
+Le parcours utilisateur normal ne demande aucune commande : double-cliquez sur
+`OPTIMISER_MES_SACS.bat`. Les commandes ci-dessous restent disponibles pour les
+usages avancés et le diagnostic.
+
 ## Lancer une recherche
 
 Mode réel, avec les clubs possédés et leurs niveaux SQLite :
@@ -106,4 +110,3 @@ de réussite d'un putt. Il ne transforme pas Power en yards et ne prétend pas
 qu'un sac atteindra le green. Les exigences correspondantes restent
 `indeterminate`, tandis que les statistiques et contributions réellement
 calculables restent comparables.
-
