@@ -74,6 +74,12 @@ def test_real_mode_is_default_and_never_supplies_a_common_level():
     assert request.mode == EvaluationMode.PARTIAL
 
 
+def test_optional_empirical_reference_is_transmitted_without_numeric_threshold():
+    request = OptimizationGuiOptions("par3", reference_bag_id="par3_divebomb").to_request()
+    assert request.reference_bag_id == "par3_divebomb"
+    assert not hasattr(request, "minimum_power")
+
+
 def test_scenario_mode_requires_and_transmits_explicit_level():
     with pytest.raises(ValueError, match="niveau"):
         OptimizationGuiOptions("par3", real_mode=False).to_request()
@@ -161,6 +167,11 @@ def test_presenter_builds_continuous_user_list_without_technical_ranking_terms(p
     assert "candidate_id" not in combined
     assert "comparison_layer" not in combined
     assert "Pareto" not in combined
+    assert any(item.families for item in presentation.candidates)
+    assert {item.user_name for item in par3_result.result_families} == {
+        "Iron le plus puissant", "Irons : puissance et contrôle",
+        "Iron le plus stable", "Meilleur concurrent tous types",
+    }
 
 
 def test_detail_contains_five_clubs_base_final_and_missing_stat(presenter, par3_result):
@@ -185,6 +196,7 @@ def test_additional_metrics_are_rendered_dynamically(presenter, par3_result):
         assert expected in content or metric in {
             "loft_angle_degrees", "wind_resistance_percent", "bounce_reduction_percent",
         }
+    assert "seulement descriptives" in content
 
 
 def test_all_four_role_labels_and_neutral_explanation_are_supported(presenter, par3_result):
@@ -232,6 +244,8 @@ def test_json_and_text_exports_use_the_domain_result(tmp_path, par3_result):
     payload = json.loads(json_path.read_text(encoding="utf-8"))
     assert payload["strategy_id"] == "par3"
     assert payload["aggregate_score"] is None
+    assert payload["result_families"]
+    assert payload["type_comparison"]
     assert "Optimisation de stratégie : par3" in text_path.read_text(encoding="utf-8")
     assert suggested_export_name("par3", "json", datetime(2026, 8, 5, 1, 30)) == "resultats_par3_2026-08-05_0130.json"
 

@@ -29,6 +29,7 @@ from .strategy_optimizer import (
     render_strategy_optimization,
     render_strategy_optimization_json,
 )
+from .user_data import load_user_data
 
 
 ROLE_LABELS = {
@@ -77,6 +78,7 @@ class OptimizationGuiOptions:
     scenario_level: int | None = None
     limit: int = 5
     max_evaluations: int = 2000
+    reference_bag_id: str | None = None
 
     def to_request(self) -> StrategyOptimizationRequest:
         if self.limit not in {5, 10, 20}:
@@ -94,6 +96,7 @@ class OptimizationGuiOptions:
             mode=EvaluationMode.PARTIAL,
             scenario_level=None if self.real_mode else self.scenario_level,
             max_evaluations=self.max_evaluations,
+            reference_bag_id=self.reference_bag_id,
         )
 
 
@@ -106,6 +109,7 @@ class CandidateListPresentation:
     unresolved_count: int
     has_neutral_club: bool
     strengths: str
+    families: str = ""
 
 
 @dataclass(frozen=True)
@@ -154,7 +158,11 @@ class StrategyOptimizerPresenter:
     def present(self, result: StrategyOptimizationResult) -> OptimizationPresentation:
         resolved = self.registry.resolve(result.strategy_id, result.applied_variant_ids)
         step_labels = {step.identifier: step.name for step in resolved.definition.sequence}
-        candidates = tuple(self._candidate_list(index, item, step_labels) for index, item in enumerate(result.retained_results, 1))
+        family_names = {item.identifier: item.user_name for item in result.result_families}
+        candidates = tuple(
+            self._candidate_list(index, item, step_labels, family_names)
+            for index, item in enumerate(result.retained_results, 1)
+        )
         details = tuple(self._candidate_detail(index, item, step_labels) for index, item in enumerate(result.retained_results, 1))
         return OptimizationPresentation(
             warning_text=self._warnings(result),
@@ -168,6 +176,7 @@ class StrategyOptimizerPresenter:
         index: int,
         candidate: StrategyCandidateResult,
         step_labels: Mapping[str, str],
+        family_names: Mapping[str, str],
     ) -> CandidateListPresentation:
         club_names = {club.club_id: club.club_name for club in candidate.clubs}
         active = ", ".join(
@@ -182,6 +191,7 @@ class StrategyOptimizerPresenter:
             unresolved_count=len(candidate.unresolved_abilities),
             has_neutral_club=any(club.role == "neutral" for club in candidate.clubs),
             strengths=self._strengths(candidate, step_labels),
+            families=", ".join(family_names.get(item, item) for item in candidate.result_family_ids),
         )
 
     def _strengths(self, candidate: StrategyCandidateResult, step_labels: Mapping[str, str]) -> str:
@@ -251,11 +261,26 @@ class StrategyOptimizerPresenter:
             else:
                 lines.extend(_stat_lines(step))
                 if step.additional_metrics:
-                    lines.append("Métriques additionnelles :")
-                    lines.extend(
-                        f"  {_metric_label(metric)} : {value:g}{_metric_unit(metric)}"
-                        for metric, value in sorted(step.additional_metrics.items())
-                    )
+                    relevant = {
+                        metric: value for metric, value in step.additional_metrics.items()
+                        if step.metric_relevance.get(metric) in {"objective", "constraint"}
+                    }
+                    descriptive = {
+                        metric: value for metric, value in step.additional_metrics.items()
+                        if step.metric_relevance.get(metric) == "descriptive"
+                    }
+                    if relevant:
+                        lines.append("Métriques pertinentes activées :")
+                        lines.extend(
+                            f"  {_metric_label(metric)} : {value:g}{_metric_unit(metric)}"
+                            for metric, value in sorted(relevant.items())
+                        )
+                    if descriptive:
+                        lines.append("Contributions calculées, seulement descriptives :")
+                        lines.extend(
+                            f"  {_metric_label(metric)} : {value:g}{_metric_unit(metric)}"
+                            for metric, value in sorted(descriptive.items())
+                        )
         return "\n".join(lines)
 
     def _synergies(self, candidate: StrategyCandidateResult, step_labels: Mapping[str, str]) -> str:
@@ -324,6 +349,8 @@ class StrategyOptimizerPresenter:
         if result.excluded_clubs:
             lines.append("• Clubs possédés exclus avant l’analyse :")
             lines.extend(f"  - {item.club_name} : {item.reason}" for item in result.excluded_clubs)
+        if result.empirical_reference:
+            lines.append("• " + result.empirical_reference.statement)
         return "\n".join(lines)
 
     @staticmethod
@@ -336,6 +363,10 @@ class StrategyOptimizerPresenter:
             f"Doublons éliminés : {result.search.candidate_result_duplicates_removed}",
             f"Durée mesurée : {total:.2f} s",
             f"Limite de sécurité atteinte : {'oui' if result.search.safety_limit_reached else 'non'}",
+            f"Compositions : {result.search.compositions_generated}",
+            f"Permutations théoriques : {result.search.permutations_theoretical}",
+            f"Permutations prouvées équivalentes : {result.search.permutations_proven_equivalent}",
+            f"Permutations structurellement distinctes : {result.search.permutations_structurally_distinct}",
         ))
 
 
@@ -474,6 +505,9 @@ class StrategyOptimizerApp:
         self.max_evaluations = tk.StringVar(value="2000")
         self.status = tk.StringVar(value="Choisissez une stratégie puis lancez l’analyse.")
         self.show_advanced = tk.BooleanVar(value=False)
+        bundle = load_user_data(self.user_data_path)
+        self.reference_by_label = {"Aucun": None, **{bag.name: bag.identifier for bag in bundle.bags}}
+        self.reference_name = tk.StringVar(value="Aucun")
         self._callback_queue: Queue[Callable[[], None]] = Queue()
         self.controller = StrategyOptimizerGuiController(
             self.optimizer,
@@ -509,6 +543,15 @@ class StrategyOptimizerApp:
         ttk.Label(parameters, text="Résultats :").grid(row=0, column=8, padx=(16, 3))
         ttk.Combobox(parameters, textvariable=self.limit, values=("5", "10", "20"), state="readonly", width=5).grid(row=0, column=9)
 
+        ttk.Label(parameters, text="Sac de référence pour la portée :").grid(row=2, column=0, pady=(8, 0), sticky="w")
+        ttk.Combobox(
+            parameters, textvariable=self.reference_name,
+            values=tuple(self.reference_by_label), state="readonly", width=28,
+        ).grid(row=2, column=1, columnspan=2, pady=(8, 0), sticky="w")
+        ttk.Label(
+            parameters, text="Option empirique : aucun calcul de distance n'est effectué.",
+        ).grid(row=2, column=3, columnspan=5, pady=(8, 0), sticky="w")
+
         self.analyze_button = ttk.Button(parameters, text="Lancer l’analyse", command=self._start)
         self.analyze_button.grid(row=0, column=10, padx=(20, 6))
         ttk.Button(parameters, text="Gérer mon inventaire", command=self._open_inventory).grid(row=0, column=11, padx=6)
@@ -534,13 +577,13 @@ class StrategyOptimizerApp:
         table.pack(fill="both", expand=True)
         table.rowconfigure(0, weight=1)
         table.columnconfigure(0, weight=1)
-        columns = ("number", "category", "composition", "active", "unresolved", "neutral", "strengths")
+        columns = ("number", "family", "category", "composition", "active", "unresolved", "neutral", "strengths")
         self.candidate_tree = ttk.Treeview(table, columns=columns, show="headings", selectmode="browse", height=15)
         labels = {
-            "number": "N°", "category": "Catégorie", "composition": "Composition ordonnée",
+            "number": "N°", "family": "Famille", "category": "Catégorie", "composition": "Composition ordonnée",
             "active": "Clubs actifs", "unresolved": "Non résolues", "neutral": "Club neutre", "strengths": "Points forts calculables",
         }
-        widths = {"number": 40, "category": 170, "composition": 330, "active": 240, "unresolved": 80, "neutral": 80, "strengths": 290}
+        widths = {"number": 40, "family": 220, "category": 170, "composition": 330, "active": 240, "unresolved": 80, "neutral": 80, "strengths": 290}
         for column in columns:
             self.candidate_tree.heading(column, text=labels[column])
             self.candidate_tree.column(column, width=widths[column], anchor="w")
@@ -613,6 +656,7 @@ class StrategyOptimizerApp:
             scenario_level=scenario,
             limit=limit,
             max_evaluations=max_evaluations,
+            reference_bag_id=self.reference_by_label[self.reference_name.get()],
         )
 
     def _start(self) -> None:
@@ -638,7 +682,7 @@ class StrategyOptimizerApp:
         self.candidate_tree.delete(*self.candidate_tree.get_children())
         for index, item in enumerate(self.presentation.candidates):
             self.candidate_tree.insert("", "end", iid=str(index), values=(
-                item.display_number, item.category, item.composition, item.active_clubs,
+                item.display_number, item.families, item.category, item.composition, item.active_clubs,
                 item.unresolved_count, "Oui" if item.has_neutral_club else "Non", item.strengths,
             ))
         for button in (self.export_json_button, self.export_text_button, self.search_info_button):
