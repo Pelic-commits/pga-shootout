@@ -573,7 +573,16 @@ class StrategyCandidateGenerator:
             for metric in metrics:
                 by_type.append(max(typed, key=lambda club_id: (values(club_id).get(metric, -math.inf), club_id)))
         saved = [item for item in saved_club_ids if item in eligible_ids]
-        contextual_or_receiving = [item for item in eligible_ids if item in runtime.contextual_active_ids]
+        contextual_or_receiving = [
+            item for item in eligible_ids
+            if item in runtime.contextual_active_ids
+            or any(
+                runtime.clubs[item].brand == runtime.clubs[support].brand
+                or runtime.clubs[item].club_type == runtime.clubs[support].club_type
+                or runtime.clubs[item].rarity == runtime.clubs[support].rarity
+                for support in runtime.support_capable_ids
+            )
+        ]
         selected = tuple(dict.fromkeys((*frontier, *best_each, *by_type, *saved, *contextual_or_receiving)))
         grouped = {
             club_type: [item for item in selected if runtime.clubs[item].club_type == club_type]

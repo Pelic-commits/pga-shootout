@@ -248,6 +248,7 @@ def test_base_dominated_iron_is_not_preselected_away_before_bag_synergy(componen
         tuple(club_id for bag in bundle.bags for club_id in bag.club_ids),
     )
     assert "divebomb" in selected
+    assert set(selected) == set(attack_pool)
     result = optimizer.optimize(StrategyOptimizationRequest("par3", limit=2, max_evaluations=600))
     family = next(item for item in result.result_families if item.identifier == "iron_max_power")
     winner = next(item for item in result.retained_results if item.candidate_id in family.candidate_ids)
