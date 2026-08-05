@@ -289,11 +289,16 @@ def test_user_errors_are_french_and_never_include_traceback(error, expected):
 
 def test_windows_launcher_is_self_contained_and_hides_python_tracebacks():
     launcher = (ROOT / "OPTIMISER_MES_SACS.bat").read_text(encoding="utf-8")
-    for expected in (
-        'cd /d "%~dp0"', "PYTHONUTF8=1", "sys.version_info >= (3, 11)",
-        "-m venv .venv", "-m pip install -e .", "import tkinter",
-        "pythonw.exe\" -m pga_shootout.strategy_optimizer_gui", ">nul 2>&1",
-        "%LocalAppData%\\Programs\\Python",
-    ):
+    for expected in ('cd /d "%~dp0"', "PYTHONUTF8=1", "%~dp0scripts\\windows_gui_launcher.ps1", "%*"):
         assert expected in launcher
     assert "Traceback" not in launcher
+
+    powershell = (ROOT / "scripts" / "windows_gui_launcher.ps1").read_text(encoding="utf-8")
+    for expected in (
+        "windows_python_probe.py", "--require-compatible", "Remove-Item Env:TCL_LIBRARY",
+        "Remove-Item Env:TK_LIBRARY", "pga_shootout.gui_preflight", "Start-Process",
+        "pga_shootout.strategy_optimizer_gui", "pyvenv.cfg",
+    ):
+        assert expected in powershell
+    assert "C:\\Users\\Pelic" not in powershell
+    assert "data\\pga_shootout.sqlite" not in powershell

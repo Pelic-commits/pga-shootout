@@ -2,7 +2,7 @@
 
 ## Démarrage en quatre étapes
 
-1. Installez **Python 3.11 ou une version plus récente** depuis [python.org](https://www.python.org/downloads/). Pendant l'installation, cochez **Add Python to PATH**.
+1. Installez **Python 3.11 ou une version plus récente** depuis [python.org](https://www.python.org/downloads/). Conservez l'option **Tcl/Tk et IDLE** ; l'ajout au `PATH` est utile mais n'est plus obligatoire pour l'optimiseur graphique.
 2. Téléchargez le projet, décompressez-le si nécessaire, puis ouvrez son dossier.
 3. Double-cliquez sur **`DEMARRER_PGA_SHOOTOUT.bat`**.
 4. Suivez les menus en français.
@@ -16,13 +16,20 @@ Pour ouvrir directement l'optimiseur graphique, utilisez ensuite
 
 Le lanceur travaille uniquement dans le dossier du projet. Il :
 
-- vérifie que Python 3.11 ou une version plus récente est disponible ;
+- détecte les installations Python locales, de la plus récente à la plus ancienne ;
+- retient la première qui réussit réellement la création et la destruction d'une fenêtre Tk et qui fournit `pip`/`venv` ;
 - crée l'environnement isolé `.venv` s'il n'existe pas ;
-- conserve sous le nom `.venv_incompatible` un ancien environnement utilisant une version trop vieille de Python ;
+- recrée uniquement `.venv` lorsque son Python d'origine n'est plus le Python validé ;
 - installe localement le projet si nécessaire ;
 - active l'affichage UTF-8 pour les accents et les flèches ;
 - ouvre le menu principal ;
 - garde la fenêtre ouverte si une erreur survient et affiche une explication simple.
+
+Avant chaque ouverture, une pré-vérification en lecture seule contrôle Python,
+Tkinter/Tcl/Tk, SQLite, le registre de stratégies et l'inventaire. Une erreur
+normale reste en français ; les détails sont enregistrés dans
+`logs/gui_preflight.txt`. Les données SQLite, les sauvegardes et les exports ne
+sont jamais supprimés lors de la recréation de `.venv`.
 
 L'application est écrite en Python. Il n'y a rien à compiler ni aucun serveur de base de données à installer : Python fournit SQLite et l'application crée sa base locale automatiquement.
 
@@ -277,6 +284,9 @@ survient, aucune modification de la session n'est conservée. Les anciens JSON d
 | Une ligne devient rouge | Corrigez le champ indiqué dans la colonne Erreur ; les autres modifications restent en attente. |
 | Une capacité est non prise en charge | Conservez l'avertissement : son effet n'est pas assimilé à zéro. |
 | La fenêtre affiche une erreur | Lisez le message conservé à l'écran. Les données sont sauvegardées avant chaque modification. |
+| Le message indique que Tcl/Tk manque | Réparez ou réinstallez Python depuis python.org avec **Tcl/Tk et IDLE**, puis relancez le `.bat`. Ne définissez pas manuellement `TCL_LIBRARY` ou `TK_LIBRARY`. |
+| Un ancien `TCL_LIBRARY`/`TK_LIBRARY` existe | Le lanceur le neutralise pour son propre processus et laisse Python retrouver les bibliothèques correspondant exactement à l'interpréteur retenu. |
+| Le Python affiché n'est pas celui attendu | Consultez `logs/gui_preflight.txt`. Le Python installé et celui qui a créé `.venv` peuvent différer ; le lanceur recrée seulement le venv si nécessaire. |
 
 ## Utilisation avancée — commandes techniques
 
@@ -307,6 +317,16 @@ pga-shootout user-validate
 pga-shootout validate-data data/raw/pga_club_stats_extract_v2_2026-07-21.json data/normalized/clubs_official.json
 python -m unittest discover -s tests
 ```
+
+Diagnostic avancé de l'optimiseur Windows :
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\windows_gui_launcher.ps1 -Validate
+```
+
+Cette commande ouvre une vraie fenêtre, exécute le parcours Par 3 de validation,
+génère des exports temporaires, ferme la fenêtre puis vérifie une seconde
+ouverture. Elle est destinée au dépannage, pas au parcours quotidien.
 
 Les commandes historiques `optimize-strategy`, `recommend-interactive`, `recommend-placement`, `recommend-replacement`, `compare-bags` et `evaluate-bag` restent compatibles pour les usages avancés.
 
