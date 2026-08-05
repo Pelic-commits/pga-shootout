@@ -35,6 +35,11 @@ Une variante compatible peut être ajoutée avec `--variant <id>`. `--strict`
 mode par défaut et `--partial` conservent les résultats calculables avec leurs
 avertissements. `--max-evaluations` est une limite de sécurité explicite.
 
+`--reference-bag <id>` utilise facultativement la Power finale du club de départ
+d’un sac enregistré comme minimum empirique. Ce seuil ne représente jamais une
+distance garantie. `--order-mode structural_exact` est le mode normal ;
+`full_120` et `legacy_reduced` sont réservés au diagnostic.
+
 ## Données et affectations
 
 En mode réel, seuls les clubs marqués comme possédés et dotés d'un niveau connu
@@ -70,13 +75,34 @@ sur l'inventaire réel. La première version applique donc une recherche
 2. plusieurs fenêtres génériques de supports susceptibles d'émettre un effet ou
    de correspondre aux attributs des actifs ;
 3. inclusion des sacs enregistrés comme points de référence ;
-4. échantillon déterministe d'ordres représentatifs ;
+4. toutes les permutations structurellement distinctes de chaque composition ;
 5. déduplication des résultats strictement équivalents.
 
 L'instrumentation expose le nombre théorique, les candidats générés et évalués,
 les permutations éliminées, les doublons de résultat, les durées et l'atteinte
 éventuelle de la limite de sécurité. Cette méthode ne garantit pas l'optimum
 global.
+
+Une permutation n’est supprimée que si toutes les capacités de la composition
+sont démontrées insensibles à la position, l’adjacence, la distance et aux effets
+différés. Sinon les 120 ordres sont évalués. Le résultat expose la preuve, le
+nombre théorique, le nombre distinct et le nombre effectivement évalué.
+
+## Familles Par 3 et profil d’atterrissage
+
+Sans référence empirique, la stratégie Par 3 projette les mêmes candidats dans
+quatre vues déclaratives : Iron le plus puissant, paliers Power/Control des
+Irons, stabilité des Irons, et meilleur concurrent tous types. Ces vues dédiées
+n’imposent pas les Irons : un Wood, Hybrid, Driver ou Wedge reste admissible dans
+la vue tous types.
+
+Le profil d’atterrissage affiche séparément Loft, Bounce Reduction, Groundspin,
+Spin, Control et Wind Resistance. Il ne calcule aucun score. Loft décrit un angle
+officiel mais aucune relation validée ne permet de conclure qu’une valeur plus
+haute est meilleure. Bounce Reduction est activée seulement si une variante
+demande explicitement de réduire le roulement ; Wind Resistance seulement dans
+un contexte de vent. Les autres contributions restent visibles comme faits
+descriptifs sans influencer le classement ou le rôle de support.
 
 ## Lire les résultats
 

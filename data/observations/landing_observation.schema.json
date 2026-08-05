@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pga-shootout/landing-observation.schema.json",
+  "title": "Landing observation",
+  "type": "object",
+  "required": ["observation_id", "recorded_at", "club_id", "club_type", "level", "terrain", "impact_zone", "loft_degrees", "bounce_reduction_percent", "bounce_count", "roll_distance", "provenance", "confidence"],
+  "properties": {
+    "observation_id": {"type": "string"},
+    "recorded_at": {"type": "string", "format": "date-time"},
+    "club_id": {"type": "string"},
+    "club_type": {"type": "string"},
+    "level": {"oneOf": [{"type": "integer"}, {"const": "Elite"}]},
+    "terrain": {"type": "string"},
+    "impact_zone": {"type": "string"},
+    "power": {"type": ["number", "null"]},
+    "spin": {"type": ["number", "null"]},
+    "groundspin": {"type": ["number", "null"]},
+    "loft_degrees": {"type": ["number", "null"]},
+    "bounce_reduction_percent": {"type": ["number", "null"]},
+    "wind_speed": {"type": ["number", "null"]},
+    "wind_relation": {"type": ["string", "null"]},
+    "bounce_count": {"type": "integer", "minimum": 0},
+    "roll_distance": {"type": "number", "minimum": 0},
+    "roll_distance_unit": {"type": "string", "enum": ["yards", "meters", "screen_relative"]},
+    "repeat_index": {"type": "integer", "minimum": 1},
+    "provenance": {"type": "string", "enum": ["direct_measurement", "video_measurement", "visual_estimate"]},
+    "confidence": {"type": "string", "enum": ["low", "medium", "high"]},
+    "notes": {"type": "string"}
+  },
+  "additionalProperties": false
+}
