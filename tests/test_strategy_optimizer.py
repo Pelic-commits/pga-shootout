@@ -179,7 +179,9 @@ def test_support_and_hybrid_roles_require_observed_contribution(components):
     detailed = optimizer._detail(quick, strategy, runtime, EvaluationMode.PARTIAL)
     roles = {item.club_id: item.role for item in detailed.clubs}
     assert roles["ember"] == "hybrid"
-    assert roles["maelstrom"] == "support"
+    # Maelstrom's only observed benefit here is not relevant to either active
+    # step, so the technical contribution remains visible without qualifying it.
+    assert roles["maelstrom"] == "neutral"
     assert all(item.role != "support" or item.support_steps for item in detailed.clubs)
 
 
@@ -194,9 +196,89 @@ def test_support_counterfactual_reports_metrics_lost_on_removal(components):
     maelstrom = next(item for item in detailed.support_counterfactuals if item.club_id == "maelstrom")
     assert maelstrom.conclusion == "support utile"
     assert any(
-        "spin" in change.lost_metrics_if_removed or "bounce_reduction_percent" in change.lost_metrics_if_removed
+        "spin" in change.lost_metrics_if_removed
         for change in maelstrom.changes
     )
+
+
+def test_putt_loft_and_bounce_remain_calculated_but_never_qualify_support(components):
+    _, runtime, strategy, optimizer = components
+    candidate = spec(
+        "descriptive", ("high_flight", "lowball", "cloudcatcher", "cyclotron", "maelstrom"),
+        "high_flight", "lowball",
+    )
+    quick = optimizer._evaluate_quick(candidate, strategy, runtime, EvaluationMode.PARTIAL)
+    detailed = optimizer._detail(quick, strategy, runtime, EvaluationMode.PARTIAL)
+    for club_id in ("cloudcatcher", "cyclotron"):
+        support = next(item for item in detailed.clubs if item.club_id == club_id)
+        assert "putt" not in support.support_steps
+    putt = next(item for item in detailed.clubs if item.club_id == "lowball").steps[1]
+    assert putt.metric_relevance.get("loft_angle_degrees") == "descriptive"
+    bounce_records = [
+        item for item in putt.contributions_received
+        if "bounce_reduction_percent" in item.modification
+    ]
+    assert all(item.metric_relevance["bounce_reduction_percent"] == "descriptive" for item in bounce_records)
+
+
+def test_result_families_and_landing_profile_are_score_free(components):
+    _, _, _, optimizer = components
+    result = optimizer.optimize(StrategyOptimizationRequest("par3", limit=3, max_evaluations=600))
+    assert {item.identifier for item in result.result_families} == {
+        "iron_max_power", "iron_power_control", "iron_stability", "all_types_competitor",
+    }
+    assert any(item.candidate_ids for item in result.result_families if item.identifier.startswith("iron"))
+    assert result.retained_results
+    assert all(profile.aggregate_score is None for item in result.retained_results for profile in item.landing_profiles)
+    assert all(
+        metric.status == "descriptive"
+        for item in result.retained_results for profile in item.landing_profiles
+        for metric in profile.metrics if metric.metric == "loft_angle_degrees"
+    )
+
+
+def test_base_dominated_iron_is_not_preselected_away_before_bag_synergy(components):
+    bundle, runtime, strategy, optimizer = components
+    divebomb = runtime.clubs["divebomb"].stats_at(runtime.levels["divebomb"]).as_dict()
+    ironbark = runtime.clubs["ironbark"].stats_at(runtime.levels["ironbark"]).as_dict()
+    assert all(ironbark[key] > divebomb[key] for key in ("power", "control", "spin"))
+    attack_pool = tuple(runtime.clubs)
+    selected = optimizer.generator._pareto_active_pool(
+        runtime, attack_pool, strategy.definition.sequence[0],
+        tuple(club_id for bag in bundle.bags for club_id in bag.club_ids),
+    )
+    assert "divebomb" in selected
+    result = optimizer.optimize(StrategyOptimizationRequest("par3", limit=2, max_evaluations=600))
+    family = next(item for item in result.result_families if item.identifier == "iron_max_power")
+    winner = next(item for item in result.retained_results if item.candidate_id in family.candidate_ids)
+    assert winner.active_assignments["attack"] == "divebomb"
+    club = next(item for item in winner.clubs if item.club_id == "divebomb")
+    attack = next(item for item in club.steps if item.step_id == "attack")
+    assert attack.final_stats["power"] > divebomb["power"]
+
+
+def test_empirical_reference_uses_saved_bag_final_power_without_distance_claim(components):
+    _, _, _, optimizer = components
+    result = optimizer.optimize(StrategyOptimizationRequest(
+        "par3", limit=2, max_evaluations=360, reference_bag_id="par3_divebomb"
+    ))
+    reference = result.empirical_reference
+    assert reference is not None
+    assert reference.club_id == "divebomb"
+    assert "distance garantie" in reference.statement
+    for candidate in result.retained_results:
+        active = next(club for club in candidate.clubs if "attack" in club.active_steps)
+        step = next(item for item in active.steps if item.step_id == "attack")
+        assert step.final_stats["power"] >= reference.final_power
+
+
+def test_exact_order_audit_is_exposed_on_every_retained_candidate(components):
+    _, _, _, optimizer = components
+    result = optimizer.optimize(StrategyOptimizationRequest("par3", limit=1, max_evaluations=240))
+    audit = result.retained_results[0].order_audit
+    assert audit["theoretical_permutations"] == 120
+    assert audit["evaluated_permutations"] <= audit["structurally_distinct_permutations"]
+    assert audit["equivalence_reason"] != "legacy_representative_sample"
 
 
 def test_result_deduplication_has_no_score_and_keeps_multiple_compromises(components):
@@ -243,20 +325,24 @@ def test_scenario_mode_is_explicitly_hypothetical(components):
     assert all(club.level == 12 for club in result.retained_results[0].clubs)
 
 
-def test_representative_inventory_search_is_instrumented_and_bounded(components):
+def test_structurally_exact_inventory_search_is_instrumented_and_bounded(components):
     _, _, _, optimizer = components
     result = optimizer.optimize(StrategyOptimizationRequest("par3", limit=2, max_evaluations=200))
     assert result.search.theoretical_candidates > 1_000_000
     assert result.search.reduced_candidates_generated < result.search.theoretical_candidates
-    assert result.search.candidates_evaluated == 200
+    assert 0 < result.search.candidates_evaluated <= 200
+    assert result.search.candidates_evaluated % 120 == 0
     assert result.search.safety_limit_reached
-    assert result.search.completeness == "partial_reduced_search"
+    assert result.search.completeness == "partial_bounded_search_with_exact_retained_order_spaces"
+    assert result.search.permutations_structurally_distinct == result.search.candidates_evaluated
     assert result.search.evaluation_seconds < 10
 
 
 def test_optimizer_source_has_no_strategy_identifier_branch():
     source = (ROOT / "src" / "pga_shootout" / "strategy_optimizer.py").read_text(encoding="utf-8")
     for token in ("if strategy ==", "if strategy_id ==", "if par3", "if par4", "if par5"):
+        assert token not in source.lower()
+    for token in ("if result_family ==", "if family.identifier ==", "if iron_max_power"):
         assert token not in source.lower()
 
 

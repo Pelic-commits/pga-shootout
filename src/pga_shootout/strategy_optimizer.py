@@ -22,7 +22,11 @@ from .bag_evaluation import (
 )
 from .engine import EvaluationError, RuleEngine
 from .models import Bag, BagEntry, Club, DelayedEffect, EvaluationMode, GameState
-from .strategy import OutcomeRequirement, ResolvedStrategy, ShotStep, StrategyRegistry
+from .metric_semantics import MetricSemantic, MetricSemanticsRegistry
+from .strategy import (
+    OutcomeRequirement, ResolvedStrategy, ResultFamilyDefinition,
+    ResultFamilyObjective, ShotStep, StrategyRegistry,
+)
 from .user_data import InventoryEntry, SavedBag, load_user_data
 
 
@@ -38,6 +42,8 @@ class StrategyOptimizationRequest:
     mode: EvaluationMode = EvaluationMode.PARTIAL
     scenario_level: int | str | None = None
     max_evaluations: int = 2000
+    order_mode: str = "structural_exact"
+    reference_bag_id: str | None = None
 
     @property
     def level_mode(self) -> str:
@@ -57,6 +63,10 @@ class CandidateSpec:
     club_ids: tuple[str, ...]
     active_assignments: Mapping[str, str]
     provenance: str
+    order_space_id: str = ""
+    theoretical_permutations: int = 120
+    structurally_distinct_permutations: int = 120
+    order_equivalence_reason: str = "none"
 
 
 @dataclass(frozen=True)
@@ -76,6 +86,7 @@ class ContributionRecord:
     mechanism: str
     modification: Mapping[str, float]
     scheduled_effect_ids: tuple[str, ...] = ()
+    metric_relevance: Mapping[str, str] | None = None
 
 
 @dataclass(frozen=True)
@@ -86,6 +97,7 @@ class ClubStepResult:
     final_stats: Mapping[str, float | None]
     deltas: Mapping[str, float | None]
     additional_metrics: Mapping[str, float]
+    metric_relevance: Mapping[str, str]
     active_abilities: tuple[str, ...]
     abilities_without_effect: tuple[str, ...]
     unresolved_abilities: tuple[str, ...]
@@ -113,6 +125,7 @@ class OptimizedClubResult:
     position: int
     club_id: str
     club_name: str
+    club_type: str
     level: int | str
     role: str
     active_steps: tuple[str, ...]
@@ -133,6 +146,9 @@ class StrategyCandidateResult:
     retained_reason: str
     equivalent_candidates: int
     support_counterfactuals: tuple[SupportCounterfactual, ...]
+    order_audit: Mapping[str, Any]
+    result_family_ids: tuple[str, ...]
+    landing_profiles: tuple["LandingProfile", ...]
     aggregate_score: None = None
 
 
@@ -149,6 +165,69 @@ class SearchInstrumentation:
     completeness: str
     generation_seconds: float
     evaluation_seconds: float
+    compositions_generated: int = 0
+    permutations_theoretical: int = 0
+    permutations_proven_equivalent: int = 0
+    permutations_structurally_distinct: int = 0
+    average_seconds_per_composition: float = 0.0
+    candidates_retained_by_family: Mapping[str, int] | None = None
+
+
+@dataclass(frozen=True)
+class LandingMetric:
+    metric: str
+    value: float | None
+    status: str
+    confidence: str
+    provenance: str
+    source_abilities: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class LandingProfile:
+    step_id: str
+    club_id: str
+    metrics: tuple[LandingMetric, ...]
+    aggregate_score: None = None
+
+
+@dataclass(frozen=True)
+class ResultFamilyResult:
+    identifier: str
+    user_name: str
+    description: str
+    candidate_ids: tuple[str, ...]
+    selection_policy: str
+
+
+@dataclass(frozen=True)
+class EmpiricalReference:
+    bag_id: str
+    bag_name: str
+    step_id: str
+    club_id: str
+    club_name: str
+    final_power: float
+    statement: str
+
+
+@dataclass(frozen=True)
+class TypeComparisonRow:
+    club_type: str
+    owned_clubs: int
+    evaluated_clubs: int
+    excluded_clubs: int
+    excluded_reasons: tuple[str, ...]
+    best_final_power: float | None
+    best_control_by_power: Mapping[str, float]
+    best_final_spin: float | None
+    best_activated_wind_resistance: float | None
+    best_activated_bounce_reduction: float | None
+    groundspin_values: tuple[float, ...]
+    loft_range: tuple[float, float] | None
+    supports_for_best_power: tuple[str, ...]
+    unresolved_abilities: tuple[str, ...]
+    best_order: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -165,6 +244,9 @@ class StrategyOptimizationResult:
     retained_results: tuple[StrategyCandidateResult, ...]
     excluded_candidate_count: int
     warnings: tuple[str, ...]
+    result_families: tuple[ResultFamilyResult, ...] = ()
+    empirical_reference: EmpiricalReference | None = None
+    type_comparison: tuple[TypeComparisonRow, ...] = ()
     aggregate_score: None = None
 
     def as_dict(self) -> dict[str, Any]:
@@ -189,6 +271,8 @@ class _QuickCandidate:
     strict_failed: bool
     equivalent_candidates: int = 1
     comparison_layer: int = 0
+    orders_evaluated_in_space: int = 1
+    best_orders: tuple[tuple[str, ...], ...] = ()
 
 
 class _RuntimeEvaluator:
@@ -212,6 +296,8 @@ class _RuntimeEvaluator:
         self.clubs: dict[str, Club] = {}
         self.exclusions: list[ClubExclusion] = []
         self.support_capable_ids: set[str] = set()
+        self.order_sensitive_ids: set[str] = set()
+        self.contextual_active_ids: set[str] = set()
         for entry in entries:
             if not entry.unlocked:
                 continue
@@ -242,6 +328,10 @@ class _RuntimeEvaluator:
             self.levels[entry.club_id] = level
             if self._can_affect_other_clubs(data, level):
                 self.support_capable_ids.add(entry.club_id)
+            if self._is_order_sensitive(data, level):
+                self.order_sensitive_ids.add(entry.club_id)
+            if self._has_contextual_active_ability(data, level):
+                self.contextual_active_ids.add(entry.club_id)
         source = document.get("source", {})
         self.catalog_version = str(source.get("source_sha256") or source.get("captured_at") or document["schema_version"])
         self.engine = RuleEngine()
@@ -252,11 +342,44 @@ class _RuntimeEvaluator:
             if str(level) not in ability.get("values_by_level", {}):
                 continue
             semantic = self.semantic_entries.get(f"label:{ability.get('label_id')}", {})
+            if semantic.get("interpretation_status") != "implemented_from_official_text":
+                # Keep potentially useful unresolved support abilities in the search.
+                return True
             for spec in _semantic_effect_specs(semantic):
                 program = _semantic_program(spec, self.semantic_patterns)
                 serialized = json.dumps(program, sort_keys=True) if program else ""
                 if any(operation in serialized for operation in outward):
                     return True
+        return False
+
+    def _is_order_sensitive(self, data: Mapping[str, Any], level: int | str) -> bool:
+        tokens = (
+            "SELECT_ADJACENT", "SELECT_BY_POSITION", "SELECT_FARTHEST",
+            "bag_position_equals", "leftmost", "rightmost", "adjacent",
+            "distance", "SCHEDULE_EFFECT",
+        )
+        for ability in data.get("abilities", ()):
+            if str(level) not in ability.get("values_by_level", {}):
+                continue
+            semantic = self.semantic_entries.get(f"label:{ability.get('label_id')}", {})
+            if semantic.get("interpretation_status") != "implemented_from_official_text":
+                # Unknown semantics cannot support a proof of order equivalence.
+                return True
+            for spec in _semantic_effect_specs(semantic):
+                program = _semantic_program(spec, self.semantic_patterns)
+                serialized = json.dumps(program, sort_keys=True) if program else ""
+                if any(token in serialized for token in tokens):
+                    return True
+        return False
+
+    def _has_contextual_active_ability(self, data: Mapping[str, Any], level: int | str) -> bool:
+        for ability in data.get("abilities", ()):
+            if str(level) not in ability.get("values_by_level", {}):
+                continue
+            semantic = self.semantic_entries.get(f"label:{ability.get('label_id')}", {})
+            serialized = json.dumps(semantic, sort_keys=True)
+            if any(token in serialized for token in ('"terrain"', 'tee', 'fairway', 'rough', 'bunker', 'green')):
+                return True
         return False
 
     def evaluate(
@@ -296,13 +419,19 @@ class StrategyCandidateGenerator:
 
     ACTIVE_POOL_SIZE = 8
     SUPPORT_SETS_PER_ASSIGNMENT = 4
-    ORDERS_PER_COMPOSITION = 8
+    LEGACY_ORDERS_PER_COMPOSITION = 8
+
+    def __init__(self, semantics: MetricSemanticsRegistry | None = None) -> None:
+        self.semantics = semantics or MetricSemanticsRegistry.load()
+        self.last_generation_stats: dict[str, int] = {}
 
     def generate(
         self,
         strategy: ResolvedStrategy,
         runtime: _RuntimeEvaluator,
         saved_bags: tuple[SavedBag, ...],
+        order_mode: str = "structural_exact",
+        max_generated: int | None = None,
     ) -> tuple[tuple[CandidateSpec, ...], int, int]:
         definition = strategy.definition
         eligible_ids = tuple(runtime.clubs)
@@ -325,6 +454,8 @@ class StrategyCandidateGenerator:
         generated: dict[tuple[Any, ...], CandidateSpec] = {}
         searched_order_spaces: set[tuple[Any, ...]] = set()
         permutations_eliminated = 0
+        budget_reached = False
+        saved_club_ids = tuple(dict.fromkeys(club_id for bag in saved_bags for club_id in bag.club_ids))
         for bag in saved_bags:
             if len(bag.club_ids) != definition.bag_size or any(club_id not in runtime.clubs for club_id in bag.club_ids):
                 continue
@@ -336,15 +467,39 @@ class StrategyCandidateGenerator:
             for assigned in assignments:
                 if not definition.allow_active_club_reuse and len(set(assigned)) != len(assigned):
                     continue
-                self._add(generated, bag.club_ids, definition, assigned, f"saved_bag:{bag.identifier}")
+                saved_orders = self._orders_for(bag.club_ids, runtime, order_mode)
+                if max_generated is not None and generated and len(generated) + len(saved_orders) > max_generated:
+                    budget_reached = True
+                    break
+                for order, reason in saved_orders:
+                    self._add(generated, order, definition, assigned, f"saved_bag:{bag.identifier}", reason)
+            if budget_reached:
+                break
 
-        active_pools = tuple(self._pareto_active_pool(runtime, pool) for pool in full_role_pools)
+        active_pools = tuple(
+            self._pareto_active_pool(runtime, pool, step, saved_club_ids)
+            for pool, step in zip(full_role_pools, definition.sequence, strict=True)
+        )
         active_pool_union = tuple(dict.fromkeys(item for pool in active_pools for item in pool))
-        assignments = product(*active_pools)
-        for assigned in assignments:
-            if not definition.allow_active_club_reuse and len(set(assigned)) != len(assigned):
-                continue
-            for support_set in self._support_sets(runtime, eligible_ids, assigned, definition.available_support_clubs, active_pool_union):
+        assignments = tuple(
+            assigned for assigned in self._fair_assignments(active_pools)
+            if definition.allow_active_club_reuse or len(set(assigned)) == len(assigned)
+        )
+        support_choices = {
+            assigned: self._support_sets(
+                runtime, eligible_ids, assigned,
+                definition.available_support_clubs, active_pool_union,
+            )
+            for assigned in assignments
+        }
+        for support_index in range(self.SUPPORT_SETS_PER_ASSIGNMENT):
+            if budget_reached:
+                break
+            for assigned in assignments:
+                choices = support_choices[assigned]
+                if support_index >= len(choices):
+                    continue
+                support_set = choices[support_index]
                 physical = tuple(dict.fromkeys((*assigned, *support_set)))
                 if len(physical) != definition.bag_size:
                     continue
@@ -352,31 +507,82 @@ class StrategyCandidateGenerator:
                 if order_space in searched_order_spaces:
                     continue
                 searched_order_spaces.add(order_space)
-                representative_orders = self._representative_orders(physical)
-                permutations_eliminated += math.factorial(definition.bag_size) - len(representative_orders)
-                for order in representative_orders:
-                    self._add(generated, order, definition, assigned, "reduced_generic_search")
+                selected_orders = self._orders_for(physical, runtime, order_mode)
+                if max_generated is not None and generated and len(generated) + len(selected_orders) > max_generated:
+                    budget_reached = True
+                    break
+                permutations_eliminated += math.factorial(definition.bag_size) - len(selected_orders)
+                for order, reason in selected_orders:
+                    self._add(generated, order, definition, assigned, "synergy_aware_search", reason)
+            if budget_reached:
+                break
+        spaces = {item.order_space_id for item in generated.values()}
+        theoretical_orders = len(spaces) * math.factorial(definition.bag_size)
+        distinct_orders = len(generated)
+        self.last_generation_stats = {
+            "compositions": len(spaces),
+            "permutations_theoretical": theoretical_orders,
+            "permutations_distinct": distinct_orders,
+            "permutations_equivalent": theoretical_orders - distinct_orders,
+            "budget_reached": int(budget_reached),
+        }
         return tuple(generated.values()), theoretical, permutations_eliminated
 
-    def _pareto_active_pool(self, runtime: _RuntimeEvaluator, eligible_ids: tuple[str, ...]) -> tuple[str, ...]:
-        remaining = list(eligible_ids)
-        ordered: list[str] = []
-        while remaining and len(ordered) < self.ACTIVE_POOL_SIZE:
-            frontier = []
-            for club_id in remaining:
-                stats = runtime.clubs[club_id].stats_at(runtime.levels[club_id]).as_dict()
-                if not any(
-                    _dominates_values(
-                        runtime.clubs[other].stats_at(runtime.levels[other]).as_dict(),
-                        stats,
-                    )
-                    for other in remaining
-                    if other != club_id
-                ):
-                    frontier.append(club_id)
-            ordered.extend(frontier)
-            remaining = [item for item in remaining if item not in frontier]
-        return tuple(ordered[: self.ACTIVE_POOL_SIZE])
+    @staticmethod
+    def _fair_assignments(pools: tuple[tuple[str, ...], ...]) -> tuple[tuple[str, ...], ...]:
+        indexed = tuple(tuple(enumerate(pool)) for pool in pools)
+        values = [item for item in product(*indexed)]
+        values.sort(key=lambda item: (
+            max(index for index, _ in item),
+            sum(index for index, _ in item),
+            tuple(index for index, _ in item),
+        ))
+        return tuple(tuple(club_id for _, club_id in item) for item in values)
+
+    def _pareto_active_pool(
+        self,
+        runtime: _RuntimeEvaluator,
+        eligible_ids: tuple[str, ...],
+        step: ShotStep,
+        saved_club_ids: tuple[str, ...] = (),
+    ) -> tuple[str, ...]:
+        metrics = tuple(
+            item.metric for item in step.metric_uses
+            if _metric_relevance(step, item.metric, self.semantics) == "objective"
+            and item.metric in {"power", "control", "spin"}
+        ) or ("power", "control")
+
+        def values(club_id: str) -> dict[str, float]:
+            raw = runtime.clubs[club_id].stats_at(runtime.levels[club_id]).as_dict()
+            return {metric: float(raw[metric]) for metric in metrics if metric in raw}
+
+        frontier = [
+            club_id for club_id in eligible_ids
+            if not any(
+                _dominates_values(values(other), values(club_id))
+                for other in eligible_ids if other != club_id
+            )
+        ]
+        best_each = [
+            max(eligible_ids, key=lambda club_id: (values(club_id).get(metric, -math.inf), club_id))
+            for metric in metrics
+        ]
+        by_type: list[str] = []
+        for club_type in sorted({runtime.clubs[item].club_type for item in eligible_ids}):
+            typed = tuple(item for item in eligible_ids if runtime.clubs[item].club_type == club_type)
+            for metric in metrics:
+                by_type.append(max(typed, key=lambda club_id: (values(club_id).get(metric, -math.inf), club_id)))
+        saved = [item for item in saved_club_ids if item in eligible_ids]
+        contextual_or_receiving = [item for item in eligible_ids if item in runtime.contextual_active_ids]
+        selected = tuple(dict.fromkeys((*frontier, *best_each, *by_type, *saved, *contextual_or_receiving)))
+        grouped = {
+            club_type: [item for item in selected if runtime.clubs[item].club_type == club_type]
+            for club_type in sorted({runtime.clubs[item].club_type for item in selected})
+        }
+        interleaved: list[str] = []
+        for index in range(max((len(items) for items in grouped.values()), default=0)):
+            interleaved.extend(items[index] for items in grouped.values() if index < len(items))
+        return tuple(interleaved)
 
     def _support_sets(
         self,
@@ -415,28 +621,52 @@ class StrategyCandidateGenerator:
 
     def _representative_orders(self, club_ids: tuple[str, ...]) -> tuple[tuple[str, ...], ...]:
         values = tuple(permutations(club_ids))
-        if len(values) <= self.ORDERS_PER_COMPOSITION:
+        if len(values) <= self.LEGACY_ORDERS_PER_COMPOSITION:
             return values
         indices = tuple(
-            round(index * (len(values) - 1) / (self.ORDERS_PER_COMPOSITION - 1))
-            for index in range(self.ORDERS_PER_COMPOSITION)
+            round(index * (len(values) - 1) / (self.LEGACY_ORDERS_PER_COMPOSITION - 1))
+            for index in range(self.LEGACY_ORDERS_PER_COMPOSITION)
         )
         return tuple(values[index] for index in dict.fromkeys(indices))
 
-    @staticmethod
+    def _orders_for(
+        self,
+        club_ids: tuple[str, ...],
+        runtime: _RuntimeEvaluator,
+        mode: str,
+    ) -> tuple[tuple[tuple[str, ...], str], ...]:
+        if mode == "legacy_reduced":
+            return tuple((order, "legacy_representative_sample") for order in self._representative_orders(club_ids))
+        if mode == "full_120":
+            return tuple((order, "full_permutation_enumeration") for order in permutations(club_ids))
+        if mode != "structural_exact":
+            raise StrategyOptimizationError(f"Unsupported order mode: {mode}")
+        if not any(club_id in runtime.order_sensitive_ids for club_id in club_ids):
+            return ((tuple(club_ids), "all_clubs_proven_order_insensitive"),)
+        return tuple((order, "order_sensitive_semantics_present") for order in permutations(club_ids))
+
     def _add(
+        self,
         target: dict[tuple[Any, ...], CandidateSpec],
         order: tuple[str, ...],
         definition: Any,
         assigned: tuple[str, ...],
         provenance: str,
+        equivalence_reason: str,
     ) -> None:
         assignments = dict(zip((step.identifier for step in definition.sequence), assigned, strict=True))
         key = (order, tuple(assignments.items()))
         if key in target:
             return
         digest = sha256(repr(key).encode("utf-8")).hexdigest()[:12]
-        target[key] = CandidateSpec(f"strategy-{digest}", order, assignments, provenance)
+        sensitive = equivalence_reason in {"order_sensitive_semantics_present", "full_permutation_enumeration"}
+        target[key] = CandidateSpec(
+            f"strategy-{digest}", order, assignments, provenance,
+            sha256(repr((tuple(sorted(order)), tuple(assignments.items()))).encode("utf-8")).hexdigest()[:12],
+            math.factorial(len(order)),
+            math.factorial(len(order)) if sensitive else (len(self._representative_orders(order)) if equivalence_reason == "legacy_representative_sample" else 1),
+            equivalence_reason,
+        )
 
 
 class StrategyOptimizer:
@@ -446,11 +676,13 @@ class StrategyOptimizer:
         user_data_path: str | Path = "data/pga_shootout.sqlite",
         catalog_path: str | Path = "data/normalized/clubs_official.json",
         strategy_registry_path: str | Path = "data/strategies/strategies.json",
+        metric_semantics_path: str | Path = "data/strategies/metric_semantics.json",
     ) -> None:
         self.user_data_path = Path(user_data_path)
         self.catalog_path = Path(catalog_path)
         self.registry_path = Path(strategy_registry_path)
-        self.generator = StrategyCandidateGenerator()
+        self.metric_semantics = MetricSemanticsRegistry.load(metric_semantics_path)
+        self.generator = StrategyCandidateGenerator(self.metric_semantics)
 
     def optimize(self, request: StrategyOptimizationRequest) -> StrategyOptimizationResult:
         if request.limit < 1:
@@ -463,24 +695,58 @@ class StrategyOptimizer:
         runtime = _RuntimeEvaluator(self.catalog_path, bundle.inventory.entries, request.scenario_level)
 
         generation_started = perf_counter()
-        generated, theoretical, eliminated = self.generator.generate(strategy, runtime, bundle.bags)
+        generated, theoretical, eliminated = self.generator.generate(
+            strategy, runtime, bundle.bags, request.order_mode,
+            max_generated=max(request.max_evaluations, math.factorial(strategy.definition.bag_size)),
+        )
         generation_seconds = perf_counter() - generation_started
 
         evaluation_started = perf_counter()
         evaluated: list[_QuickCandidate] = []
         excluded_candidates = 0
-        for spec in generated[: request.max_evaluations]:
+        selected_specs = generated[: request.max_evaluations]
+        order_counts: dict[str, int] = {}
+        for spec in selected_specs:
+            order_counts[spec.order_space_id] = order_counts.get(spec.order_space_id, 0) + 1
+        for spec in selected_specs:
             quick = self._evaluate_quick(spec, strategy, runtime, request.mode)
+            quick = replace(
+                quick,
+                orders_evaluated_in_space=order_counts[spec.order_space_id],
+                best_orders=(spec.club_ids,),
+            )
             if quick.strict_failed:
                 excluded_candidates += 1
             else:
                 evaluated.append(quick)
         evaluation_seconds = perf_counter() - evaluation_started
+        empirical_reference = None
+        if request.reference_bag_id:
+            reference_bag = next((item for item in bundle.bags if item.identifier == request.reference_bag_id), None)
+            if reference_bag is None:
+                raise StrategyOptimizationError(f"Unknown reference bag: {request.reference_bag_id}")
+            empirical_reference = self._empirical_reference(reference_bag, strategy, runtime, request.mode)
+            reference_step = strategy.definition.reference_step_id
+            evaluated = [
+                item for item in evaluated
+                if reference_step is not None
+                and _quick_metric(item, reference_step, "power") >= empirical_reference.final_power
+            ]
         unique = self._deduplicate(evaluated)
         layered = self._assign_layers(unique)
-        selected_quick = layered[: request.limit]
-        detailed = tuple(self._detail(item, strategy, runtime, request.mode) for item in selected_quick)
-        safety_reached = len(generated) > request.max_evaluations
+        family_results, selected_quick, memberships = self._project_families(
+            layered, strategy, runtime, request.limit, empirical_reference is not None
+        )
+        detailed = tuple(
+            self._detail(item, strategy, runtime, request.mode, memberships.get(item.spec.identifier, ()))
+            for item in selected_quick
+        )
+        type_comparison = _build_type_comparison(layered, strategy, runtime, self.metric_semantics)
+        safety_reached = (
+            len(generated) > request.max_evaluations
+            or bool(self.generator.last_generation_stats.get("budget_reached"))
+        )
+        generation_stats = self.generator.last_generation_stats
         warnings = [
             "La portée réelle n'est pas modélisée ; atteindre le green reste indéterminable.",
             "La réussite du putt n'est pas modélisée.",
@@ -491,8 +757,12 @@ class StrategyOptimizer:
             warnings.append(f"Analyse hypothétique : niveau de scénario {request.scenario_level} appliqué explicitement.")
         if safety_reached:
             warnings.append(
-                f"Limite de sécurité atteinte : {request.max_evaluations} candidats évalués sur {len(generated)} générés."
+                f"Limite de sécurité de {request.max_evaluations} évaluations atteinte : "
+                f"{len(generated)} candidats générés en conservant des espaces d'ordre complets ; "
+                "des compositions supplémentaires n'ont pas été générées."
             )
+        if empirical_reference:
+            warnings.append(empirical_reference.statement)
         return StrategyOptimizationResult(
             schema_version="1.0.0",
             catalog_version=runtime.catalog_version,
@@ -510,14 +780,95 @@ class StrategyOptimizer:
                 permutations_eliminated_before_evaluation=eliminated,
                 safety_limit=request.max_evaluations,
                 safety_limit_reached=safety_reached,
-                search_method="deterministic_pareto_pool_support_windows_representative_orders",
-                completeness="partial_reduced_search",
+                search_method=f"synergy_aware_{request.order_mode}_order_search",
+                completeness="partial_bounded_search_with_exact_retained_order_spaces",
                 generation_seconds=round(generation_seconds, 6),
                 evaluation_seconds=round(evaluation_seconds, 6),
+                compositions_generated=generation_stats.get("compositions", 0),
+                permutations_theoretical=generation_stats.get("permutations_theoretical", 0),
+                permutations_proven_equivalent=generation_stats.get("permutations_equivalent", 0),
+                permutations_structurally_distinct=generation_stats.get("permutations_distinct", 0),
+                average_seconds_per_composition=round(
+                    evaluation_seconds / max(1, len({item.order_space_id for item in selected_specs})), 6
+                ),
+                candidates_retained_by_family={item.identifier: len(item.candidate_ids) for item in family_results},
             ),
             retained_results=detailed,
             excluded_candidate_count=excluded_candidates,
             warnings=tuple(warnings),
+            result_families=family_results,
+            empirical_reference=empirical_reference,
+            type_comparison=type_comparison,
+        )
+
+    def _empirical_reference(
+        self,
+        bag: SavedBag,
+        strategy: ResolvedStrategy,
+        runtime: _RuntimeEvaluator,
+        mode: EvaluationMode,
+    ) -> EmpiricalReference:
+        if len(bag.club_ids) != strategy.definition.bag_size or any(item not in runtime.clubs for item in bag.club_ids):
+            raise StrategyOptimizationError("Reference bag cannot be evaluated with the current inventory")
+        used: set[str] = set()
+        assignments: dict[str, str] = {}
+        for step in strategy.definition.sequence:
+            club_id = next(
+                (item for item in bag.club_ids if item not in used and _matches_step(runtime.clubs[item], step)),
+                None,
+            )
+            if club_id is None:
+                raise StrategyOptimizationError(f"Reference bag has no compatible club for step {step.identifier}")
+            assignments[step.identifier] = club_id
+            used.add(club_id)
+        spec = CandidateSpec(
+            f"reference-{bag.identifier}", bag.club_ids, assignments, "empirical_reference"
+        )
+        quick = self._evaluate_quick(spec, strategy, runtime, mode)
+        step_id = strategy.definition.reference_step_id or strategy.definition.sequence[0].identifier
+        club_id = assignments[step_id]
+        power = _quick_metric(quick, step_id, "power")
+        club_name = runtime.clubs[club_id].name
+        return EmpiricalReference(
+            bag.identifier, bag.name, step_id, club_id, club_name, power,
+            f"Puissance minimale empirique : {power:g}, issue de {club_name} dans votre sac {bag.name}. "
+            "Cette valeur ne correspond pas à une distance garantie.",
+        )
+
+    def _project_families(
+        self,
+        candidates: tuple[_QuickCandidate, ...],
+        strategy: ResolvedStrategy,
+        runtime: _RuntimeEvaluator,
+        limit: int,
+        has_reference: bool,
+    ) -> tuple[tuple[ResultFamilyResult, ...], tuple[_QuickCandidate, ...], dict[str, tuple[str, ...]]]:
+        definitions = strategy.definition.result_families
+        if not definitions:
+            selected = candidates[:limit]
+            family = ResultFamilyResult("default", "Propositions retenues", "", tuple(item.spec.identifier for item in selected), "nondominated")
+            return (family,), selected, {item.spec.identifier: ("default",) for item in selected}
+        family_results: list[ResultFamilyResult] = []
+        selected_by_id: dict[str, _QuickCandidate] = {}
+        memberships: dict[str, list[str]] = {}
+        for definition in definitions:
+            eligible = tuple(item for item in candidates if _family_matches(item, definition, runtime))
+            objectives = (
+                strategy.definition.reference_objectives
+                if has_reference and strategy.definition.reference_objectives
+                else definition.objectives
+            )
+            retained = _select_family(eligible, definition.selection_policy, objectives, limit)
+            ids = tuple(item.spec.identifier for item in retained)
+            family_results.append(ResultFamilyResult(
+                definition.identifier, definition.user_name, definition.description, ids, definition.selection_policy
+            ))
+            for item in retained:
+                selected_by_id.setdefault(item.spec.identifier, item)
+                memberships.setdefault(item.spec.identifier, []).append(definition.identifier)
+        return (
+            tuple(family_results), tuple(selected_by_id.values()),
+            {key: tuple(value) for key, value in memberships.items()},
         )
 
     def _evaluate_quick(
@@ -553,7 +904,7 @@ class StrategyOptimizer:
             for step in strategy.definition.sequence
             for requirement in step.requirements
         )
-        objective_metrics = _objective_metrics(tuple(steps))
+        objective_metrics = _objective_metrics(tuple(steps), self.metric_semantics)
         return _QuickCandidate(
             spec,
             tuple(steps),
@@ -567,6 +918,7 @@ class StrategyOptimizer:
         unique: dict[tuple[Any, ...], _QuickCandidate] = {}
         for value in values:
             signature = (
+                tuple(sorted(value.spec.club_ids)),
                 tuple(value.spec.active_assignments.items()),
                 tuple(sorted((key, round(metric, 9)) for key, metric in value.objective_metrics.items())),
                 value.unresolved,
@@ -576,7 +928,14 @@ class StrategyOptimizer:
             if previous is None:
                 unique[signature] = value
             else:
-                unique[signature] = replace(previous, equivalent_candidates=previous.equivalent_candidates + 1)
+                unique[signature] = replace(
+                    previous,
+                    equivalent_candidates=previous.equivalent_candidates + 1,
+                    orders_evaluated_in_space=max(
+                        previous.orders_evaluated_in_space, value.orders_evaluated_in_space
+                    ),
+                    best_orders=tuple(dict.fromkeys((*previous.best_orders, *value.best_orders))),
+                )
         return tuple(unique.values())
 
     def _assign_layers(self, values: tuple[_QuickCandidate, ...]) -> tuple[_QuickCandidate, ...]:
@@ -600,6 +959,7 @@ class StrategyOptimizer:
         strategy: ResolvedStrategy,
         runtime: _RuntimeEvaluator,
         mode: EvaluationMode,
+        result_family_ids: tuple[str, ...] = (),
     ) -> StrategyCandidateResult:
         step_rows: dict[str, dict[str, ClubStepResult]] = {}
         emitted_by_step: dict[str, dict[str, list[ContributionRecord]]] = {}
@@ -621,7 +981,9 @@ class StrategyOptimizer:
                         previous_club_id=previous,
                     )
                 summaries[club_id] = summary
-            rows, emitted = _build_step_rows(step, quick_step.active_club_id, summaries, runtime)
+            rows, emitted = _build_step_rows(
+                step, quick_step.active_club_id, summaries, runtime, self.metric_semantics
+            )
             step_rows[step.identifier] = rows
             emitted_by_step[step.identifier] = emitted
             previous = quick_step.active_club_id
@@ -669,6 +1031,7 @@ class StrategyOptimizer:
                     position,
                     club_id,
                     runtime.clubs[club_id].name,
+                    runtime.clubs[club_id].club_type,
                     runtime.levels[club_id],
                     role,
                     active_steps,
@@ -684,6 +1047,16 @@ class StrategyOptimizer:
             f"Conservé dans la couche de comparaison {quick.comparison_layer}; "
             f"{quick.equivalent_candidates} résultat(s) équivalent(s) regroupé(s)."
         )
+        landing_profiles = tuple(
+            _landing_profile(
+                quick_step.step,
+                quick_step.active_club_id,
+                step_rows[quick_step.step.identifier][quick_step.active_club_id],
+                self.metric_semantics,
+            )
+            for quick_step in quick.steps
+            if quick_step.step.function.identifier == "reach_target_zone"
+        )
         return StrategyCandidateResult(
             candidate_id=quick.spec.identifier,
             composition=quick.spec.club_ids,
@@ -696,6 +1069,19 @@ class StrategyOptimizer:
             retained_reason=reason,
             equivalent_candidates=quick.equivalent_candidates,
             support_counterfactuals=tuple(counterfactuals),
+            order_audit={
+                "theoretical_permutations": quick.spec.theoretical_permutations,
+                "proven_equivalent_permutations": (
+                    quick.spec.theoretical_permutations - quick.spec.structurally_distinct_permutations
+                ),
+                "structurally_distinct_permutations": quick.spec.structurally_distinct_permutations,
+                "evaluated_permutations": quick.orders_evaluated_in_space,
+                "best_orders": quick.best_orders,
+                "equivalence_reason": quick.spec.order_equivalence_reason,
+                "complete": quick.orders_evaluated_in_space >= quick.spec.structurally_distinct_permutations,
+            },
+            result_family_ids=result_family_ids,
+            landing_profiles=landing_profiles,
         )
 
     def _counterfactual(
@@ -724,7 +1110,10 @@ class StrategyOptimizer:
             previous = original.active_club_id
             with_values = _summary_metrics(original.summary)
             without_values = _summary_metrics(without)
-            keys = with_values.keys() | without_values.keys()
+            keys = {
+                key for key in with_values.keys() | without_values.keys()
+                if _metric_qualifies_support(original.step, key, self.metric_semantics)
+            }
             delta = {key: with_values.get(key, 0.0) - without_values.get(key, 0.0) for key in keys}
             losses = {key: value for key, value in sorted(delta.items()) if value > 0}
             gains = {key: -value for key, value in sorted(delta.items()) if value < 0}
@@ -739,6 +1128,7 @@ def _build_step_rows(
     active_club_id: str,
     summaries: Mapping[str, ComparedBag],
     runtime: _RuntimeEvaluator,
+    metric_semantics: MetricSemanticsRegistry,
 ) -> tuple[dict[str, ClubStepResult], dict[str, list[ContributionRecord]]]:
     emitted: dict[str, list[ContributionRecord]] = {club_id: [] for club_id in summaries}
     received: dict[str, list[ContributionRecord]] = {club_id: [] for club_id in summaries}
@@ -756,6 +1146,7 @@ def _build_step_rows(
                 contribution.mechanism,
                 modification,
                 contribution.scheduled_effect_ids,
+                {metric: _metric_relevance(step, metric, metric_semantics) for metric in modification},
             )
             if record not in emitted.setdefault(contribution.source_club_id, []):
                 emitted[contribution.source_club_id].append(record)
@@ -784,6 +1175,13 @@ def _build_step_rows(
             final,
             deltas,
             dict(summary.modifier_impact),
+            {
+                metric: _metric_relevance(step, metric, metric_semantics)
+                for metric in {
+                    *_summary_metrics(summary),
+                    *(item.metric for item in step.metric_uses),
+                }
+            },
             active,
             no_effect,
             unresolved,
@@ -839,17 +1237,295 @@ def _summary_metrics(summary: ComparedBag) -> dict[str, float]:
     return values
 
 
-def _objective_metrics(steps: tuple[_QuickStep, ...]) -> dict[str, float]:
+def _objective_metrics(
+    steps: tuple[_QuickStep, ...],
+    semantics: MetricSemanticsRegistry,
+) -> dict[str, float]:
     values: dict[str, float] = {}
     for item in steps:
         available = _summary_metrics(item.summary)
         for objective in item.step.local_objectives:
             if objective.metric == "all_comparable_metrics":
                 for metric, value in available.items():
-                    values[f"{item.step.identifier}:{metric}"] = value
-            elif objective.metric in available:
+                    if _metric_relevance(item.step, metric, semantics) == "objective":
+                        values[f"{item.step.identifier}:{metric}"] = value
+            elif objective.metric in available and _metric_relevance(item.step, objective.metric, semantics) == "objective":
                 values[f"{item.step.identifier}:{objective.metric}"] = available[objective.metric]
     return values
+
+
+def _metric_use(step: ShotStep, metric: str):
+    return next((item for item in step.metric_uses if item.metric == metric), None)
+
+
+def _metric_relevance(
+    step: ShotStep,
+    metric: str,
+    semantics: MetricSemanticsRegistry,
+) -> str:
+    """Return an explicit functional status; unknown metrics are always descriptive."""
+
+    declared = _metric_use(step, metric)
+    semantic: MetricSemantic = semantics.get(metric)
+    if declared is None or declared.usage == "descriptive":
+        return "descriptive"
+    if declared.usage == "context_dependent":
+        if semantic.direction != "context_dependent":
+            return "descriptive"
+        return "objective" if semantic.context_matches(step.function.identifier, step.context.values) else "descriptive"
+    if declared.usage == "objective" and semantic.objective_allowed:
+        return "objective"
+    if declared.usage == "constraint" and semantic.constraint_allowed:
+        return "constraint"
+    return "descriptive"
+
+
+def _metric_qualifies_support(
+    step: ShotStep,
+    metric: str,
+    semantics: MetricSemanticsRegistry,
+) -> bool:
+    declared = _metric_use(step, metric)
+    semantic = semantics.get(metric)
+    return bool(
+        declared
+        and declared.qualifies_support
+        and semantic.support_qualifying_allowed
+        and _metric_relevance(step, metric, semantics) in {"objective", "constraint"}
+    )
+
+
+def _quick_metric(candidate: _QuickCandidate, step_id: str, metric: str) -> float:
+    step = next((item for item in candidate.steps if item.step.identifier == step_id), None)
+    if step is None:
+        return -math.inf
+    return float(_summary_metrics(step.summary).get(metric, -math.inf))
+
+
+def _family_matches(
+    candidate: _QuickCandidate,
+    family: ResultFamilyDefinition,
+    runtime: _RuntimeEvaluator,
+) -> bool:
+    for constraint in family.constraints:
+        club_id = candidate.spec.active_assignments.get(constraint.step_id)
+        if club_id is None:
+            return False
+        club = runtime.clubs[club_id]
+        values = {
+            "type": club.club_type, "brand": club.brand,
+            "rarity": club.rarity, "identity": club.identifier,
+        }
+        observed = values.get(constraint.attribute)
+        if constraint.operator == "equals":
+            matched = observed == constraint.expected
+        elif constraint.operator == "not_equals":
+            matched = observed != constraint.expected
+        elif constraint.operator == "in":
+            matched = observed in constraint.expected
+        else:
+            raise StrategyOptimizationError(
+                f"Unsupported result-family constraint operator: {constraint.operator}"
+            )
+        if not matched:
+            return False
+    return True
+
+
+def _objective_value(candidate: _QuickCandidate, objective: ResultFamilyObjective) -> float:
+    value = _quick_metric(candidate, objective.step_id, objective.metric)
+    if objective.direction == "maximize":
+        return value
+    if objective.direction == "minimize":
+        return -value
+    raise StrategyOptimizationError(
+        f"Result-family objective direction requires an explicit target contract: {objective.direction}"
+    )
+
+
+def _select_family(
+    candidates: tuple[_QuickCandidate, ...],
+    policy: str,
+    objectives: tuple[ResultFamilyObjective, ...],
+    limit: int,
+) -> tuple[_QuickCandidate, ...]:
+    ordered_objectives = tuple(sorted(objectives, key=lambda item: item.priority))
+    if not candidates or not ordered_objectives:
+        return ()
+
+    def key(item: _QuickCandidate) -> tuple[float, ...]:
+        return tuple(_objective_value(item, objective) for objective in ordered_objectives)
+
+    def pareto(items: list[_QuickCandidate], group: tuple[ResultFamilyObjective, ...]) -> list[_QuickCandidate]:
+        vectors = {
+            item.spec.identifier: {index: _objective_value(item, objective) for index, objective in enumerate(group)}
+            for item in items
+        }
+        return [
+            item for item in items
+            if not any(
+                _dominates_values(vectors[other.spec.identifier], vectors[item.spec.identifier])
+                for other in items if other is not item
+            )
+        ]
+
+    def ordered_priorities(items: list[_QuickCandidate], objectives_to_apply: tuple[ResultFamilyObjective, ...]) -> list[_QuickCandidate]:
+        retained = items
+        previous: tuple[ResultFamilyObjective, ...] = ()
+        for priority in sorted({item.priority for item in objectives_to_apply}):
+            group = tuple(item for item in objectives_to_apply if item.priority == priority)
+            partitions: dict[tuple[float, ...], list[_QuickCandidate]] = {}
+            for item in retained:
+                signature = tuple(_objective_value(item, objective) for objective in previous)
+                partitions.setdefault(signature, []).append(item)
+            retained = [item for values in partitions.values() for item in pareto(values, group)]
+            previous = (*previous, *group)
+        return retained
+
+    if policy == "lexicographic_best":
+        retained = ordered_priorities(list(candidates), ordered_objectives)
+        retained.sort(key=lambda item: (*key(item), item.spec.identifier), reverse=True)
+        return tuple(retained[:limit])
+    if policy == "best_per_primary_value":
+        primary = ordered_objectives[0]
+        groups: dict[float, list[_QuickCandidate]] = {}
+        for item in candidates:
+            groups.setdefault(_objective_value(item, primary), []).append(item)
+        remaining_objectives = tuple(item for item in ordered_objectives if item is not primary)
+        retained = [
+            item
+            for _, items in sorted(groups.items(), reverse=True)
+            for item in ordered_priorities(items, remaining_objectives)
+        ]
+        return tuple(retained[:limit])
+    if policy == "nondominated":
+        first_priority = min(item.priority for item in ordered_objectives)
+        first_group = tuple(item for item in ordered_objectives if item.priority == first_priority)
+        frontier = pareto(list(candidates), first_group)
+        later = tuple(item for item in ordered_objectives if item.priority != first_priority)
+        if later:
+            partitions: dict[tuple[float, ...], list[_QuickCandidate]] = {}
+            for item in frontier:
+                signature = tuple(_objective_value(item, objective) for objective in first_group)
+                partitions.setdefault(signature, []).append(item)
+            frontier = [
+                item for values in partitions.values()
+                for item in ordered_priorities(values, later)
+            ]
+        frontier.sort(key=lambda item: (*key(item), item.spec.identifier), reverse=True)
+        return tuple(frontier[:limit])
+    raise StrategyOptimizationError(f"Unsupported result-family selection policy: {policy}")
+
+
+def _landing_profile(
+    step: ShotStep,
+    club_id: str,
+    row: ClubStepResult,
+    semantics: MetricSemanticsRegistry,
+) -> LandingProfile:
+    metric_ids = (
+        "loft_angle_degrees", "bounce_reduction_percent", "groundspin",
+        "spin", "control", "wind_resistance_percent",
+    )
+    values: dict[str, float | None] = {
+        "spin": row.final_stats.get("spin"),
+        "control": row.final_stats.get("control"),
+        **{key: float(value) for key, value in row.additional_metrics.items()},
+    }
+    metrics: list[LandingMetric] = []
+    for metric in metric_ids:
+        semantic = semantics.get(metric)
+        sources = tuple(dict.fromkeys(
+            item.ability_id for item in row.contributions_received
+            if metric in item.modification
+        ))
+        metrics.append(LandingMetric(
+            metric=metric,
+            value=values.get(metric),
+            status=_metric_relevance(step, metric, semantics),
+            confidence=semantic.confidence,
+            provenance=semantic.provenance,
+            source_abilities=sources,
+        ))
+    return LandingProfile(step.identifier, club_id, tuple(metrics))
+
+
+def _build_type_comparison(
+    candidates: tuple[_QuickCandidate, ...],
+    strategy: ResolvedStrategy,
+    runtime: _RuntimeEvaluator,
+    semantics: MetricSemanticsRegistry,
+) -> tuple[TypeComparisonRow, ...]:
+    attack_step = next(
+        (item for item in strategy.definition.sequence if item.function.identifier == "reach_target_zone"),
+        strategy.definition.sequence[0],
+    )
+    owned_by_type: dict[str, set[str]] = {}
+    for club_id, club in runtime.clubs.items():
+        if _matches_step(club, attack_step):
+            owned_by_type.setdefault(club.club_type, set()).add(club_id)
+    excluded_by_type: dict[str, list[str]] = {}
+    catalog_clubs = runtime.catalog_document.get("clubs", {})
+    for excluded in runtime.exclusions:
+        raw = catalog_clubs.get(excluded.club_id, {})
+        club_type = str(raw.get("club_type", {}).get("id", "unknown"))
+        excluded_by_type.setdefault(club_type, []).append(excluded.reason)
+    grouped: dict[str, list[_QuickCandidate]] = {}
+    for candidate in candidates:
+        club_id = candidate.spec.active_assignments.get(attack_step.identifier)
+        if club_id:
+            grouped.setdefault(runtime.clubs[club_id].club_type, []).append(candidate)
+    rows: list[TypeComparisonRow] = []
+    for club_type in sorted(owned_by_type.keys() | grouped.keys() | excluded_by_type.keys()):
+        items = grouped.get(club_type, [])
+        active_ids = {item.spec.active_assignments[attack_step.identifier] for item in items}
+        power_tiers: dict[str, float] = {}
+        loft_values: list[float] = []
+        wind_values: list[float] = []
+        bounce_values: list[float] = []
+        groundspin_values: list[float] = []
+        for item in items:
+            power = _quick_metric(item, attack_step.identifier, "power")
+            control = _quick_metric(item, attack_step.identifier, "control")
+            power_tiers[str(power)] = max(power_tiers.get(str(power), -math.inf), control)
+            quick_step = next(step for step in item.steps if step.step.identifier == attack_step.identifier)
+            metrics = _summary_metrics(quick_step.summary)
+            if "loft_angle_degrees" in metrics:
+                loft_values.append(metrics["loft_angle_degrees"])
+            if _metric_relevance(attack_step, "wind_resistance_percent", semantics) == "objective" and "wind_resistance_percent" in metrics:
+                wind_values.append(metrics["wind_resistance_percent"])
+            if _metric_relevance(attack_step, "bounce_reduction_percent", semantics) == "objective" and "bounce_reduction_percent" in metrics:
+                bounce_values.append(metrics["bounce_reduction_percent"])
+            if "groundspin" in metrics:
+                groundspin_values.append(metrics["groundspin"])
+        best = max(
+            items,
+            key=lambda item: (
+                _quick_metric(item, attack_step.identifier, "power"),
+                _quick_metric(item, attack_step.identifier, "control"),
+                _quick_metric(item, attack_step.identifier, "spin"),
+            ),
+            default=None,
+        )
+        active_id = best.spec.active_assignments[attack_step.identifier] if best else None
+        rows.append(TypeComparisonRow(
+            club_type=club_type,
+            owned_clubs=len(owned_by_type.get(club_type, ())),
+            evaluated_clubs=len(active_ids),
+            excluded_clubs=len(excluded_by_type.get(club_type, ())),
+            excluded_reasons=tuple(sorted(set(excluded_by_type.get(club_type, ())))),
+            best_final_power=max((_quick_metric(item, attack_step.identifier, "power") for item in items), default=None),
+            best_control_by_power=dict(sorted(power_tiers.items(), key=lambda pair: float(pair[0]), reverse=True)),
+            best_final_spin=max((_quick_metric(item, attack_step.identifier, "spin") for item in items), default=None),
+            best_activated_wind_resistance=max(wind_values, default=None),
+            best_activated_bounce_reduction=max(bounce_values, default=None),
+            groundspin_values=tuple(sorted(set(groundspin_values))),
+            loft_range=(min(loft_values), max(loft_values)) if loft_values else None,
+            supports_for_best_power=tuple(item for item in best.spec.club_ids if item != active_id) if best else (),
+            unresolved_abilities=tuple(sorted({value for item in items for value in item.unresolved})),
+            best_order=best.spec.club_ids if best else (),
+        ))
+    return tuple(rows)
 
 
 def _dominates_values(left: Mapping[str, float], right: Mapping[str, float]) -> bool:
@@ -884,8 +1560,20 @@ def render_strategy_optimization(result: StrategyOptimizationResult) -> str:
         f"Doublons de résultat éliminés : {result.search.candidate_result_duplicates_removed}",
         f"Durée génération : {result.search.generation_seconds:.3f} s",
         f"Durée évaluation : {result.search.evaluation_seconds:.3f} s",
+        f"Compositions : {result.search.compositions_generated}",
+        f"Permutations théoriques : {result.search.permutations_theoretical}",
+        f"Permutations prouvées équivalentes : {result.search.permutations_proven_equivalent}",
+        f"Permutations structurellement distinctes : {result.search.permutations_structurally_distinct}",
         "Aucun score global n'a été calculé.",
     ]
+    if result.empirical_reference:
+        lines.extend(["", result.empirical_reference.statement])
+    if result.result_families:
+        lines.extend(["", "Familles de résultats"])
+        lines.extend(
+            f"- {family.user_name}: {len(family.candidate_ids)} proposition(s) — {family.description}"
+            for family in result.result_families
+        )
     if result.excluded_clubs:
         lines.extend(["", "Clubs exclus avant recherche"])
         lines.extend(f"- {item.club_name} ({item.club_id}) : {item.reason}" for item in result.excluded_clubs)
@@ -912,6 +1600,7 @@ def _candidate_lines(candidate: StrategyCandidateResult) -> list[str]:
     lines = [
         "-" * 88,
         f"Sac {candidate.candidate_id} — couche {candidate.comparison_layer}",
+        "Familles : " + (", ".join(candidate.result_family_ids) or "générique"),
         "Composition : " + " | ".join(
             f"{club.position}. {club.club_name}" for club in candidate.clubs
         ),
@@ -920,6 +1609,9 @@ def _candidate_lines(candidate: StrategyCandidateResult) -> list[str]:
             for step, club_id in candidate.active_assignments.items()
         ),
         f"Raison : {candidate.retained_reason}",
+        "Ordre : "
+        f"{candidate.order_audit['evaluated_permutations']}/{candidate.order_audit['structurally_distinct_permutations']} "
+        "permutations structurellement distinctes évaluées",
         "Exigences :",
     ]
     lines.extend(
@@ -947,9 +1639,22 @@ def _candidate_lines(candidate: StrategyCandidateResult) -> list[str]:
             for stat in ("power", "control", "spin"):
                 lines.append(f"      {stat.capitalize():<7}: {_stat_transition(step, stat)}")
             if step.additional_metrics:
-                lines.append("      Métriques additionnelles : " + ", ".join(
-                    f"{key}={value:g}" for key, value in sorted(step.additional_metrics.items())
-                ))
+                functional = {
+                    key: value for key, value in step.additional_metrics.items()
+                    if step.metric_relevance.get(key) in {"objective", "constraint"}
+                }
+                descriptive = {
+                    key: value for key, value in step.additional_metrics.items()
+                    if step.metric_relevance.get(key) == "descriptive"
+                }
+                if functional:
+                    lines.append("      Métriques pertinentes : " + ", ".join(
+                        f"{key}={value:g}" for key, value in sorted(functional.items())
+                    ))
+                if descriptive:
+                    lines.append("      Métriques seulement descriptives : " + ", ".join(
+                        f"{key}={value:g}" for key, value in sorted(descriptive.items())
+                    ))
             lines.append("      Capacités actives : " + (", ".join(step.active_abilities) or "aucune"))
             lines.append("      Capacités sans effet : " + (", ".join(step.abilities_without_effect) or "aucune"))
             lines.append("      Capacités non résolues : " + (", ".join(step.unresolved_abilities) or "aucune"))
@@ -971,6 +1676,12 @@ def _candidate_lines(candidate: StrategyCandidateResult) -> list[str]:
                 )
     if candidate.unresolved_abilities:
         lines.append("  Éléments non résolus : " + "; ".join(candidate.unresolved_abilities))
+    for profile in candidate.landing_profiles:
+        lines.append(f"  Profil d'atterrissage ({profile.step_id}, sans score) :")
+        lines.extend(
+            f"    {item.metric}: {'—' if item.value is None else f'{item.value:g}'} [{item.status}]"
+            for item in profile.metrics
+        )
     return lines
 
 

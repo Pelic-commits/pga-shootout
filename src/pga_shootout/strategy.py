@@ -61,11 +61,48 @@ class ClubConstraint:
 
 
 @dataclass(frozen=True)
+class StepMetricUse:
+    metric: str
+    usage: str
+    direction: str | None = None
+    qualifies_support: bool = False
+
+
+@dataclass(frozen=True)
+class ResultFamilyConstraint:
+    step_id: str
+    attribute: str
+    operator: str
+    expected: Any
+
+
+@dataclass(frozen=True)
+class ResultFamilyObjective:
+    priority: int
+    step_id: str
+    metric: str
+    direction: str
+
+
+@dataclass(frozen=True)
+class ResultFamilyDefinition:
+    identifier: str
+    user_name: str
+    origin: str
+    selection_policy: str
+    constraints: tuple[ResultFamilyConstraint, ...]
+    objectives: tuple[ResultFamilyObjective, ...]
+    activated_metrics: tuple[str, ...] = ()
+    description: str = ""
+
+
+@dataclass(frozen=True)
 class ShotStep:
     identifier: str
     name: str
     active_role: str
     club_constraints: tuple[ClubConstraint, ...]
+    metric_uses: tuple[StepMetricUse, ...]
     function: ShotFunction
     context: StepContext
     requirements: tuple[OutcomeRequirement, ...]
@@ -85,6 +122,9 @@ class StrategyDefinition:
     expected_active_roles: tuple[str, ...]
     available_support_clubs: int
     allow_active_club_reuse: bool = False
+    result_families: tuple[ResultFamilyDefinition, ...] = ()
+    reference_step_id: str | None = None
+    reference_objectives: tuple[ResultFamilyObjective, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -104,6 +144,11 @@ class StrategyDefinition:
             expected_active_roles=tuple(str(item) for item in value.get("expected_active_roles", ())),
             available_support_clubs=int(value["available_support_clubs"]),
             allow_active_club_reuse=bool(value.get("allow_active_club_reuse", False)),
+            result_families=tuple(_family_from_dict(item) for item in value.get("result_families", ())),
+            reference_step_id=str(value["reference_step_id"]) if value.get("reference_step_id") else None,
+            reference_objectives=tuple(
+                _family_objective_from_dict(item) for item in value.get("reference_objectives", ())
+            ),
         )
         _validate_strategy(result)
         return result
@@ -393,6 +438,15 @@ def _step_from_dict(value: Mapping[str, Any]) -> ShotStep:
             ClubConstraint(str(item["attribute"]), str(item["operator"]), item.get("expected"))
             for item in value.get("club_constraints", ())
         ),
+        metric_uses=tuple(
+            StepMetricUse(
+                metric=str(item["metric"]),
+                usage=str(item["usage"]),
+                direction=str(item["direction"]) if item.get("direction") is not None else None,
+                qualifies_support=bool(item.get("qualifies_support", False)),
+            )
+            for item in value.get("metric_uses", ())
+        ),
         function=ShotFunction(str(function["identifier"]), dict(function.get("parameters", {}))),
         context=StepContext(
             dict(context.get("values", {})),
@@ -426,6 +480,34 @@ def _objective_from_dict(value: Mapping[str, Any]) -> LocalObjective:
     )
 
 
+def _family_objective_from_dict(value: Mapping[str, Any]) -> ResultFamilyObjective:
+    return ResultFamilyObjective(
+        priority=int(value["priority"]),
+        step_id=str(value["step_id"]),
+        metric=str(value["metric"]),
+        direction=str(value.get("direction", "maximize")),
+    )
+
+
+def _family_from_dict(value: Mapping[str, Any]) -> ResultFamilyDefinition:
+    return ResultFamilyDefinition(
+        identifier=str(value["identifier"]),
+        user_name=str(value["user_name"]),
+        origin=str(value.get("origin", "bundled")),
+        selection_policy=str(value["selection_policy"]),
+        constraints=tuple(
+            ResultFamilyConstraint(
+                str(item["step_id"]), str(item["attribute"]),
+                str(item["operator"]), item.get("expected"),
+            )
+            for item in value.get("constraints", ())
+        ),
+        objectives=tuple(_family_objective_from_dict(item) for item in value.get("objectives", ())),
+        activated_metrics=tuple(str(item) for item in value.get("activated_metrics", ())),
+        description=str(value.get("description", "")),
+    )
+
+
 def _validate_strategy(strategy: StrategyDefinition) -> None:
     if not strategy.sequence:
         raise StrategyError(f"Strategy {strategy.identifier} has no shot sequence")
@@ -440,6 +522,22 @@ def _validate_strategy(strategy: StrategyDefinition) -> None:
     expected_support = strategy.bag_size - len(roles)
     if strategy.available_support_clubs != expected_support or expected_support < 0:
         raise StrategyError(f"Strategy {strategy.identifier} has an inconsistent support-club count")
+    if strategy.reference_step_id is not None and strategy.reference_step_id not in step_ids:
+        raise StrategyError(f"Strategy {strategy.identifier} has an unknown reference step")
+    family_ids = tuple(item.identifier for item in strategy.result_families)
+    if len(set(family_ids)) != len(family_ids):
+        raise StrategyError(f"Strategy {strategy.identifier} contains duplicate result-family identifiers")
+    for family in strategy.result_families:
+        if family.selection_policy not in {"lexicographic_best", "best_per_primary_value", "nondominated"}:
+            raise StrategyError(f"Unsupported result-family policy: {family.selection_policy}")
+        referenced_steps = {
+            *(item.step_id for item in family.constraints),
+            *(item.step_id for item in family.objectives),
+        }
+        if not referenced_steps <= set(step_ids):
+            raise StrategyError(f"Result family {family.identifier} references an unknown step")
+        if any(item.direction not in {"maximize", "minimize"} for item in family.objectives):
+            raise StrategyError(f"Result family {family.identifier} has an unsupported objective direction")
 
 
 def _insert_unique(target: dict[str, Any], key: str, value: Any, path: Path) -> None:

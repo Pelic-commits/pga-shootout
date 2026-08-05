@@ -250,6 +250,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     optimize_strategy_parser.add_argument("--scenario-level", type=_level_value, help="explicit hypothetical level for owned clubs")
     optimize_strategy_parser.add_argument("--max-evaluations", type=int, default=2000, help="explicit search safety limit")
+    optimize_strategy_parser.add_argument(
+        "--order-mode", choices=("structural_exact", "full_120", "legacy_reduced"),
+        default="structural_exact", help="physical bag-order evaluation policy",
+    )
+    optimize_strategy_parser.add_argument(
+        "--reference-bag", help="saved bag used as an empirical minimum-Power reference",
+    )
     optimize_strategy_parser.add_argument("--user-dir", default="data/pga_shootout.sqlite")
     optimize_strategy_parser.add_argument("--catalog", default="data/normalized/clubs_official.json")
     optimize_strategy_parser.add_argument("--registry", default="data/strategies/strategies.json")
@@ -349,6 +356,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 mode=mode,
                 scenario_level=args.scenario_level,
                 max_evaluations=args.max_evaluations,
+                order_mode=args.order_mode,
+                reference_bag_id=args.reference_bag,
             )
         )
         if hasattr(sys.stdout, "reconfigure"):

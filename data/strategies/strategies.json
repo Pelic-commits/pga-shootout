@@ -12,12 +12,94 @@
       "expected_active_roles": ["attack_club", "putter"],
       "available_support_clubs": 3,
       "allow_active_club_reuse": false,
+      "reference_step_id": "attack",
+      "reference_objectives": [
+        {"priority": 1, "step_id": "attack", "metric": "control", "direction": "maximize"},
+        {"priority": 2, "step_id": "attack", "metric": "spin", "direction": "maximize"},
+        {"priority": 3, "step_id": "putt", "metric": "power", "direction": "maximize"},
+        {"priority": 3, "step_id": "putt", "metric": "control", "direction": "maximize"}
+      ],
+      "result_families": [
+        {
+          "identifier": "iron_max_power",
+          "user_name": "Iron le plus puissant",
+          "origin": "bundled",
+          "selection_policy": "lexicographic_best",
+          "description": "L'Iron construisant la Power finale la plus élevée, puis Control et Spin.",
+          "constraints": [{"step_id": "attack", "attribute": "type", "operator": "equals", "expected": "iron"}],
+          "objectives": [
+            {"priority": 1, "step_id": "attack", "metric": "power", "direction": "maximize"},
+            {"priority": 2, "step_id": "attack", "metric": "control", "direction": "maximize"},
+            {"priority": 3, "step_id": "attack", "metric": "spin", "direction": "maximize"},
+            {"priority": 4, "step_id": "putt", "metric": "power", "direction": "maximize"},
+            {"priority": 4, "step_id": "putt", "metric": "control", "direction": "maximize"}
+          ],
+          "activated_metrics": []
+        },
+        {
+          "identifier": "iron_power_control",
+          "user_name": "Irons : puissance et contrôle",
+          "origin": "bundled",
+          "selection_policy": "best_per_primary_value",
+          "description": "Le meilleur Control observé à chaque palier réel de Power finale.",
+          "constraints": [{"step_id": "attack", "attribute": "type", "operator": "equals", "expected": "iron"}],
+          "objectives": [
+            {"priority": 1, "step_id": "attack", "metric": "power", "direction": "maximize"},
+            {"priority": 2, "step_id": "attack", "metric": "control", "direction": "maximize"},
+            {"priority": 3, "step_id": "attack", "metric": "spin", "direction": "maximize"},
+            {"priority": 4, "step_id": "putt", "metric": "power", "direction": "maximize"},
+            {"priority": 4, "step_id": "putt", "metric": "control", "direction": "maximize"}
+          ],
+          "activated_metrics": []
+        },
+        {
+          "identifier": "iron_stability",
+          "user_name": "Iron le plus stable",
+          "origin": "bundled",
+          "selection_policy": "nondominated",
+          "description": "Compromis calculables de Control et Spin ; la portée suffisante reste indéterminée sans référence.",
+          "constraints": [{"step_id": "attack", "attribute": "type", "operator": "equals", "expected": "iron"}],
+          "objectives": [
+            {"priority": 1, "step_id": "attack", "metric": "control", "direction": "maximize"},
+            {"priority": 1, "step_id": "attack", "metric": "spin", "direction": "maximize"},
+            {"priority": 2, "step_id": "attack", "metric": "power", "direction": "maximize"},
+            {"priority": 3, "step_id": "putt", "metric": "power", "direction": "maximize"},
+            {"priority": 3, "step_id": "putt", "metric": "control", "direction": "maximize"}
+          ],
+          "activated_metrics": []
+        },
+        {
+          "identifier": "all_types_competitor",
+          "user_name": "Meilleur concurrent tous types",
+          "origin": "bundled",
+          "selection_policy": "nondominated",
+          "description": "Concurrents de tous types comparés sans présumer la supériorité d'un type.",
+          "constraints": [],
+          "objectives": [
+            {"priority": 1, "step_id": "attack", "metric": "power", "direction": "maximize"},
+            {"priority": 1, "step_id": "attack", "metric": "control", "direction": "maximize"},
+            {"priority": 1, "step_id": "attack", "metric": "spin", "direction": "maximize"},
+            {"priority": 2, "step_id": "putt", "metric": "power", "direction": "maximize"},
+            {"priority": 2, "step_id": "putt", "metric": "control", "direction": "maximize"}
+          ],
+          "activated_metrics": []
+        }
+      ],
       "sequence": [
         {
           "identifier": "attack",
           "name": "Atteindre le green",
           "active_role": "attack_club",
           "club_constraints": [],
+          "metric_uses": [
+            {"metric": "power", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "control", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "spin", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "loft_angle_degrees", "usage": "descriptive"},
+            {"metric": "wind_resistance_percent", "usage": "context_dependent", "direction": "maximize", "qualifies_support": true},
+            {"metric": "bounce_reduction_percent", "usage": "context_dependent", "direction": "maximize", "qualifies_support": true},
+            {"metric": "groundspin", "usage": "descriptive"}
+          ],
           "function": {"identifier": "reach_target_zone", "parameters": {"target_zone": "green"}},
           "context": {"values": {"terrain": "tee"}, "required_data": []},
           "requirements": [
@@ -45,6 +127,17 @@
           "active_role": "putter",
           "club_constraints": [
             {"attribute": "type", "operator": "equals", "expected": "putter"}
+          ],
+          "metric_uses": [
+            {"metric": "power", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "control", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "spin", "usage": "descriptive"},
+            {"metric": "loft_angle_degrees", "usage": "descriptive"},
+            {"metric": "wind_resistance_percent", "usage": "descriptive"},
+            {"metric": "bounce_reduction_percent", "usage": "descriptive"},
+            {"metric": "groundspin", "usage": "descriptive"},
+            {"metric": "launch_angle_degrees", "usage": "descriptive"},
+            {"metric": "gravity_reduction_percent", "usage": "descriptive"}
           ],
           "function": {"identifier": "finish", "parameters": {"start_zone": "green"}},
           "context": {"values": {"terrain": "green"}, "required_data": []},
@@ -86,6 +179,15 @@
           "name": "Attaque directe du green",
           "active_role": "attack_club",
           "club_constraints": [],
+          "metric_uses": [
+            {"metric": "power", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "control", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "spin", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "loft_angle_degrees", "usage": "descriptive"},
+            {"metric": "wind_resistance_percent", "usage": "context_dependent", "direction": "maximize", "qualifies_support": true},
+            {"metric": "bounce_reduction_percent", "usage": "context_dependent", "direction": "maximize", "qualifies_support": true},
+            {"metric": "groundspin", "usage": "descriptive"}
+          ],
           "function": {"identifier": "reach_target_zone", "parameters": {"target_zone": "green"}},
           "context": {"values": {"terrain": "tee"}, "required_data": []},
           "requirements": [
@@ -113,6 +215,17 @@
           "active_role": "putter",
           "club_constraints": [
             {"attribute": "type", "operator": "equals", "expected": "putter"}
+          ],
+          "metric_uses": [
+            {"metric": "power", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "control", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "spin", "usage": "descriptive"},
+            {"metric": "loft_angle_degrees", "usage": "descriptive"},
+            {"metric": "wind_resistance_percent", "usage": "descriptive"},
+            {"metric": "bounce_reduction_percent", "usage": "descriptive"},
+            {"metric": "groundspin", "usage": "descriptive"},
+            {"metric": "launch_angle_degrees", "usage": "descriptive"},
+            {"metric": "gravity_reduction_percent", "usage": "descriptive"}
           ],
           "function": {"identifier": "finish", "parameters": {"start_zone": "green"}},
           "context": {"values": {"terrain": "green"}, "required_data": []},
@@ -154,6 +267,15 @@
           "name": "Départ",
           "active_role": "drive_club",
           "club_constraints": [],
+          "metric_uses": [
+            {"metric": "power", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "control", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "spin", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "loft_angle_degrees", "usage": "descriptive"},
+            {"metric": "wind_resistance_percent", "usage": "context_dependent", "direction": "maximize", "qualifies_support": true},
+            {"metric": "bounce_reduction_percent", "usage": "context_dependent", "direction": "maximize", "qualifies_support": true},
+            {"metric": "groundspin", "usage": "descriptive"}
+          ],
           "function": {"identifier": "advance_toward_target", "parameters": {}},
           "context": {"values": {"terrain": "tee"}, "required_data": []},
           "requirements": [
@@ -180,6 +302,15 @@
           "name": "Approche vers le green",
           "active_role": "approach_club",
           "club_constraints": [],
+          "metric_uses": [
+            {"metric": "power", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "control", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "spin", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "loft_angle_degrees", "usage": "descriptive"},
+            {"metric": "wind_resistance_percent", "usage": "context_dependent", "direction": "maximize", "qualifies_support": true},
+            {"metric": "bounce_reduction_percent", "usage": "context_dependent", "direction": "maximize", "qualifies_support": true},
+            {"metric": "groundspin", "usage": "descriptive"}
+          ],
           "function": {"identifier": "reach_target_zone", "parameters": {"target_zone": "green"}},
           "context": {"values": {}, "required_data": []},
           "requirements": [
@@ -207,6 +338,17 @@
           "active_role": "putter",
           "club_constraints": [
             {"attribute": "type", "operator": "equals", "expected": "putter"}
+          ],
+          "metric_uses": [
+            {"metric": "power", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "control", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "spin", "usage": "descriptive"},
+            {"metric": "loft_angle_degrees", "usage": "descriptive"},
+            {"metric": "wind_resistance_percent", "usage": "descriptive"},
+            {"metric": "bounce_reduction_percent", "usage": "descriptive"},
+            {"metric": "groundspin", "usage": "descriptive"},
+            {"metric": "launch_angle_degrees", "usage": "descriptive"},
+            {"metric": "gravity_reduction_percent", "usage": "descriptive"}
           ],
           "function": {"identifier": "finish", "parameters": {"start_zone": "green"}},
           "context": {"values": {"terrain": "green"}, "required_data": []},
@@ -248,6 +390,15 @@
           "name": "Long départ",
           "active_role": "drive_club",
           "club_constraints": [],
+          "metric_uses": [
+            {"metric": "power", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "control", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "spin", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "loft_angle_degrees", "usage": "descriptive"},
+            {"metric": "wind_resistance_percent", "usage": "context_dependent", "direction": "maximize", "qualifies_support": true},
+            {"metric": "bounce_reduction_percent", "usage": "context_dependent", "direction": "maximize", "qualifies_support": true},
+            {"metric": "groundspin", "usage": "descriptive"}
+          ],
           "function": {"identifier": "advance_toward_target", "parameters": {}},
           "context": {"values": {"terrain": "tee"}, "required_data": []},
           "requirements": [
@@ -274,6 +425,15 @@
           "name": "Longue approche vers le green",
           "active_role": "approach_club",
           "club_constraints": [],
+          "metric_uses": [
+            {"metric": "power", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "control", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "spin", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "loft_angle_degrees", "usage": "descriptive"},
+            {"metric": "wind_resistance_percent", "usage": "context_dependent", "direction": "maximize", "qualifies_support": true},
+            {"metric": "bounce_reduction_percent", "usage": "context_dependent", "direction": "maximize", "qualifies_support": true},
+            {"metric": "groundspin", "usage": "descriptive"}
+          ],
           "function": {"identifier": "reach_target_zone", "parameters": {"target_zone": "green"}},
           "context": {"values": {}, "required_data": []},
           "requirements": [
@@ -309,6 +469,17 @@
           "active_role": "putter",
           "club_constraints": [
             {"attribute": "type", "operator": "equals", "expected": "putter"}
+          ],
+          "metric_uses": [
+            {"metric": "power", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "control", "usage": "objective", "direction": "maximize", "qualifies_support": true},
+            {"metric": "spin", "usage": "descriptive"},
+            {"metric": "loft_angle_degrees", "usage": "descriptive"},
+            {"metric": "wind_resistance_percent", "usage": "descriptive"},
+            {"metric": "bounce_reduction_percent", "usage": "descriptive"},
+            {"metric": "groundspin", "usage": "descriptive"},
+            {"metric": "launch_angle_degrees", "usage": "descriptive"},
+            {"metric": "gravity_reduction_percent", "usage": "descriptive"}
           ],
           "function": {"identifier": "finish", "parameters": {"start_zone": "green"}},
           "context": {"values": {"terrain": "green"}, "required_data": []},
