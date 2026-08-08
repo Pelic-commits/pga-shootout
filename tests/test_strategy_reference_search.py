@@ -183,6 +183,9 @@ def test_two_replacement_search_is_explicitly_structurally_reduced(local_databas
     assert generated
     assert service.generator.last_generation_stats["replacement_depth"] == 2
     assert any(len(set(item.club_ids) - set(bag.club_ids)) == 2 for item in generated)
+    selected = service._bounded_local_order_spaces(generated, bag, 240)
+    assert len(selected) == 240
+    assert {len(set(item.club_ids) - set(bag.club_ids)) for item in selected} == {0, 2}
 
 
 def test_real_gearshift_is_fully_resolved_as_left_or_right_support():

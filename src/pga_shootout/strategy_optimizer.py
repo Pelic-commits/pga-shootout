@@ -678,6 +678,7 @@ class StrategyCandidateGenerator:
             "local_compositions": len(compositions),
             "local_candidates": len(generated),
             "replacement_depth": replacement_depth,
+            "pair_compositions": pair_compositions,
             "pair_composition_limit_reached": int(
                 replacement_depth >= 2 and pair_compositions >= self.STRUCTURAL_PAIR_COMPOSITION_LIMIT
             ),
@@ -1069,6 +1070,11 @@ class StrategyOptimizer:
         if request.search_mode != "global" and request.replacement_depth == 1:
             # The one-replacement neighborhood is deliberately exhaustive.
             selected_specs = (*reference_specs, *search_specs)
+        elif request.search_mode != "global" and target_bag is not None:
+            selected_specs = (
+                *reference_specs,
+                *self._bounded_local_order_spaces(search_specs, target_bag, request.max_evaluations),
+            )
         else:
             selected_specs = (*reference_specs, *search_specs[: request.max_evaluations])
         order_counts: dict[str, int] = {}
@@ -1234,6 +1240,11 @@ class StrategyOptimizer:
                     "permutations": len(selected_specs),
                     "resultats_uniques": len(unique),
                     "domines_par_reference": reference_dominated_removed,
+                    "paires_generees": generation_stats.get("pair_compositions", 0),
+                    "paires_evaluees": len({
+                        item.order_space_id for item in selected_specs
+                        if target_bag is not None and len(set(item.club_ids) - set(target_bag.club_ids)) == 2
+                    }),
                 },
                 origin_counts={origin: sum(item.provenance == origin for item in selected_specs) for origin in (
                     "reference_bag", "reference_neighborhood", "global_search",
@@ -1254,6 +1265,33 @@ class StrategyOptimizer:
             inventory_owned_count=sum(item.unlocked for item in bundle.inventory.entries),
             inventory_observed_at=bundle.inventory.observed_at,
         )
+
+    @staticmethod
+    def _bounded_local_order_spaces(
+        specs: tuple[CandidateSpec, ...],
+        target_bag: SavedBag,
+        max_evaluations: int,
+    ) -> tuple[CandidateSpec, ...]:
+        """Share a bounded budget between complete one- and two-change order spaces."""
+        grouped: dict[str, list[CandidateSpec]] = {}
+        for item in specs:
+            grouped.setdefault(item.order_space_id, []).append(item)
+        single: list[list[CandidateSpec]] = []
+        double: list[list[CandidateSpec]] = []
+        baseline = set(target_bag.club_ids)
+        for values in grouped.values():
+            added = len(set(values[0].club_ids) - baseline)
+            (double if added >= 2 else single).append(values)
+        chosen: list[CandidateSpec] = []
+        for index in range(max(len(single), len(double))):
+            for pools in (single, double):
+                if index >= len(pools):
+                    continue
+                values = pools[index]
+                if len(chosen) + len(values) > max_evaluations:
+                    continue
+                chosen.extend(values)
+        return tuple(chosen)
 
     @staticmethod
     def _with_reference_delta(
