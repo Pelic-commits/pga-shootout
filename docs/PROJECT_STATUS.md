@@ -7,7 +7,7 @@
 - Loads official club statistics, user inventory and saved bags.
 - Evaluates supported deterministic bag abilities in strict or partial mode.
 - Compares bags metric by metric with attributed contributions and a factual completeness diagnostic.
-- Supports 81/138 owned-club abilities (58.70%).
+- Supports 83/140 owned-club abilities (59.29%).
 
 ## What it does not do
 
@@ -17,12 +17,12 @@
 
 ## Inventory
 
-- Known clubs: 75; inventory complete: no.
-- Fully simulated clubs: 35/75.
-- Fully comparable clubs: 29/75: Homestead, Commonlaw, Kinship, Sandsend, Steadfast, Jumpstart, Cyclotron, High Flight, Cloudcatcher, Rook, Mirage, Lodestar, Into the Breach, Conqueror, Earthquake, Conspiracy, Divebomb, Into the Blue, Sunstorm, Triumph, Galvanizer, Lowball, Maelstrom, Navigator, Endeavor, People's Champion, Rampart, Saber, Steward.
-- Comparable with warning: 21/75.
-- Not currently comparable: 25/75.
-- Known current levels: 72/75.
+- Known clubs: 76; inventory complete: no.
+- Fully simulated clubs: 36/76.
+- Fully comparable clubs: 30/76: Homestead, Commonlaw, Kinship, Sandsend, Steadfast, Jumpstart, Cyclotron, High Flight, Cloudcatcher, Rook, Mirage, Lodestar, Into the Breach, Conqueror, Earthquake, Conspiracy, Divebomb, Into the Blue, Sunstorm, Triumph, Galvanizer, Lowball, Maelstrom, Navigator, Endeavor, People's Champion, Rampart, Saber, Steward, Gearshift.
+- Comparable with warning: 21/76.
+- Not currently comparable: 25/76.
+- Known current levels: 73/76.
 
 ## compare-bags
 

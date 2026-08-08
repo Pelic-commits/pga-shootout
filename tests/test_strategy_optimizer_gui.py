@@ -80,6 +80,19 @@ def test_optional_empirical_reference_is_transmitted_without_numeric_threshold()
     assert not hasattr(request, "minimum_power")
 
 
+def test_local_search_modes_are_transmitted_without_new_business_rules():
+    improve = OptimizationGuiOptions(
+        "par3", search_mode="improve_bag", target_bag_id="par3_high_flight", replacement_depth=2,
+    ).to_request()
+    assert (improve.search_mode, improve.target_bag_id, improve.replacement_depth) == (
+        "improve_bag", "par3_high_flight", 2,
+    )
+    around = OptimizationGuiOptions(
+        "par3", search_mode="around_club", fixed_club_id="gearshift",
+    ).to_request()
+    assert (around.search_mode, around.fixed_club_id) == ("around_club", "gearshift")
+
+
 def test_scenario_mode_requires_and_transmits_explicit_level():
     with pytest.raises(ValueError, match="niveau"):
         OptimizationGuiOptions("par3", real_mode=False).to_request()

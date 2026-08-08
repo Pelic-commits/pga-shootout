@@ -6,27 +6,27 @@
 
 | Measure | Value |
 |---|---:|
-| Known inventory clubs | 75 |
+| Known inventory clubs | 76 |
 | Baseline inventory clubs | 21 |
-| Clubs added since baseline | 54 |
+| Clubs added since baseline | 55 |
 | Inventory declared complete | no |
-| Known user levels | 72/75 |
-| Official owned-club abilities | 138 |
-| Engine-supported owned-club abilities | 81 |
+| Known user levels | 73/76 |
+| Official owned-club abilities | 140 |
+| Engine-supported owned-club abilities | 83 |
 | Unresolved owned-club abilities | 57 |
-| Owned-ability coverage | 58.70% |
-| Fully simulated owned clubs | 35/75 |
-| Fully comparable owned clubs | 29/75 |
-| Comparable with warning | 21/75 |
-| Not currently comparable | 25/75 |
-| Fully optimizable | 29/75 |
-| Optimizable with context | 6/75 |
-| Optimizable with warning | 15/75 |
-| Not optimizable | 25/75 |
+| Owned-ability coverage | 59.29% |
+| Fully simulated owned clubs | 36/76 |
+| Fully comparable owned clubs | 30/76 |
+| Comparable with warning | 21/76 |
+| Not currently comparable | 25/76 |
+| Fully optimizable | 30/76 |
+| Optimizable with context | 6/76 |
+| Optimizable with warning | 15/76 |
+| Not optimizable | 25/76 |
 
 ## Inventory changes since the retained JSON baseline
 
-- Newly added clubs (54): Eagle's Landing, Earthquake, Conspiracy, Crusader, Divebomb, Dunecrawler, Edgewalker, Ember, Homecoming, Huntsman, Hydroforce, Into the Blue, Ironbark, Jetstream, Oakheart, Obelisk, Overgrowth, Pantheon, Ranger, Rebound, Sparky, Stormbringer, Sunstorm, Trailblazer, Triumph, Catalyst, Crystallize, Flamethrower, Fusion, Galvanizer, Leviathan, Lowball, Maelstrom, Navigator, Rising Flame, Sandblast, Sidewinder, Supercollider, Tierra Hueca, Windstrike, XLR8R, Boomstick, Bushwhacker, Endeavor, Fanfare, Hero, Meanderer, New Frontier, Outlaw, People's Champion, Rampart, Rolling Stone, Saber, Steward.
+- Newly added clubs (55): Eagle's Landing, Earthquake, Conspiracy, Crusader, Divebomb, Dunecrawler, Edgewalker, Ember, Homecoming, Huntsman, Hydroforce, Into the Blue, Ironbark, Jetstream, Oakheart, Obelisk, Overgrowth, Pantheon, Ranger, Rebound, Sparky, Stormbringer, Sunstorm, Trailblazer, Triumph, Catalyst, Crystallize, Flamethrower, Fusion, Galvanizer, Leviathan, Lowball, Maelstrom, Navigator, Rising Flame, Sandblast, Sidewinder, Supercollider, Tierra Hueca, Windstrike, XLR8R, Boomstick, Bushwhacker, Endeavor, Fanfare, Hero, Meanderer, New Frontier, Outlaw, People's Champion, Rampart, Rolling Stone, Saber, Steward, Gearshift.
 
 ## Clubs
 
@@ -107,6 +107,7 @@
 | Rolling Stone (`rolling_stone`) | Willoughsby | Putter | Rare | 7 | 1/2 | no | `comparable_with_warning` | rolling_stone__momentum:physics_required | `optimizable_with_warning` | rolling_stone__momentum:physics_required |
 | Saber (`saber`) | Stanchion | Hybrid | Common | 7 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 | Steward (`steward`) | Willoughsby | Driver | Epic | 6 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
+| Gearshift (`gearshift`) | PALO | Putter | Legendary | 8 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 
 ### Homestead
 
@@ -620,6 +621,13 @@
 |---|---|---:|---|---|---|---|---|---|---|---|---|---|---|
 | Fellowship (`steward__fellowship`) | The clubs next to Steward have +X Power. This bonus is doubled for Willoughsby Clubs. | 5 | `simulated_no_effect_in_current_bag` | `implemented` | `power` | `high` | The ability is supported, but its source club is absent from every saved bag. | none | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ADJACENT`, `FOR_EACH`, `ADD_STAT`, `MATCH_BRAND` | none | `steward__fellowship` | `adjacent_stat_bonus_with_brand_multiplier` | none |
 | Brand Loyalty (`steward__brand_loyalty`) | Has +X power per Willoughsby club next to Steward. | 8 | `simulated_no_effect_in_current_bag` | `implemented` | `power` | `high` | The ability is supported but inactive at the user's current level. | none | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ADJACENT`, `MATCH_BRAND`, `COUNT`, `SCALE`, `ADD_STAT` | none | `cloudcatcher__brand_loyalty_x`, `rook__brand_loyalty_x`, `ranger__forester_power`, `trailblazer__brand_loyalty_x`, `maelstrom__bag_spin_bonus`, `lodestar__brand_loyalty_x`, `lowball__brand_loyalty_x`, `rising_flame__phoenix_power`, `cyclotron__spin_boost`, `galvanizer__control_boost`, `jumpstart__power_boost`, `conqueror__brand_loyalty_x`, `into_the_breach__brand_loyalty_x`, `outlaw__adjacent_power`, `people_s_champion__driver_loyalty`, `people_s_champion__brand_loyalty_x`, `rampart__adjacent_power`, `rampart__brand_loyalty_x`, `saber__brand_loyalty_x`, `saber__stanchion_power`, `commonlaw__bag_control`, `commonlaw__brand_loyalty_x`, `crusader__brand_loyalty_x`, `endeavor__brand_loyalty_x`, `groundskeep__brand_loyalty_x`, `homestead__brand_loyalty_x`, `kinship__brand_loyalty_x`, `meanderer__brand_loyalty_x`, `rolling_stone__brand_loyalty_x`, `sandsend__brand_loyalty_x`, `steadfast__brand_loyalty_x`, `steward__brand_loyalty` | `dsl_pipeline` | none |
+
+### Gearshift
+
+| Official ability | Official text | Activates | Status | Classification | Potential metrics/behavior | Importance | Reason | Needed data | Existing primitives | New primitive | Same behavior in catalog | Technical family | Validation experiment |
+|---|---|---:|---|---|---|---|---|---|---|---|---|---|---|
+| First Gear (`gearshift__first_gear`) | If Gearshift is in your leftmost club slot, your clubs have +X Control and their shots bounce X% less. | 7 | `simulated_no_effect_in_current_bag` | `implemented` | `bounce_reduction_percent`, `control` | `high` | The ability is supported, but its source club is absent from every saved bag. | none | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `FOR_EACH`, `ADD_STAT`, `ADD_MODIFIER` | none | `gearshift__first_gear`, `gearshift__top_gear` | `positioned_bag_composed_modifier` | none |
+| Top Gear (`gearshift__top_gear`) | If Gearshift is in your rightmost club slot, your clubs have +X Power and their shots apply X% more Groundspin. | 7 | `simulated_no_effect_in_current_bag` | `implemented` | `groundspin_increase_percent`, `power` | `high` | The ability is supported, but its source club is absent from every saved bag. | none | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `FOR_EACH`, `ADD_STAT`, `ADD_MODIFIER` | none | `gearshift__first_gear`, `gearshift__top_gear` | `positioned_bag_composed_modifier` | none |
 
 ## Reference bags (regression only)
 

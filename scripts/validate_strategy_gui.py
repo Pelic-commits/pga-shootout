@@ -70,7 +70,7 @@ def _validate_values(app: StrategyOptimizerApp) -> dict[str, object]:
 
     # Presentation is inspected through the real widgets, not only the domain result.
     assert len(app.candidate_tree.get_children()) == len(result.retained_results)
-    visible_families = " ".join(str(app.candidate_tree.item(iid, "values")[1]) for iid in app.candidate_tree.get_children())
+    visible_families = " ".join(str(app.candidate_tree.item(iid, "values")[2]) for iid in app.candidate_tree.get_children())
     for family in result.result_families:
         assert family.user_name in visible_families
     assert all(
@@ -98,6 +98,19 @@ def main() -> int:
     app.reference_name.set("Aucun")
     app.limit.set("20")
     app.max_evaluations.set("2000")
+    improve_label = next(label for label, identifier in app.search_mode_by_label.items() if identifier == "improve_bag")
+    around_label = next(label for label, identifier in app.search_mode_by_label.items() if identifier == "around_club")
+    app.search_mode_name.set(improve_label)
+    app._toggle_search_mode()
+    assert str(app.target_bag_box.cget("state")) == "readonly"
+    assert app._options().target_bag_id in app.target_bag_by_label.values()
+    app.search_mode_name.set(around_label)
+    app._toggle_search_mode()
+    assert str(app.fixed_club_box.cget("state")) == "readonly"
+    assert app._options().fixed_club_id in app.fixed_club_by_label.values()
+    global_label = next(label for label, identifier in app.search_mode_by_label.items() if identifier == "global")
+    app.search_mode_name.set(global_label)
+    app._toggle_search_mode()
     app._start()
     _wait(app)
     evidence = _validate_values(app)

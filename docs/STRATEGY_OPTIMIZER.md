@@ -40,6 +40,21 @@ d’un sac enregistré comme minimum empirique. Ce seuil ne représente jamais u
 distance garantie. `--order-mode structural_exact` est le mode normal ;
 `full_120` et `legacy_reduced` sont réservés au diagnostic.
 
+## Améliorer un sac existant
+
+La fenêtre propose trois modes : chercher de nouveaux sacs, améliorer un sac
+enregistré, ou optimiser autour d'un club possédé. En ligne de commande :
+
+```powershell
+pga-shootout optimize-strategy par3 --search-mode improve_bag --target-bag par3_high_flight --replacement-depth 1
+pga-shootout optimize-strategy par3 --search-mode around_club --target-bag par3_divebomb --fixed-club divebomb --replacement-depth 1
+```
+
+La profondeur 1 est exhaustive sur les remplacements simples. La profondeur 2
+est réduite aux paires liées par une synergie structurelle et l'indique dans les
+résultats. Voir `COMPOSITION_SEARCH.md` pour le contrôle par les sacs enregistrés,
+la commande `trace-composition` et l'audit High Flight/Gearshift.
+
 ## Données et affectations
 
 En mode réel, seuls les clubs marqués comme possédés et dotés d'un niveau connu

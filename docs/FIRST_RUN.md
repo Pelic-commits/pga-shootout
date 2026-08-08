@@ -12,6 +12,12 @@ C'est tout. Il n'est pas nécessaire de connaître Python, Git, PowerShell ou JS
 Pour ouvrir directement l'optimiseur graphique, utilisez ensuite
 **`OPTIMISER_MES_SACS.bat`**.
 
+L'optimiseur propose aussi « Améliorer un de mes sacs » et « Optimiser autour
+d'un club ». Le premier teste tous les remplacements simples du sac choisi ; le
+second conserve le club actif choisi et recherche de meilleurs supports. Le
+calcul exhaustif peut prendre une à deux minutes sur un inventaire important,
+mais la fenêtre reste utilisable et affiche la progression.
+
 ## Ce que prépare le lanceur
 
 Le lanceur travaille uniquement dans le dossier du projet. Il :

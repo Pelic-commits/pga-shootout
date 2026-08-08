@@ -79,6 +79,10 @@ class OptimizationGuiOptions:
     limit: int = 5
     max_evaluations: int = 2000
     reference_bag_id: str | None = None
+    search_mode: str = "global"
+    target_bag_id: str | None = None
+    fixed_club_id: str | None = None
+    replacement_depth: int = 1
 
     def to_request(self) -> StrategyOptimizationRequest:
         if self.limit not in {5, 10, 20}:
@@ -97,6 +101,10 @@ class OptimizationGuiOptions:
             scenario_level=None if self.real_mode else self.scenario_level,
             max_evaluations=self.max_evaluations,
             reference_bag_id=self.reference_bag_id,
+            search_mode=self.search_mode,
+            target_bag_id=self.target_bag_id,
+            fixed_club_id=self.fixed_club_id,
+            replacement_depth=self.replacement_depth,
         )
 
 
@@ -110,6 +118,7 @@ class CandidateListPresentation:
     has_neutral_club: bool
     strengths: str
     families: str = ""
+    origin: str = ""
 
 
 @dataclass(frozen=True)
@@ -192,10 +201,26 @@ class StrategyOptimizerPresenter:
             has_neutral_club=any(club.role == "neutral" for club in candidate.clubs),
             strengths=self._strengths(candidate, step_labels),
             families=", ".join(family_names.get(item, item) for item in candidate.result_family_ids),
+            origin={
+                "reference_bag": "Sac enregistré",
+                "reference_neighborhood": "Amélioration locale",
+                "global_search": "Recherche globale",
+            }.get(candidate.origin, candidate.origin),
         )
 
     def _strengths(self, candidate: StrategyCandidateResult, step_labels: Mapping[str, str]) -> str:
         facts: list[str] = []
+        if candidate.removed_club_ids or candidate.added_club_ids:
+            facts.append(
+                "Remplacement " + ", ".join(candidate.removed_club_ids or ("aucun",))
+                + " → " + ", ".join(candidate.added_club_ids or ("aucun",))
+            )
+        if candidate.metric_deltas_from_reference:
+            facts.extend(
+                f"{metric} {delta:+g}"
+                for metric, delta in candidate.metric_deltas_from_reference.items()
+                if delta not in {None, 0}
+            )
         for club in candidate.clubs:
             if club.role not in {"active", "hybrid"}:
                 continue
@@ -314,7 +339,21 @@ class StrategyOptimizerPresenter:
         return "\n".join(lines)
 
     def _technical(self, candidate: StrategyCandidateResult, step_labels: Mapping[str, str]) -> str:
-        lines = ["Exigences"]
+        lines = [f"Origine : {candidate.origin}", "Exigences"]
+        if candidate.metric_deltas_from_reference is not None:
+            lines.extend((
+                "",
+                "Différence avec le sac actuel",
+                "Clubs retirés : " + (", ".join(candidate.removed_club_ids) or "aucun"),
+                "Clubs ajoutés : " + (", ".join(candidate.added_club_ids) or "aucun"),
+                *(
+                    f"- {metric} : {'indéterminé' if delta is None else f'{delta:+g}'}"
+                    for metric, delta in candidate.metric_deltas_from_reference.items()
+                ),
+                "Contributions gagnées : " + (", ".join(candidate.gained_contribution_ids) or "aucune"),
+                "Contributions perdues : " + (", ".join(candidate.lost_contribution_ids) or "aucune"),
+                "",
+            ))
         for item in candidate.requirements:
             missing = f" — données manquantes : {', '.join(item.missing_data)}" if item.missing_data else ""
             lines.append(f"- {step_labels.get(item.step_id, item.step_id)} : {item.description} = {item.status}{missing}")
@@ -367,6 +406,9 @@ class StrategyOptimizerPresenter:
             f"Permutations théoriques : {result.search.permutations_theoretical}",
             f"Permutations prouvées équivalentes : {result.search.permutations_proven_equivalent}",
             f"Permutations structurellement distinctes : {result.search.permutations_structurally_distinct}",
+            f"Origines : {dict(result.search.origin_counts or {})}",
+            f"Complétude locale : {result.search.local_search_completeness}",
+            f"Inventaire utilisé : {result.inventory_owned_count} clubs possédés — observation {result.inventory_observed_at or 'inconnue'}",
         ))
 
 
@@ -508,6 +550,18 @@ class StrategyOptimizerApp:
         bundle = load_user_data(self.user_data_path)
         self.reference_by_label = {"Aucun": None, **{bag.name: bag.identifier for bag in bundle.bags}}
         self.reference_name = tk.StringVar(value="Aucun")
+        self.search_mode_by_label = {
+            "Chercher de nouveaux sacs": "global",
+            "Améliorer un de mes sacs": "improve_bag",
+            "Optimiser autour d’un club": "around_club",
+        }
+        self.search_mode_name = tk.StringVar(value="Chercher de nouveaux sacs")
+        self.target_bag_by_label = {bag.name: bag.identifier for bag in bundle.bags}
+        self.target_bag_name = tk.StringVar(value=next(iter(self.target_bag_by_label), ""))
+        owned = tuple(item for item in bundle.inventory.entries if item.unlocked and item.current_level is not None)
+        self.fixed_club_by_label = {item.display_name: item.club_id for item in owned}
+        self.fixed_club_name = tk.StringVar(value=next(iter(self.fixed_club_by_label), ""))
+        self.replacement_depth = tk.StringVar(value="1")
         self._callback_queue: Queue[Callable[[], None]] = Queue()
         self.controller = StrategyOptimizerGuiController(
             self.optimizer,
@@ -520,6 +574,7 @@ class StrategyOptimizerApp:
         self.root.after(25, self._poll_callbacks)
         self._refresh_variants()
         self._toggle_mode()
+        self._toggle_search_mode()
 
     def _build(self) -> None:
         tk, ttk = self.tk, self.ttk
@@ -552,6 +607,31 @@ class StrategyOptimizerApp:
             parameters, text="Option empirique : aucun calcul de distance n'est effectué.",
         ).grid(row=2, column=3, columnspan=5, pady=(8, 0), sticky="w")
 
+        ttk.Label(parameters, text="Mode de recherche :").grid(row=3, column=0, pady=(8, 0), sticky="w")
+        self.search_mode_box = ttk.Combobox(
+            parameters, textvariable=self.search_mode_name,
+            values=tuple(self.search_mode_by_label), state="readonly", width=28,
+        )
+        self.search_mode_box.grid(row=3, column=1, columnspan=2, pady=(8, 0), sticky="w")
+        self.search_mode_box.bind("<<ComboboxSelected>>", lambda _event: self._toggle_search_mode())
+        ttk.Label(parameters, text="Sac à améliorer :").grid(row=3, column=3, pady=(8, 0), sticky="e")
+        self.target_bag_box = ttk.Combobox(
+            parameters, textvariable=self.target_bag_name,
+            values=tuple(self.target_bag_by_label), state="disabled", width=28,
+        )
+        self.target_bag_box.grid(row=3, column=4, columnspan=2, pady=(8, 0), sticky="w")
+        ttk.Label(parameters, text="Club fixé :").grid(row=3, column=6, pady=(8, 0), sticky="e")
+        self.fixed_club_box = ttk.Combobox(
+            parameters, textvariable=self.fixed_club_name,
+            values=tuple(self.fixed_club_by_label), state="disabled", width=22,
+        )
+        self.fixed_club_box.grid(row=3, column=7, columnspan=2, pady=(8, 0), sticky="w")
+        ttk.Label(parameters, text="Remplacements :").grid(row=3, column=9, pady=(8, 0), sticky="e")
+        self.depth_box = ttk.Combobox(
+            parameters, textvariable=self.replacement_depth, values=("1", "2"), state="disabled", width=4,
+        )
+        self.depth_box.grid(row=3, column=10, pady=(8, 0), sticky="w")
+
         self.analyze_button = ttk.Button(parameters, text="Lancer l’analyse", command=self._start)
         self.analyze_button.grid(row=0, column=10, padx=(20, 6))
         ttk.Button(parameters, text="Gérer mon inventaire", command=self._open_inventory).grid(row=0, column=11, padx=6)
@@ -577,13 +657,13 @@ class StrategyOptimizerApp:
         table.pack(fill="both", expand=True)
         table.rowconfigure(0, weight=1)
         table.columnconfigure(0, weight=1)
-        columns = ("number", "family", "category", "composition", "active", "unresolved", "neutral", "strengths")
+        columns = ("number", "origin", "family", "category", "composition", "active", "unresolved", "neutral", "strengths")
         self.candidate_tree = ttk.Treeview(table, columns=columns, show="headings", selectmode="browse", height=15)
         labels = {
-            "number": "N°", "family": "Famille", "category": "Catégorie", "composition": "Composition ordonnée",
+            "number": "N°", "origin": "Origine", "family": "Famille", "category": "Catégorie", "composition": "Composition ordonnée",
             "active": "Clubs actifs", "unresolved": "Non résolues", "neutral": "Club neutre", "strengths": "Points forts calculables",
         }
-        widths = {"number": 40, "family": 220, "category": 170, "composition": 330, "active": 240, "unresolved": 80, "neutral": 80, "strengths": 290}
+        widths = {"number": 40, "origin": 130, "family": 220, "category": 170, "composition": 330, "active": 240, "unresolved": 80, "neutral": 80, "strengths": 290}
         for column in columns:
             self.candidate_tree.heading(column, text=labels[column])
             self.candidate_tree.column(column, width=widths[column], anchor="w")
@@ -631,6 +711,27 @@ class StrategyOptimizerApp:
     def _toggle_mode(self) -> None:
         self.scenario_entry.configure(state="disabled" if self.real_mode.get() else "normal")
 
+    def _toggle_search_mode(self) -> None:
+        mode = self.search_mode_by_label[self.search_mode_name.get()]
+        self.target_bag_box.configure(state="readonly" if mode == "improve_bag" else "disabled")
+        self.fixed_club_box.configure(state="readonly" if mode == "around_club" else "disabled")
+        self.depth_box.configure(state="readonly" if mode != "global" else "disabled")
+        self.analyze_button.configure(
+            text="Chercher des améliorations" if mode == "improve_bag" else "Lancer l’analyse"
+        )
+
+    def _refresh_inventory_choices(self) -> None:
+        bundle = load_user_data(self.user_data_path)
+        previous_bag = self.target_bag_name.get()
+        previous_club = self.fixed_club_name.get()
+        self.target_bag_by_label = {bag.name: bag.identifier for bag in bundle.bags}
+        owned = tuple(item for item in bundle.inventory.entries if item.unlocked and item.current_level is not None)
+        self.fixed_club_by_label = {item.display_name: item.club_id for item in owned}
+        self.target_bag_box.configure(values=tuple(self.target_bag_by_label))
+        self.fixed_club_box.configure(values=tuple(self.fixed_club_by_label))
+        self.target_bag_name.set(previous_bag if previous_bag in self.target_bag_by_label else next(iter(self.target_bag_by_label), ""))
+        self.fixed_club_name.set(previous_club if previous_club in self.fixed_club_by_label else next(iter(self.fixed_club_by_label), ""))
+
     def _toggle_advanced(self) -> None:
         if self.show_advanced.get():
             self.advanced_frame.grid(row=1, column=0, columnspan=2, pady=(10, 0), sticky="w")
@@ -657,10 +758,15 @@ class StrategyOptimizerApp:
             limit=limit,
             max_evaluations=max_evaluations,
             reference_bag_id=self.reference_by_label[self.reference_name.get()],
+            search_mode=self.search_mode_by_label[self.search_mode_name.get()],
+            target_bag_id=self.target_bag_by_label.get(self.target_bag_name.get()),
+            fixed_club_id=self.fixed_club_by_label.get(self.fixed_club_name.get()),
+            replacement_depth=int(self.replacement_depth.get()),
         )
 
     def _start(self) -> None:
         try:
+            self._refresh_inventory_choices()
             options = self._options()
         except (ValueError, KeyError) as error:
             self._on_error(str(error), error.__class__.__name__)
@@ -682,9 +788,13 @@ class StrategyOptimizerApp:
         self.candidate_tree.delete(*self.candidate_tree.get_children())
         for index, item in enumerate(self.presentation.candidates):
             self.candidate_tree.insert("", "end", iid=str(index), values=(
-                item.display_number, item.families, item.category, item.composition, item.active_clubs,
+                item.display_number, item.origin, item.families, item.category, item.composition, item.active_clubs,
                 item.unresolved_count, "Oui" if item.has_neutral_club else "Non", item.strengths,
             ))
+        self.status.set(
+            f"Analyse terminée — inventaire utilisé : {result.inventory_owned_count} clubs possédés "
+            f"(observation {result.inventory_observed_at or 'inconnue'})."
+        )
         for button in (self.export_json_button, self.export_text_button, self.search_info_button):
             button.configure(state="normal")
         if self.presentation.candidates:
