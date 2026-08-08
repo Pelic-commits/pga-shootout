@@ -88,6 +88,27 @@ def _validate_values(app: StrategyOptimizerApp) -> dict[str, object]:
     }
 
 
+def _validate_strategy(app: StrategyOptimizerApp, strategy_id: str) -> dict[str, object]:
+    assert app.result is not None and app.presentation is not None
+    assert app.result.strategy_id == strategy_id
+    expected_steps = 2 if strategy_id in {"par3", "par4_short"} else 3
+    assert app.result.retained_results
+    assert all(len(item.active_assignments) == expected_steps for item in app.result.retained_results)
+    first = app.presentation.details[0]
+    assert len(first.steps) == expected_steps
+    assert first.overview.count("Club :") == expected_steps
+    assert "SUPPORTS" in first.overview and "ORDRE" in first.overview
+    tabs = tuple(app.notebook.tab(tab, "text") for tab in app.notebook.tabs())
+    assert tabs[0] == "Résumé"
+    assert len(tabs) == expected_steps + 3
+    return {
+        "steps": expected_steps,
+        "families": [item.identifier for item in app.result.result_families],
+        "candidates": len(app.result.retained_results),
+        "total_seconds": app.result.search.total_seconds,
+    }
+
+
 def main() -> int:
     export_dir = Path(tempfile.mkdtemp(prefix="pga-shootout-gui-validation-"))
     root = tk.Tk()
@@ -126,6 +147,17 @@ def main() -> int:
     evidence["reference_power"] = app.result.empirical_reference.final_power
     evidence["reference_statement"] = app.result.empirical_reference.statement
     evidence["exports"] = [str(json_path), str(text_path)]
+
+    evidence["strategies"] = {}
+    app.reference_name.set("Aucun")
+    app.max_evaluations.set("600")
+    app.limit.set("5")
+    for strategy_id in ("par3", "par4_short", "par4_long", "par5"):
+        app.strategy_name.set(next(label for label, identifier in app.strategy_by_label.items() if identifier == strategy_id))
+        app._refresh_variants()
+        app._start()
+        _wait(app)
+        evidence["strategies"][strategy_id] = _validate_strategy(app, strategy_id)
     _close_root(app.root)
 
     # A second real root proves normal closure and relaunch in the same launcher path.

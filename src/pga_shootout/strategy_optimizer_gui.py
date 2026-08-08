@@ -131,6 +131,7 @@ class StepPresentation:
 @dataclass(frozen=True)
 class CandidateDetailPresentation:
     title: str
+    overview: str
     steps: tuple[StepPresentation, ...]
     synergies: str
     technical_details: str
@@ -255,11 +256,43 @@ class StrategyOptimizerPresenter:
         ))
         return CandidateDetailPresentation(
             title=title,
+            overview=self._overview(candidate, step_labels),
             steps=steps,
             synergies=self._synergies(candidate, step_labels),
             technical_details=self._technical(candidate, step_labels),
             clipboard_summary=clipboard,
         )
+
+    def _overview(
+        self,
+        candidate: StrategyCandidateResult,
+        step_labels: Mapping[str, str],
+    ) -> str:
+        clubs = {item.club_id: item for item in candidate.clubs}
+        lines = ["Résumé des clubs essentiels", "=" * 28]
+        for step_id, club_id in candidate.active_assignments.items():
+            club = clubs[club_id]
+            step = next(item for item in club.steps if item.step_id == step_id)
+            values = []
+            for metric in ("power", "control", "spin"):
+                value = step.final_stats.get(metric)
+                if value is not None and step.metric_relevance.get(metric) == "objective":
+                    values.append(f"{_metric_label(metric)} {value:g}")
+            lines.extend((
+                "",
+                step_labels.get(step_id, step_id).upper(),
+                f"Club : {club.club_name}",
+                " — ".join(values) or "Aucune métrique objective disponible",
+            ))
+        support_lines = [
+            f"{club.club_name} : {', '.join(step_labels.get(step, step) for step in club.support_steps)}"
+            for club in candidate.clubs if club.support_steps
+        ]
+        lines.extend(("", "SUPPORTS", *(support_lines or ("Aucun support différenciant observé",))))
+        lines.extend(("", "ORDRE", " → ".join(club.club_name for club in candidate.clubs)))
+        if candidate.unresolved_abilities:
+            lines.extend(("", f"AVERTISSEMENTS : {len(candidate.unresolved_abilities)} capacité(s) non résolue(s)"))
+        return "\n".join(lines)
 
     def _step_content(
         self,
@@ -394,18 +427,25 @@ class StrategyOptimizerPresenter:
 
     @staticmethod
     def _search_information(result: StrategyOptimizationResult) -> str:
-        total = result.search.generation_seconds + result.search.evaluation_seconds
+        total = result.search.total_seconds
         return "\n".join((
             "Informations sur la recherche",
             f"Candidats générés : {result.search.reduced_candidates_generated}",
             f"Candidats évalués : {result.search.candidates_evaluated}",
             f"Doublons éliminés : {result.search.candidate_result_duplicates_removed}",
             f"Durée mesurée : {total:.2f} s",
+            f"Génération : {result.search.generation_seconds:.2f} s",
+            f"Moteur : {result.search.evaluation_seconds:.2f} s",
+            f"Comparaison et détails : {result.search.comparison_seconds:.2f} s",
             f"Limite de sécurité atteinte : {'oui' if result.search.safety_limit_reached else 'non'}",
             f"Compositions : {result.search.compositions_generated}",
+            f"Compositions théoriques : {result.search.theoretical_compositions}",
+            f"Compositions évaluées : {result.search.compositions_evaluated}",
+            f"Affectations actives : {result.search.active_assignments_considered} / {result.search.active_assignments_theoretical}",
             f"Permutations théoriques : {result.search.permutations_theoretical}",
             f"Permutations prouvées équivalentes : {result.search.permutations_proven_equivalent}",
             f"Permutations structurellement distinctes : {result.search.permutations_structurally_distinct}",
+            f"Cache d’évaluation : {result.search.evaluation_cache_hits} hits / {result.search.evaluation_cache_misses} misses",
             f"Origines : {dict(result.search.origin_counts or {})}",
             f"Complétude locale : {result.search.local_search_completeness}",
             f"Inventaire utilisé : {result.inventory_owned_count} clubs possédés — observation {result.inventory_observed_at or 'inconnue'}",
@@ -820,6 +860,7 @@ class StrategyOptimizerApp:
         self.detail_title.set(detail.title)
         for tab in self.notebook.tabs():
             self.notebook.forget(tab)
+        self._add_text_tab("Résumé", detail.overview)
         for step in detail.steps:
             self._add_text_tab(step.label, step.content)
         self._add_text_tab("Pourquoi ces clubs ?", detail.synergies)

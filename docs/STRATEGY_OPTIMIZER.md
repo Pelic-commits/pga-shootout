@@ -6,6 +6,11 @@ ne contient aucune branche liée à cet identifiant : il lit la séquence, les
 contraintes de clubs actifs, les objectifs locaux, les contextes et le nombre de
 places de support dans le registre.
 
+Les quatre stratégies livrées sont désormais validées dans le même optimiseur :
+Par 3, Par 4 court, Par 4 long et Par 5. Les stratégies sans familles explicites
+reçoivent des vues génériques dérivées des fonctions de leurs coups ; voir
+`MULTI_STRATEGY_OPTIMIZER.md`.
+
 Le parcours utilisateur normal ne demande aucune commande : double-cliquez sur
 `OPTIMISER_MES_SACS.bat`. Les commandes ci-dessous restent disponibles pour les
 usages avancés et le diagnostic.

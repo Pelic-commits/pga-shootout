@@ -18,6 +18,11 @@ second conserve le club actif choisi et recherche de meilleurs supports. Le
 calcul exhaustif peut prendre une à deux minutes sur un inventaire important,
 mais la fenêtre reste utilisable et affiche la progression.
 
+Le menu « Stratégie » permet de choisir Par 3, Par 4 court, Par 4 long ou Par 5.
+Pour les stratégies à trois coups, l’onglet « Résumé » affiche immédiatement le
+club de départ, le club d’approche et le putter avec leurs statistiques
+objectives, puis les supports et l’ordre du sac.
+
 ## Ce que prépare le lanceur
 
 Le lanceur travaille uniquement dans le dossier du projet. Il :
