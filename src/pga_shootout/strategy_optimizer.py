@@ -24,7 +24,7 @@ from .engine import EvaluationError, RuleEngine
 from .models import Bag, BagEntry, Club, DelayedEffect, EvaluationMode, GameState
 from .metric_semantics import MetricSemantic, MetricSemanticsRegistry
 from .strategy import (
-    OutcomeRequirement, ResolvedStrategy, ResultFamilyDefinition,
+    OutcomeRequirement, ResolvedStrategy, ResultFamilyConstraint, ResultFamilyDefinition,
     ResultFamilyObjective, ShotStep, StrategyRegistry,
 )
 from .user_data import InventoryEntry, SavedBag, load_user_data
@@ -185,6 +185,14 @@ class SearchInstrumentation:
     origin_counts: Mapping[str, int] | None = None
     replacement_depth: int = 0
     local_search_completeness: str = "not_applicable"
+    theoretical_compositions: int = 0
+    compositions_evaluated: int = 0
+    active_assignments_theoretical: int = 0
+    active_assignments_considered: int = 0
+    evaluation_cache_hits: int = 0
+    evaluation_cache_misses: int = 0
+    comparison_seconds: float = 0.0
+    total_seconds: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -315,6 +323,9 @@ class _RuntimeEvaluator:
         self.support_categories: dict[str, tuple[str, ...]] = {}
         self.order_sensitive_ids: set[str] = set()
         self.contextual_active_ids: set[str] = set()
+        self.evaluation_cache: dict[tuple[Any, ...], ComparedBag] = {}
+        self.evaluation_cache_hits = 0
+        self.evaluation_cache_misses = 0
         for entry in entries:
             if not entry.unlocked:
                 continue
@@ -434,6 +445,19 @@ class _RuntimeEvaluator:
         pending_effects: tuple[DelayedEffect, ...] = (),
         previous_club_id: str | None = None,
     ) -> ComparedBag:
+        cache_key = (
+            spec.club_ids,
+            current_club_id,
+            mode.value,
+            terrain,
+            tuple(repr(item) for item in pending_effects),
+            previous_club_id,
+        )
+        cached = self.evaluation_cache.get(cache_key)
+        if cached is not None:
+            self.evaluation_cache_hits += 1
+            return cached
+        self.evaluation_cache_misses += 1
         entries = tuple(BagEntry(self.clubs[club_id], self.levels[club_id]) for club_id in spec.club_ids)
         state = GameState(
             bag=Bag(entries),
@@ -453,7 +477,9 @@ class _RuntimeEvaluator:
             strict_failed = True
         saved = SavedBag(spec.identifier, spec.identifier, "optimizer_candidate", spec.club_ids, ())
         evaluation = BagEvaluation(saved, state, result, mode, strict_failed, self.engine.mechanisms.names)
-        return summarize_bag_evaluation(evaluation, spec.club_ids.index(current_club_id) + 1)
+        summary = summarize_bag_evaluation(evaluation, spec.club_ids.index(current_club_id) + 1)
+        self.evaluation_cache[cache_key] = summary
+        return summary
 
 
 class StrategyCandidateGenerator:
@@ -509,10 +535,11 @@ class StrategyCandidateGenerator:
             for pool, step in zip(full_role_pools, definition.sequence, strict=True)
         )
         active_pool_union = tuple(dict.fromkeys(item for pool in active_pools for item in pool))
+        assignment_limit = min(max_generated or 512, 512)
         assignments = tuple(
-            assigned for assigned in self._fair_assignments(active_pools)
+            assigned for assigned in self._fair_assignments(active_pools, assignment_limit * 2)
             if definition.allow_active_club_reuse or len(set(assigned)) == len(assigned)
-        )
+        )[:assignment_limit]
         support_choices = {
             assigned: self._support_sets(
                 runtime, eligible_ids, assigned,
@@ -557,6 +584,8 @@ class StrategyCandidateGenerator:
             "inventory": len(eligible_ids),
             "active_potential": sum(len(pool) for pool in full_role_pools),
             "active_assignments": len(assignments),
+            "active_assignments_theoretical": active_theoretical,
+            "theoretical_compositions": active_theoretical * support_theoretical,
             "reference_candidates": len(references),
             "global_candidates": sum(item.provenance == "global_search" for item in generated.values()),
         }
@@ -759,15 +788,24 @@ class StrategyCandidateGenerator:
         return related and helps_remaining
 
     @staticmethod
-    def _fair_assignments(pools: tuple[tuple[str, ...], ...]) -> tuple[tuple[str, ...], ...]:
-        indexed = tuple(tuple(enumerate(pool)) for pool in pools)
-        values = [item for item in product(*indexed)]
-        values.sort(key=lambda item: (
-            max(index for index, _ in item),
-            sum(index for index, _ in item),
-            tuple(index for index, _ in item),
-        ))
-        return tuple(tuple(club_id for _, club_id in item) for item in values)
+    def _fair_assignments(
+        pools: tuple[tuple[str, ...], ...],
+        limit: int | None = None,
+    ) -> tuple[tuple[str, ...], ...]:
+        """Return the same fair diagonal prefix without materializing the full product."""
+        if not pools or any(not pool for pool in pools):
+            return ()
+        target = limit if limit is not None else math.prod(len(pool) for pool in pools)
+        result: list[tuple[str, ...]] = []
+        for maximum_index in range(max(len(pool) for pool in pools)):
+            ranges = tuple(range(min(len(pool), maximum_index + 1)) for pool in pools)
+            shell = [indices for indices in product(*ranges) if max(indices) == maximum_index]
+            shell.sort(key=lambda indices: (sum(indices), indices))
+            for indices in shell:
+                result.append(tuple(pool[index] for pool, index in zip(pools, indices, strict=True)))
+                if len(result) >= target:
+                    return tuple(result)
+        return tuple(result)
 
     def _pareto_active_pool(
         self,
@@ -1013,6 +1051,7 @@ class StrategyOptimizer:
         }
 
     def optimize(self, request: StrategyOptimizationRequest) -> StrategyOptimizationResult:
+        optimization_started = perf_counter()
         if request.limit < 1:
             raise StrategyOptimizationError("Display limit must be at least 1")
         if request.max_evaluations < 1:
@@ -1092,6 +1131,7 @@ class StrategyOptimizer:
             else:
                 evaluated.append(quick)
         evaluation_seconds = perf_counter() - evaluation_started
+        comparison_started = perf_counter()
         current_saved_quick = (
             next(
                 (
@@ -1111,11 +1151,16 @@ class StrategyOptimizer:
             if reference_bag is None:
                 raise StrategyOptimizationError(f"Unknown reference bag: {request.reference_bag_id}")
             empirical_reference = self._empirical_reference(reference_bag, strategy, runtime, request.mode)
-            reference_step = strategy.definition.reference_step_id
+            reference_step = (
+                strategy.definition.reference_step_id
+                or next(
+                    (step.identifier for step in strategy.definition.sequence if step.function.identifier != "finish"),
+                    strategy.definition.sequence[0].identifier,
+                )
+            )
             evaluated = [
                 item for item in evaluated
-                if reference_step is not None
-                and _quick_metric(item, reference_step, "power") >= empirical_reference.final_power
+                if _quick_metric(item, reference_step, "power") >= empirical_reference.final_power
             ]
         unique_before_reference_guard = self._deduplicate(evaluated)
         reference_controls = tuple(
@@ -1158,6 +1203,8 @@ class StrategyOptimizer:
             if baseline is not None:
                 detailed = tuple(self._with_reference_delta(item, baseline) for item in detailed)
         type_comparison = _build_type_comparison(layered, strategy, runtime, self.metric_semantics)
+        comparison_seconds = perf_counter() - comparison_started
+        total_seconds = perf_counter() - optimization_started
         safety_reached = (
             len(search_specs) > request.max_evaluations
             and not (request.search_mode != "global" and request.replacement_depth == 1)
@@ -1255,6 +1302,14 @@ class StrategyOptimizer:
                     else "structurally_reduced_two_replacements" if request.search_mode != "global"
                     else "not_applicable"
                 ),
+                theoretical_compositions=generation_stats.get("theoretical_compositions", theoretical),
+                compositions_evaluated=len({item.order_space_id for item in selected_specs}),
+                active_assignments_theoretical=generation_stats.get("active_assignments_theoretical", 0),
+                active_assignments_considered=generation_stats.get("active_assignments", 0),
+                evaluation_cache_hits=runtime.evaluation_cache_hits,
+                evaluation_cache_misses=runtime.evaluation_cache_misses,
+                comparison_seconds=round(comparison_seconds, 6),
+                total_seconds=round(total_seconds, 6),
             ),
             retained_results=detailed,
             excluded_candidate_count=excluded_candidates,
@@ -1377,7 +1432,7 @@ class StrategyOptimizer:
         limit: int,
         has_reference: bool,
     ) -> tuple[tuple[ResultFamilyResult, ...], tuple[_QuickCandidate, ...], dict[str, tuple[str, ...]]]:
-        definitions = strategy.definition.result_families
+        definitions = strategy.definition.result_families or self._derived_result_families(strategy)
         if not definitions:
             selected = candidates[:limit]
             family = ResultFamilyResult("default", "Propositions retenues", "", tuple(item.spec.identifier for item in selected), "nondominated")
@@ -1404,6 +1459,134 @@ class StrategyOptimizer:
             tuple(family_results), tuple(selected_by_id.values()),
             {key: tuple(value) for key, value in memberships.items()},
         )
+
+    def _derived_result_families(
+        self,
+        strategy: ResolvedStrategy,
+    ) -> tuple[ResultFamilyDefinition, ...]:
+        """Build reusable views from shot functions and declared metric relevance."""
+        steps = strategy.definition.sequence
+
+        def objectives(
+            step: ShotStep,
+            order: tuple[str, ...],
+            *,
+            first_priority_together: bool = False,
+        ) -> tuple[ResultFamilyObjective, ...]:
+            available = {
+                item.metric for item in step.metric_uses
+                if _metric_relevance(step, item.metric, self.metric_semantics) == "objective"
+            }
+            result = []
+            for index, metric in enumerate(order, 1):
+                if metric in available:
+                    result.append(ResultFamilyObjective(
+                        1 if first_priority_together else index,
+                        step.identifier,
+                        metric,
+                        "maximize",
+                    ))
+            return tuple(result)
+
+        def secondary_objectives(excluded_step_id: str) -> tuple[ResultFamilyObjective, ...]:
+            result: list[ResultFamilyObjective] = []
+            for step in steps:
+                if step.identifier == excluded_step_id:
+                    continue
+                for objective in objectives(step, ("power", "control", "spin"), first_priority_together=True):
+                    result.append(replace(objective, priority=4))
+            return tuple(result)
+
+        families: list[ResultFamilyDefinition] = []
+        for step in (item for item in steps if item.function.identifier != "finish"):
+            power_first = objectives(step, ("power", "control", "spin"))
+            if power_first:
+                families.extend((
+                    ResultFamilyDefinition(
+                        f"{step.identifier}_max_power",
+                        f"{step.name} — Power maximale",
+                        "derived_from_shot_function",
+                        "lexicographic_best",
+                        (),
+                        (*power_first, *secondary_objectives(step.identifier)),
+                        (),
+                        "Power maximale calculable, sans prétendre à une distance réelle.",
+                    ),
+                    ResultFamilyDefinition(
+                        f"{step.identifier}_power_control",
+                        f"{step.name} — Power / Control",
+                        "derived_from_shot_function",
+                        "best_per_primary_value",
+                        (),
+                        (*power_first, *secondary_objectives(step.identifier)),
+                        (),
+                        "Meilleur Control observé aux différents paliers réels de Power.",
+                    ),
+                ))
+            if step.function.identifier == "reach_target_zone":
+                attack = objectives(step, ("control", "spin", "power"), first_priority_together=True)
+                families.extend((
+                    ResultFamilyDefinition(
+                        f"{step.identifier}_landing_control",
+                        f"{step.name} — contrôle de l’attaque",
+                        "derived_from_shot_function",
+                        "nondominated",
+                        (),
+                        (*attack, *secondary_objectives(step.identifier)),
+                        (),
+                        "Compromis calculables de Control, Spin et Power pour l’attaque de la zone cible.",
+                    ),
+                    ResultFamilyDefinition(
+                        f"{step.identifier}_iron",
+                        f"{step.name} — approche Iron",
+                        "derived_from_shot_function",
+                        "nondominated",
+                        (ResultFamilyConstraint(step.identifier, "type", "equals", "iron"),),
+                        (*attack, *secondary_objectives(step.identifier)),
+                        (),
+                        "Meilleures approches calculables dont le club actif est un Iron.",
+                    ),
+                    ResultFamilyDefinition(
+                        f"{step.identifier}_all_types",
+                        f"{step.name} — meilleur concurrent tous types",
+                        "derived_from_shot_function",
+                        "nondominated",
+                        (),
+                        (*attack, *secondary_objectives(step.identifier)),
+                        (),
+                        "Tous les types restent admissibles et sont comparés sans préférence imposée.",
+                    ),
+                ))
+        finish = next((item for item in steps if item.function.identifier == "finish"), None)
+        if finish is not None:
+            putt = objectives(finish, ("power", "control"), first_priority_together=True)
+            families.append(ResultFamilyDefinition(
+                f"{finish.identifier}_power_control",
+                f"{finish.name} — Power / Control",
+                "derived_from_shot_function",
+                "nondominated",
+                (),
+                putt,
+                (),
+                "Compromis Power / Control du club de finition, sans utiliser les métriques descriptives.",
+            ))
+        whole_sequence = tuple(
+            objective
+            for step in steps
+            for objective in objectives(step, ("power", "control", "spin"), first_priority_together=True)
+        )
+        if whole_sequence:
+            families.append(ResultFamilyDefinition(
+                "whole_sequence",
+                "Meilleurs compromis sur toute la séquence",
+                "derived_from_shot_function",
+                "nondominated",
+                (),
+                whole_sequence,
+                (),
+                "Front non dominé considérant simultanément tous les clubs actifs.",
+            ))
+        return tuple(families)
 
     def _evaluate_quick(
         self,
@@ -2094,11 +2277,17 @@ def render_strategy_optimization(result: StrategyOptimizationResult) -> str:
         f"Candidats évalués : {result.search.candidates_evaluated}",
         f"Doublons de résultat éliminés : {result.search.candidate_result_duplicates_removed}",
         f"Durée génération : {result.search.generation_seconds:.3f} s",
-        f"Durée évaluation : {result.search.evaluation_seconds:.3f} s",
-        f"Compositions : {result.search.compositions_generated}",
+        f"Durée moteur : {result.search.evaluation_seconds:.3f} s",
+        f"Durée comparaison et détails : {result.search.comparison_seconds:.3f} s",
+        f"Durée totale : {result.search.total_seconds:.3f} s",
+        f"Compositions théoriques : {result.search.theoretical_compositions}",
+        f"Compositions générées : {result.search.compositions_generated}",
+        f"Compositions évaluées : {result.search.compositions_evaluated}",
+        f"Affectations actives considérées : {result.search.active_assignments_considered} / {result.search.active_assignments_theoretical}",
         f"Permutations théoriques : {result.search.permutations_theoretical}",
         f"Permutations prouvées équivalentes : {result.search.permutations_proven_equivalent}",
         f"Permutations structurellement distinctes : {result.search.permutations_structurally_distinct}",
+        f"Cache d'évaluation : {result.search.evaluation_cache_hits} hits / {result.search.evaluation_cache_misses} misses",
         f"Origines : {dict(result.search.origin_counts or {})}",
         f"Étapes de réduction : {dict(result.search.stage_counts or {})}",
         f"Complétude locale : {result.search.local_search_completeness}",
