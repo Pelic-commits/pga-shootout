@@ -257,9 +257,25 @@ def build_parser() -> argparse.ArgumentParser:
     optimize_strategy_parser.add_argument(
         "--reference-bag", help="saved bag used as an empirical minimum-Power reference",
     )
+    optimize_strategy_parser.add_argument(
+        "--search-mode", choices=("global", "improve_bag", "around_club"), default="global",
+    )
+    optimize_strategy_parser.add_argument("--target-bag", help="saved bag used for local improvement search")
+    optimize_strategy_parser.add_argument("--fixed-club", help="owned club fixed as the first active club")
+    optimize_strategy_parser.add_argument("--replacement-depth", type=int, choices=(1, 2), default=1)
     optimize_strategy_parser.add_argument("--user-dir", default="data/pga_shootout.sqlite")
     optimize_strategy_parser.add_argument("--catalog", default="data/normalized/clubs_official.json")
     optimize_strategy_parser.add_argument("--registry", default="data/strategies/strategies.json")
+    trace_parser = subparsers.add_parser(
+        "trace-composition", help="show where one five-club composition enters or leaves strategy search",
+    )
+    trace_parser.add_argument("strategy_id")
+    trace_parser.add_argument("club_ids", nargs=5)
+    trace_parser.add_argument("--variant", action="append", default=[])
+    trace_parser.add_argument("--scenario-level", type=_level_value)
+    trace_parser.add_argument("--user-dir", default="data/pga_shootout.sqlite")
+    trace_parser.add_argument("--catalog", default="data/normalized/clubs_official.json")
+    trace_parser.add_argument("--registry", default="data/strategies/strategies.json")
     return parser
 
 
@@ -358,11 +374,27 @@ def main(argv: Sequence[str] | None = None) -> int:
                 max_evaluations=args.max_evaluations,
                 order_mode=args.order_mode,
                 reference_bag_id=args.reference_bag,
+                search_mode=args.search_mode,
+                target_bag_id=args.target_bag,
+                fixed_club_id=args.fixed_club,
+                replacement_depth=args.replacement_depth,
             )
         )
         if hasattr(sys.stdout, "reconfigure"):
             sys.stdout.reconfigure(encoding="utf-8")
         print(render_strategy_optimization_json(result) if args.json else render_strategy_optimization(result))
+    elif args.command == "trace-composition":
+        result = StrategyOptimizer(
+            user_data_path=args.user_dir,
+            catalog_path=args.catalog,
+            strategy_registry_path=args.registry,
+        ).trace_composition(
+            args.strategy_id,
+            tuple(args.club_ids),
+            variant_ids=tuple(args.variant),
+            scenario_level=args.scenario_level,
+        )
+        print(json.dumps(result, indent=2, ensure_ascii=False))
     elif args.command == "evaluate-bag":
         mode = EvaluationMode.STRICT if args.strict else EvaluationMode.PARTIAL
         evaluation = evaluate_saved_bag(
