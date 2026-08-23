@@ -111,6 +111,13 @@ garantit donc pas l’optimum absolu. Les recherches locales à un remplacement
 restent exhaustives sur les compositions et les ordres de l’affectation active
 retenue ; elles ne prétendent pas énumérer toutes les affectations de rôles.
 
+Pour les recherches locales fréquentes, les 120 permutations historiques sont
+regroupées seulement lorsque leurs voisinages calculés et leurs résultats de
+sélection positionnelle sont identiques. Un test de non-régression compare
+l’ensemble complet des résultats de l’ancienne énumération `full_120` à la
+réduction `structural_exact`. Cette optimisation ne modifie ni les statistiques,
+ni les capacités non résolues, ni les propositions retenues.
+
 ## Limites restantes
 
 - aucune conversion Power → distance ;
@@ -119,4 +126,3 @@ retenue ; elles ne prétendent pas énumérer toutes les affectations de rôles.
 - certaines capacités restent non résolues et sont signalées ;
 - la recherche locale réelle sur trois étapes demeure plus coûteuse ;
 - aucun classement global entre compromis n’est produit.
-

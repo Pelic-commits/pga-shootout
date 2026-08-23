@@ -27,25 +27,25 @@ class InventoryStatusTests(unittest.TestCase):
 
     def test_totals_are_derived_and_inventory_is_distinct_from_catalog(self):
         report = self.report()
-        self.assertEqual(report.inventory_clubs, 76)
+        self.assertEqual(report.inventory_clubs, 77)
         self.assertEqual(report.baseline_inventory_clubs, 21)
-        self.assertEqual(len(report.newly_added_club_names), 55)
+        self.assertEqual(len(report.newly_added_club_names), 56)
         self.assertFalse(report.inventory_complete)
-        self.assertEqual(report.official_abilities, 140)
-        self.assertEqual(report.simulated_abilities, 83)
-        self.assertEqual(report.unresolved_abilities, 57)
+        self.assertEqual(report.official_abilities, 142)
+        self.assertEqual(report.simulated_abilities, 84)
+        self.assertEqual(report.unresolved_abilities, 58)
         self.assertEqual(report.fully_simulated_clubs, 36)
-        self.assertEqual(report.known_user_levels, 73)
+        self.assertEqual(report.known_user_levels, 74)
         self.assertEqual(
             (report.fully_comparable_clubs, report.warning_comparable_clubs, report.non_comparable_clubs),
-            (30, 21, 25),
+            (30, 22, 25),
         )
         self.assertEqual((report.global_clubs, report.global_abilities), (88, 162))
         self.assertEqual((report.global_simulated_groups, report.global_simulated_abilities), (63, 86))
         self.assertEqual(report.global_simulated_clubs, 56)
         self.assertEqual(
             (report.fully_optimizable_clubs, report.context_optimizable_clubs, report.warning_optimizable_clubs, report.non_optimizable_clubs),
-            (30, 6, 15, 25),
+            (30, 6, 16, 25),
         )
 
     def test_every_owned_ability_occurs_exactly_once(self):
@@ -128,7 +128,7 @@ class InventoryStatusTests(unittest.TestCase):
             ("official_data_conflicts", "semantic_dependencies", "geometry_physics"),
         )
         self.assertNotIn("meteor", {club_id for lot in report.next_lots for club_id in lot.club_ids})
-        self.assertEqual(tuple(item.expected_ability_gain for item in report.next_lots), (9, 13, 21))
+        self.assertEqual(tuple(item.expected_ability_gain for item in report.next_lots), (9, 13, 22))
 
     def test_real_inventory_eligibility_and_texas_tee_are_explainable(self):
         report = self.report()
@@ -157,8 +157,8 @@ class InventoryStatusTests(unittest.TestCase):
         self.assertEqual(render_inventory_markdown(first), render_inventory_markdown(second))
         self.assertEqual(render_project_status_markdown(first), render_project_status_markdown(second))
         payload = json.loads(render_inventory_json(first))
-        self.assertEqual(payload["inventory_clubs"], 76)
-        self.assertEqual(len(payload["clubs"]), 76)
+        self.assertEqual(payload["inventory_clubs"], 77)
+        self.assertEqual(len(payload["clubs"]), 77)
 
     def test_written_reports_share_the_same_audit(self):
         report = self.report()

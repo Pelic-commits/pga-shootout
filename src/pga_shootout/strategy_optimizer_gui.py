@@ -43,6 +43,7 @@ GROUP_LABELS = {
     "tradeoff": "Compromis",
     "with_warnings": "Résultat avec avertissements",
     "excluded": "Candidat exclu",
+    "neutral": "Neutre",
 }
 METRIC_LABELS = {
     "power": "Power",
@@ -52,6 +53,7 @@ METRIC_LABELS = {
     "wind_resistance_percent": "Wind Resistance",
     "bounce_reduction_percent": "Bounce Reduction",
     "groundspin": "Groundspin",
+    "groundspin_increase_percent": "Groundspin",
     "swing_speed": "Swing Speed",
     "gravity_reduction_percent": "Gravity Reduction",
     "launch_angle_degrees": "Launch Angle",
@@ -83,6 +85,11 @@ class OptimizationGuiOptions:
     target_bag_id: str | None = None
     fixed_club_id: str | None = None
     replacement_depth: int = 1
+    required_club_ids: tuple[str, ...] = ()
+    excluded_club_ids: tuple[str, ...] = ()
+    locked_positions: Mapping[int, str] | None = None
+    keep_current_putter: bool = False
+    fixed_step_id: str | None = None
 
     def to_request(self) -> StrategyOptimizationRequest:
         if self.limit not in {5, 10, 20}:
@@ -105,6 +112,11 @@ class OptimizationGuiOptions:
             target_bag_id=self.target_bag_id,
             fixed_club_id=self.fixed_club_id,
             replacement_depth=self.replacement_depth,
+            required_club_ids=self.required_club_ids,
+            excluded_club_ids=self.excluded_club_ids,
+            locked_positions=self.locked_positions or {},
+            keep_current_putter=self.keep_current_putter,
+            fixed_step_id=self.fixed_step_id,
         )
 
 
@@ -270,6 +282,8 @@ class StrategyOptimizerPresenter:
     ) -> str:
         clubs = {item.club_id: item for item in candidate.clubs}
         lines = ["Résumé des clubs essentiels", "=" * 28]
+        if candidate.metric_values_from_reference is not None:
+            lines.extend(("", self._reference_comparison(candidate, step_labels)))
         for step_id, club_id in candidate.active_assignments.items():
             club = clubs[club_id]
             step = next(item for item in club.steps if item.step_id == step_id)
@@ -292,6 +306,58 @@ class StrategyOptimizerPresenter:
         lines.extend(("", "ORDRE", " → ".join(club.club_name for club in candidate.clubs)))
         if candidate.unresolved_abilities:
             lines.extend(("", f"AVERTISSEMENTS : {len(candidate.unresolved_abilities)} capacité(s) non résolue(s)"))
+        return "\n".join(lines)
+
+    @staticmethod
+    def _reference_comparison(
+        candidate: StrategyCandidateResult,
+        step_labels: Mapping[str, str],
+    ) -> str:
+        names = {club.club_id: club.club_name for club in candidate.clubs}
+        lines = ["COMPARAISON AVANT / APRÈS", "=" * 27]
+        lines.append("CLUBS RETIRÉS : " + (", ".join(candidate.removed_club_ids) or "aucun"))
+        lines.append("CLUBS AJOUTÉS : " + (", ".join(candidate.added_club_ids) or "aucun"))
+        lines.append("CHANGEMENTS DE POSITION :")
+        if candidate.position_changes:
+            for club_id, (before, after) in candidate.position_changes.items():
+                lines.append(f"  {names.get(club_id, club_id)} : {before or 'hors sac'} → {after or 'hors sac'}")
+        else:
+            lines.append("  aucun")
+
+        profiles = (("PROFIL D’ATTAQUE", {"power", "control", "spin"}),
+                    ("PROFIL D’ATTERRISSAGE", set(METRIC_LABELS) - {"power", "control", "spin"}))
+        gains: list[str] = []
+        losses: list[str] = []
+        unchanged: list[str] = []
+        unknown: list[str] = []
+        values = candidate.metric_values_from_reference or {}
+        for heading, metrics in profiles:
+            selected = [(key, value) for key, value in values.items() if key.rsplit(".", 1)[-1] in metrics]
+            if not selected:
+                continue
+            lines.extend(("", heading))
+            for key, value in selected:
+                step_id, metric = key.split(".", 1)
+                before, after = value.get("before"), value.get("after")
+                label = f"{step_labels.get(step_id, step_id)} / {_metric_label(metric)}"
+                if before is None or after is None:
+                    line = f"{label} : inconnu"
+                    unknown.append(label)
+                else:
+                    delta = after - before
+                    sign = "=" if delta == 0 else f"{delta:+g}"
+                    line = f"{label} : {before:g} → {after:g} ({sign})"
+                    (gains if delta > 0 else losses if delta < 0 else unchanged).append(
+                        f"{label} {sign}{_metric_unit(metric)}"
+                    )
+                lines.append("  " + line)
+        for heading, items in (("GAINS", gains), ("PERTES", losses), ("INCHANGÉ", unchanged), ("INCONNU", unknown)):
+            lines.extend(("", heading))
+            lines.extend((f"- {item}" for item in items) if items else ("- aucun",))
+        if candidate.gained_contribution_ids:
+            lines.extend(("", "CAPACITÉS GAGNÉES", *(f"- {item}" for item in candidate.gained_contribution_ids)))
+        if candidate.lost_contribution_ids:
+            lines.extend(("", "CAPACITÉS PERDUES", *(f"- {item}" for item in candidate.lost_contribution_ids)))
         return "\n".join(lines)
 
     def _step_content(
@@ -423,6 +489,9 @@ class StrategyOptimizerPresenter:
             lines.extend(f"  - {item.club_name} : {item.reason}" for item in result.excluded_clubs)
         if result.empirical_reference:
             lines.append("• " + result.empirical_reference.statement)
+        if result.inventory_changes.added_club_ids:
+            lines.append("• Nouveau(x) club(s) détecté(s) depuis la précédente analyse :")
+            lines.extend(f"  - {item.club_name} — niveau {item.level}" for item in result.new_club_diagnostics)
         return "\n".join(lines)
 
     @staticmethod
@@ -594,6 +663,7 @@ class StrategyOptimizerApp:
             "Chercher de nouveaux sacs": "global",
             "Améliorer un de mes sacs": "improve_bag",
             "Optimiser autour d’un club": "around_club",
+            "Tester un nouveau club dans mes sacs": "test_new_club",
         }
         self.search_mode_name = tk.StringVar(value="Chercher de nouveaux sacs")
         self.target_bag_by_label = {bag.name: bag.identifier for bag in bundle.bags}
@@ -601,7 +671,11 @@ class StrategyOptimizerApp:
         owned = tuple(item for item in bundle.inventory.entries if item.unlocked and item.current_level is not None)
         self.fixed_club_by_label = {item.display_name: item.club_id for item in owned}
         self.fixed_club_name = tk.StringVar(value=next(iter(self.fixed_club_by_label), ""))
+        self.fixed_step_name = tk.StringVar(value="")
         self.replacement_depth = tk.StringVar(value="1")
+        self.keep_current_putter = tk.BooleanVar(value=False)
+        self.lock_required_positions = tk.BooleanVar(value=False)
+        self.last_detected_club_ids: tuple[str, ...] = ()
         self._callback_queue: Queue[Callable[[], None]] = Queue()
         self.controller = StrategyOptimizerGuiController(
             self.optimizer,
@@ -611,6 +685,7 @@ class StrategyOptimizerApp:
             on_error=self._on_error,
         )
         self._build()
+        self._refresh_inventory_choices()
         self.root.after(25, self._poll_callbacks)
         self._refresh_variants()
         self._toggle_mode()
@@ -672,9 +747,34 @@ class StrategyOptimizerApp:
         )
         self.depth_box.grid(row=3, column=10, pady=(8, 0), sticky="w")
 
+        constraints = ttk.LabelFrame(parameters, text="Contraintes facultatives", padding=6)
+        constraints.grid(row=4, column=0, columnspan=12, sticky="ew", pady=(8, 0))
+        ttk.Label(constraints, text="Clubs à conserver / obligatoires").grid(row=0, column=0, sticky="w")
+        self.required_list = tk.Listbox(constraints, selectmode="multiple", exportselection=False, height=4, width=28)
+        self.required_list.grid(row=1, column=0, padx=(0, 12), sticky="ew")
+        ttk.Label(constraints, text="Clubs exclus").grid(row=0, column=1, sticky="w")
+        self.excluded_list = tk.Listbox(constraints, selectmode="multiple", exportselection=False, height=4, width=28)
+        self.excluded_list.grid(row=1, column=1, padx=(0, 12), sticky="ew")
+        ttk.Checkbutton(
+            constraints, text="Conserver mon putter actuel", variable=self.keep_current_putter,
+        ).grid(row=0, column=2, sticky="w")
+        ttk.Checkbutton(
+            constraints, text="Verrouiller à leur position actuelle les clubs conservés",
+            variable=self.lock_required_positions,
+        ).grid(row=1, column=2, sticky="nw")
+        ttk.Label(constraints, text="Rôle actif du club testé :").grid(row=0, column=3, padx=(14, 0), sticky="w")
+        self.fixed_step_box = ttk.Combobox(
+            constraints, textvariable=self.fixed_step_name, state="disabled", width=22,
+        )
+        self.fixed_step_box.grid(row=1, column=3, padx=(14, 0), sticky="nw")
+
         self.analyze_button = ttk.Button(parameters, text="Lancer l’analyse", command=self._start)
         self.analyze_button.grid(row=0, column=10, padx=(20, 6))
         ttk.Button(parameters, text="Gérer mon inventaire", command=self._open_inventory).grid(row=0, column=11, padx=6)
+        self.test_new_button = ttk.Button(
+            parameters, text="Tester le nouveau club", command=self._test_detected_club, state="disabled",
+        )
+        self.test_new_button.grid(row=1, column=11, padx=6, pady=(10, 0))
         ttk.Checkbutton(parameters, text="Options avancées", variable=self.show_advanced, command=self._toggle_advanced).grid(row=1, column=0, pady=(10, 0), sticky="w")
         self.advanced_frame = ttk.Frame(parameters)
         ttk.Label(self.advanced_frame, text="Limite de sécurité :").pack(side="left")
@@ -747,30 +847,65 @@ class StrategyOptimizerApp:
         self.variant_by_label = {item.label: item.identifier for item in choices}
         self.variant_box.configure(values=tuple(self.variant_by_label))
         self.variant_name.set(choices[0].label)
+        strategy = self.presenter.registry.get(strategy_id)
+        self.fixed_step_by_label = {step.name: step.identifier for step in strategy.sequence}
+        self.fixed_step_box.configure(values=tuple(self.fixed_step_by_label))
+        self.fixed_step_name.set(next(iter(self.fixed_step_by_label), ""))
 
     def _toggle_mode(self) -> None:
         self.scenario_entry.configure(state="disabled" if self.real_mode.get() else "normal")
 
     def _toggle_search_mode(self) -> None:
         mode = self.search_mode_by_label[self.search_mode_name.get()]
-        self.target_bag_box.configure(state="readonly" if mode == "improve_bag" else "disabled")
-        self.fixed_club_box.configure(state="readonly" if mode == "around_club" else "disabled")
+        local_mode = mode in {"improve_bag", "around_club", "test_new_club"}
+        self.target_bag_box.configure(state="readonly" if local_mode else "disabled")
+        self.fixed_club_box.configure(state="readonly" if mode in {"around_club", "test_new_club"} else "disabled")
+        self.fixed_step_box.configure(state="readonly" if mode == "around_club" else "disabled")
         self.depth_box.configure(state="readonly" if mode != "global" else "disabled")
         self.analyze_button.configure(
-            text="Chercher des améliorations" if mode == "improve_bag" else "Lancer l’analyse"
+            text="Chercher des améliorations" if mode == "improve_bag" else "Tester ce club" if mode == "test_new_club" else "Lancer l’analyse"
         )
 
     def _refresh_inventory_choices(self) -> None:
         bundle = load_user_data(self.user_data_path)
         previous_bag = self.target_bag_name.get()
         previous_club = self.fixed_club_name.get()
+        previous_ids = set(self.fixed_club_by_label.values())
         self.target_bag_by_label = {bag.name: bag.identifier for bag in bundle.bags}
         owned = tuple(item for item in bundle.inventory.entries if item.unlocked and item.current_level is not None)
         self.fixed_club_by_label = {item.display_name: item.club_id for item in owned}
         self.target_bag_box.configure(values=tuple(self.target_bag_by_label))
         self.fixed_club_box.configure(values=tuple(self.fixed_club_by_label))
+        for widget in (self.required_list, self.excluded_list):
+            selected = {widget.get(index) for index in widget.curselection()}
+            widget.delete(0, "end")
+            for label in self.fixed_club_by_label:
+                widget.insert("end", label)
+                if label in selected:
+                    widget.selection_set(widget.size() - 1)
         self.target_bag_name.set(previous_bag if previous_bag in self.target_bag_by_label else next(iter(self.target_bag_by_label), ""))
         self.fixed_club_name.set(previous_club if previous_club in self.fixed_club_by_label else next(iter(self.fixed_club_by_label), ""))
+        detected = tuple(sorted(set(self.fixed_club_by_label.values()) - previous_ids))
+        if detected:
+            self.last_detected_club_ids = detected
+            names = [label for label, club_id in self.fixed_club_by_label.items() if club_id in detected]
+            self.status.set("Nouveau club détecté : " + ", ".join(names) + " — vous pouvez le tester dans vos sacs.")
+            self.test_new_button.configure(state="normal")
+
+    def _test_detected_club(self) -> None:
+        if not self.last_detected_club_ids:
+            return
+        club_id = self.last_detected_club_ids[-1]
+        label = next((name for name, value in self.fixed_club_by_label.items() if value == club_id), None)
+        mode_label = next(
+            (name for name, value in self.search_mode_by_label.items() if value == "test_new_club"), None
+        )
+        if label is None or mode_label is None:
+            return
+        self.fixed_club_name.set(label)
+        self.search_mode_name.set(mode_label)
+        self._toggle_search_mode()
+        self.status.set(f"{label} est prêt à être testé dans le sac sélectionné.")
 
     def _toggle_advanced(self) -> None:
         if self.show_advanced.get():
@@ -790,6 +925,18 @@ class StrategyOptimizerApp:
             max_evaluations = int(self.max_evaluations.get())
         except ValueError as error:
             raise ValueError("Les options numériques doivent contenir des nombres entiers.") from error
+        required_labels = tuple(self.required_list.get(index) for index in self.required_list.curselection())
+        excluded_labels = tuple(self.excluded_list.get(index) for index in self.excluded_list.curselection())
+        required_ids = tuple(self.fixed_club_by_label[item] for item in required_labels)
+        target_bag_id = self.target_bag_by_label.get(self.target_bag_name.get())
+        locked_positions: dict[int, str] = {}
+        if self.lock_required_positions.get() and target_bag_id:
+            bundle = load_user_data(self.user_data_path)
+            bag = next(item for item in bundle.bags if item.identifier == target_bag_id)
+            locked_positions = {
+                position: club_id for position, club_id in enumerate(bag.club_ids, 1)
+                if club_id in required_ids
+            }
         return OptimizationGuiOptions(
             strategy_id=self.strategy_by_label[self.strategy_name.get()],
             variant_id=self.variant_by_label[self.variant_name.get()],
@@ -799,9 +946,14 @@ class StrategyOptimizerApp:
             max_evaluations=max_evaluations,
             reference_bag_id=self.reference_by_label[self.reference_name.get()],
             search_mode=self.search_mode_by_label[self.search_mode_name.get()],
-            target_bag_id=self.target_bag_by_label.get(self.target_bag_name.get()),
+            target_bag_id=target_bag_id,
             fixed_club_id=self.fixed_club_by_label.get(self.fixed_club_name.get()),
             replacement_depth=int(self.replacement_depth.get()),
+            required_club_ids=required_ids,
+            excluded_club_ids=tuple(self.fixed_club_by_label[item] for item in excluded_labels),
+            locked_positions=locked_positions,
+            keep_current_putter=self.keep_current_putter.get(),
+            fixed_step_id=self.fixed_step_by_label.get(self.fixed_step_name.get()),
         )
 
     def _start(self) -> None:

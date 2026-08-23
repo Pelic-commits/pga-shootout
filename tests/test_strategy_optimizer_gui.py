@@ -93,6 +93,18 @@ def test_local_search_modes_are_transmitted_without_new_business_rules():
     assert (around.search_mode, around.fixed_club_id) == ("around_club", "gearshift")
 
 
+def test_user_constraints_are_transmitted_as_structural_options():
+    request = OptimizationGuiOptions(
+        "par3", search_mode="improve_bag", target_bag_id="par3_high_flight",
+        required_club_ids=("ember", "gearshift"), excluded_club_ids=("sunstorm",),
+        locked_positions={3: "ember"}, keep_current_putter=True, fixed_step_id="putt",
+    ).to_request()
+    assert request.required_club_ids == ("ember", "gearshift")
+    assert request.excluded_club_ids == ("sunstorm",)
+    assert request.locked_positions == {3: "ember"}
+    assert request.keep_current_putter and request.fixed_step_id == "putt"
+
+
 def test_scenario_mode_requires_and_transmits_explicit_level():
     with pytest.raises(ValueError, match="niveau"):
         OptimizationGuiOptions("par3", real_mode=False).to_request()
@@ -284,6 +296,23 @@ def test_three_step_strategy_can_be_presented_without_special_case(presenter, pa
     expected = [step.name for step in presenter.registry.get("par4_long").sequence]
     assert [item.label for item in presentation.details[0].steps] == expected
     assert all(len(candidate.clubs) == 5 for candidate in par4_long_result.retained_results)
+
+
+def test_local_presentation_separates_attack_landing_and_exact_before_after(presenter):
+    result = StrategyOptimizer(
+        user_data_path=DATABASE, catalog_path=CATALOG, strategy_registry_path=REGISTRY,
+    ).optimize(StrategyOptimizationRequest(
+        "par3", limit=2, max_evaluations=20, search_mode="improve_bag",
+        target_bag_id="par3_high_flight", required_club_ids=("steadfast",),
+    ))
+    candidate = next(item for item in result.retained_results if item.origin != "reference_bag")
+    overview = presenter.present(replace(result, retained_results=(candidate,))).details[0].overview
+    for expected in (
+        "COMPARAISON AVANT / APRÈS", "CLUBS RETIRÉS", "CLUBS AJOUTÉS",
+        "CHANGEMENTS DE POSITION", "PROFIL D’ATTAQUE", "GAINS", "PERTES", "INCHANGÉ",
+    ):
+        assert expected in overview
+    assert "→" in overview
 
 
 @pytest.mark.parametrize(

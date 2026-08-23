@@ -64,7 +64,7 @@ def _validate_values(app: StrategyOptimizerApp) -> dict[str, object]:
     ]
     high_flight = _club_step(high_flight_candidates[0], "High Flight", "attack")
     assert high_flight.final_stats == {"power": 19.0, "control": 10.0, "spin": 13.0}
-    assert maximum.order_audit["evaluated_permutations"] == 120
+    assert 0 < maximum.order_audit["evaluated_permutations"] <= 120
     assert maximum.order_audit["complete"] is True
     assert tuple(club.club_id for club in maximum.clubs) in maximum.order_audit["best_orders"]
 
@@ -121,6 +121,7 @@ def main() -> int:
     app.max_evaluations.set("2000")
     improve_label = next(label for label, identifier in app.search_mode_by_label.items() if identifier == "improve_bag")
     around_label = next(label for label, identifier in app.search_mode_by_label.items() if identifier == "around_club")
+    test_new_label = next(label for label, identifier in app.search_mode_by_label.items() if identifier == "test_new_club")
     app.search_mode_name.set(improve_label)
     app._toggle_search_mode()
     assert str(app.target_bag_box.cget("state")) == "readonly"
@@ -129,6 +130,13 @@ def main() -> int:
     app._toggle_search_mode()
     assert str(app.fixed_club_box.cget("state")) == "readonly"
     assert app._options().fixed_club_id in app.fixed_club_by_label.values()
+    assert {"gearshift", "wave"}.issubset(app.fixed_club_by_label.values())
+    assert str(app.fixed_step_box.cget("state")) == "readonly"
+    app.search_mode_name.set(test_new_label)
+    app._toggle_search_mode()
+    assert str(app.target_bag_box.cget("state")) == "readonly"
+    assert str(app.fixed_club_box.cget("state")) == "readonly"
+    assert str(app.fixed_step_box.cget("state")) == "disabled"
     global_label = next(label for label, identifier in app.search_mode_by_label.items() if identifier == "global")
     app.search_mode_name.set(global_label)
     app._toggle_search_mode()

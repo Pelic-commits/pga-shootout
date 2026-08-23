@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Ajout des contraintes pratiques de sacs, de la détection fraîche de l’inventaire, de l’audit générique des nouveaux clubs et des comparaisons avant/après séparant attaque et atterrissage.
+- Généralisation de la recherche autour d’un club et du test local d’un nouveau club, avec rôles actifs configurables et prise en charge des usages de support.
+- Réduction exacte des permutations locales par signature structurelle, validée contre l’énumération historique complète.
+
 - Qualification générique des bonus personnels de Power depuis le tee, contexte catégoriel strict/partial, audit SQLite d'éligibilité et cartographie détaillée des capacités possédées.
 - Correction du tri des marques par comparaison normalisée, notamment pour le nom officiel `PALO`.
 - Alignement de l'éditeur d'inventaire sur l'ordre des clubs du jeu, conservation du défilement et saisie clavier de type tableur.

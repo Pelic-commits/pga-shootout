@@ -58,6 +58,14 @@ def _level_value(value: str) -> int | str:
     return int(value) if value.isdigit() else value
 
 
+def _locked_position(value: str) -> tuple[int, str]:
+    try:
+        position, club_id = value.split("=", 1)
+        return int(position), club_id
+    except (ValueError, TypeError) as error:
+        raise argparse.ArgumentTypeError("expected POSITION=club_id") from error
+
+
 def _add_scenario_level(parser: argparse.ArgumentParser, *, required: bool) -> None:
     group = parser.add_mutually_exclusive_group(required=required)
     group.add_argument(
@@ -258,10 +266,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--reference-bag", help="saved bag used as an empirical minimum-Power reference",
     )
     optimize_strategy_parser.add_argument(
-        "--search-mode", choices=("global", "improve_bag", "around_club"), default="global",
+        "--search-mode", choices=("global", "improve_bag", "around_club", "test_new_club"), default="global",
     )
     optimize_strategy_parser.add_argument("--target-bag", help="saved bag used for local improvement search")
     optimize_strategy_parser.add_argument("--fixed-club", help="owned club fixed as the first active club")
+    optimize_strategy_parser.add_argument("--fixed-step", help="strategy step where the fixed club must be active")
+    optimize_strategy_parser.add_argument("--require-club", action="append", default=[], help="owned club required in every candidate")
+    optimize_strategy_parser.add_argument("--exclude-club", action="append", default=[], help="owned club excluded from every candidate")
+    optimize_strategy_parser.add_argument("--lock-position", action="append", default=[], type=_locked_position, help="keep POSITION=club_id fixed")
+    optimize_strategy_parser.add_argument("--keep-current-putter", action="store_true")
     optimize_strategy_parser.add_argument("--replacement-depth", type=int, choices=(1, 2), default=1)
     optimize_strategy_parser.add_argument("--user-dir", default="data/pga_shootout.sqlite")
     optimize_strategy_parser.add_argument("--catalog", default="data/normalized/clubs_official.json")
@@ -378,6 +391,11 @@ def main(argv: Sequence[str] | None = None) -> int:
                 target_bag_id=args.target_bag,
                 fixed_club_id=args.fixed_club,
                 replacement_depth=args.replacement_depth,
+                required_club_ids=tuple(args.require_club),
+                excluded_club_ids=tuple(args.exclude_club),
+                locked_positions=dict(args.lock_position),
+                keep_current_putter=args.keep_current_putter,
+                fixed_step_id=args.fixed_step,
             )
         )
         if hasattr(sys.stdout, "reconfigure"):

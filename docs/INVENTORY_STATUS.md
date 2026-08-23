@@ -6,27 +6,27 @@
 
 | Measure | Value |
 |---|---:|
-| Known inventory clubs | 76 |
+| Known inventory clubs | 77 |
 | Baseline inventory clubs | 21 |
-| Clubs added since baseline | 55 |
+| Clubs added since baseline | 56 |
 | Inventory declared complete | no |
-| Known user levels | 73/76 |
-| Official owned-club abilities | 140 |
-| Engine-supported owned-club abilities | 83 |
-| Unresolved owned-club abilities | 57 |
-| Owned-ability coverage | 59.29% |
-| Fully simulated owned clubs | 36/76 |
-| Fully comparable owned clubs | 30/76 |
-| Comparable with warning | 21/76 |
-| Not currently comparable | 25/76 |
-| Fully optimizable | 30/76 |
-| Optimizable with context | 6/76 |
-| Optimizable with warning | 15/76 |
-| Not optimizable | 25/76 |
+| Known user levels | 74/77 |
+| Official owned-club abilities | 142 |
+| Engine-supported owned-club abilities | 84 |
+| Unresolved owned-club abilities | 58 |
+| Owned-ability coverage | 59.15% |
+| Fully simulated owned clubs | 36/77 |
+| Fully comparable owned clubs | 30/77 |
+| Comparable with warning | 22/77 |
+| Not currently comparable | 25/77 |
+| Fully optimizable | 30/77 |
+| Optimizable with context | 6/77 |
+| Optimizable with warning | 16/77 |
+| Not optimizable | 25/77 |
 
 ## Inventory changes since the retained JSON baseline
 
-- Newly added clubs (55): Eagle's Landing, Earthquake, Conspiracy, Crusader, Divebomb, Dunecrawler, Edgewalker, Ember, Homecoming, Huntsman, Hydroforce, Into the Blue, Ironbark, Jetstream, Oakheart, Obelisk, Overgrowth, Pantheon, Ranger, Rebound, Sparky, Stormbringer, Sunstorm, Trailblazer, Triumph, Catalyst, Crystallize, Flamethrower, Fusion, Galvanizer, Leviathan, Lowball, Maelstrom, Navigator, Rising Flame, Sandblast, Sidewinder, Supercollider, Tierra Hueca, Windstrike, XLR8R, Boomstick, Bushwhacker, Endeavor, Fanfare, Hero, Meanderer, New Frontier, Outlaw, People's Champion, Rampart, Rolling Stone, Saber, Steward, Gearshift.
+- Newly added clubs (56): Eagle's Landing, Earthquake, Conspiracy, Crusader, Divebomb, Dunecrawler, Edgewalker, Ember, Homecoming, Huntsman, Hydroforce, Into the Blue, Ironbark, Jetstream, Oakheart, Obelisk, Overgrowth, Pantheon, Ranger, Rebound, Sparky, Stormbringer, Sunstorm, Trailblazer, Triumph, Catalyst, Crystallize, Flamethrower, Fusion, Galvanizer, Leviathan, Lowball, Maelstrom, Navigator, Rising Flame, Sandblast, Sidewinder, Supercollider, Tierra Hueca, Windstrike, XLR8R, Boomstick, Bushwhacker, Endeavor, Fanfare, Hero, Meanderer, New Frontier, Outlaw, People's Champion, Rampart, Rolling Stone, Saber, Steward, Gearshift, Wave.
 
 ## Clubs
 
@@ -108,6 +108,7 @@
 | Saber (`saber`) | Stanchion | Hybrid | Common | 7 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 | Steward (`steward`) | Willoughsby | Driver | Epic | 6 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 | Gearshift (`gearshift`) | PALO | Putter | Legendary | 8 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
+| Wave (`wave`) | Nautilus | Iron | Epic | 7 | 1/2 | no | `comparable_with_warning` | wave__shoreline_rush:physics_required | `optimizable_with_warning` | wave__shoreline_rush:physics_required |
 
 ### Homestead
 
@@ -629,6 +630,13 @@
 | First Gear (`gearshift__first_gear`) | If Gearshift is in your leftmost club slot, your clubs have +X Control and their shots bounce X% less. | 7 | `simulated_no_effect_in_current_bag` | `implemented` | `bounce_reduction_percent`, `control` | `high` | The ability is supported, but its source club is absent from every saved bag. | none | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `FOR_EACH`, `ADD_STAT`, `ADD_MODIFIER` | none | `gearshift__first_gear`, `gearshift__top_gear` | `positioned_bag_composed_modifier` | none |
 | Top Gear (`gearshift__top_gear`) | If Gearshift is in your rightmost club slot, your clubs have +X Power and their shots apply X% more Groundspin. | 7 | `simulated_no_effect_in_current_bag` | `implemented` | `groundspin_increase_percent`, `power` | `high` | The ability is supported, but its source club is absent from every saved bag. | none | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `FOR_EACH`, `ADD_STAT`, `ADD_MODIFIER` | none | `gearshift__first_gear`, `gearshift__top_gear` | `positioned_bag_composed_modifier` | none |
 
+### Wave
+
+| Official ability | Official text | Activates | Status | Classification | Potential metrics/behavior | Importance | Reason | Needed data | Existing primitives | New primitive | Same behavior in catalog | Technical family | Validation experiment |
+|---|---|---:|---|---|---|---|---|---|---|---|---|---|---|
+| Shoreline Rush (`wave__shoreline_rush`) | When you hit with Wave as long as the ball is over Water or Sand it travels X% faster and farther. | 7 | `physics_required` | `geometry_or_trajectory_required` | none | `low` | The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain. | `validated_geometry_or_physics` | none | `validated_physics_effect` | `skyfury__boundary_rush_75`, `explorer__wild_rush_speed`, `leviathan__water_rush`, `wave__shoreline_rush`, `green_demon__emerald_rush_75`, `ember__power_shot`, `neon_impulse__power_shot` | `trajectory_physics` | Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases. |
+| Nautilus Boost (`wave__nautilus_boost`) | For each Nautilus club next to Wave, that club and Wave each gain +X Power. | 7 | `simulated_no_effect_in_current_bag` | `implemented` | `power` | `high` | The ability is supported, but its source club is absent from every saved bag. | none | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ADJACENT`, `MATCH_BRAND`, `FOR_EACH`, `ADD_STAT` | none | `wave__nautilus_boost`, `ember__alloy` | `matching_targets_and_source_per_match` | none |
+
 ## Reference bags (regression only)
 
 | Bag | Supported abilities | Coverage |
@@ -665,10 +673,10 @@
 
 ### 3. Measure geometry and trajectory effects
 
-- Abilities: Power Shot, Boundary Rush 75%, Emerald Rush 75%, Tree Bonus, Flight Training, Boundary Bonus, Tree Bonus +X, Water Bonus +X, Tree Passing, Water Rush, Water Bonus, Green Grip, Momentum.
-- Owned clubs: Neon Impulse, Skyfury, Green Demon, Outset, Eagle's Landing, Dunecrawler, Edgewalker, Ember, Huntsman, Hydroforce, Ironbark, Oakheart, Trailblazer, Flamethrower, Leviathan, Windstrike, Meanderer, Rolling Stone.
-- Expected ability coverage gain: +21.
-- Clubs becoming fully simulated: Neon Impulse, Skyfury, Green Demon, Outset, Eagle's Landing, Edgewalker, Ember, Huntsman, Ironbark, Trailblazer, Leviathan, Meanderer, Rolling Stone.
+- Abilities: Power Shot, Boundary Rush 75%, Emerald Rush 75%, Tree Bonus, Flight Training, Boundary Bonus, Tree Bonus +X, Water Bonus +X, Tree Passing, Water Rush, Water Bonus, Green Grip, Momentum, Shoreline Rush.
+- Owned clubs: Neon Impulse, Skyfury, Green Demon, Outset, Eagle's Landing, Dunecrawler, Edgewalker, Ember, Huntsman, Hydroforce, Ironbark, Oakheart, Trailblazer, Flamethrower, Leviathan, Windstrike, Meanderer, Rolling Stone, Wave.
+- Expected ability coverage gain: +22.
+- Clubs becoming fully simulated: Neon Impulse, Skyfury, Green Demon, Outset, Eagle's Landing, Edgewalker, Ember, Huntsman, Ironbark, Trailblazer, Leviathan, Meanderer, Rolling Stone, Wave.
 - Difficulty: experimental-high.
 - Required: validated physics contract, in-game measurements.
 - Priority: Covers proximity, collision, timing and speed/distance effects only after measurable contracts exist.

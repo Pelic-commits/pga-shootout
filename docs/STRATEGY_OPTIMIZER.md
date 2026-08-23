@@ -108,6 +108,32 @@ sont démontrées insensibles à la position, l’adjacence, la distance et aux 
 différés. Sinon les 120 ordres sont évalués. Le résultat expose la preuve, le
 nombre théorique, le nombre distinct et le nombre effectivement évalué.
 
+La recherche locale relit SQLite au début de chaque analyse. Un changement de
+possession, niveau ou cartes invalide donc naturellement toutes les évaluations
+de la session précédente. Les nouveaux clubs sont diagnostiqués depuis le
+catalogue et le registre sémantique, sans liste de noms dans l’optimiseur.
+
+## Outils pratiques et contraintes
+
+`Améliorer un de mes sacs` parcourt exhaustivement chaque composition accessible
+par un remplacement, puis tous ses ordres structurellement distincts. Le sac
+choisi est l’unique référence avant/après : un autre sac enregistré n’est jamais
+injecté comme fausse amélioration locale.
+
+Les contraintes restent structurelles et génériques : clubs obligatoires,
+clubs exclus, positions verrouillées, conservation du putter actif et rôle actif
+choisi pour une recherche autour d’un club. Conserver un putter n’interdit pas
+un deuxième Putter support. `Optimiser autour d’un club` effectue une recherche
+bornée de compositions où ce club est actif sur l’étape compatible choisie ;
+`Tester un nouveau club` conserve au contraire le club dans le sac sans lui
+imposer un rôle, afin d’observer aussi ses usages de support.
+
+Les résultats locaux séparent le profil d’attaque (Power, Control, Spin) du
+profil d’atterrissage (Bounce Reduction, Groundspin, Loft, Wind Resistance et
+autres métriques disponibles). Ils exposent les valeurs avant/après, gains,
+pertes, invariants, inconnues, capacités gagnées/perdues et changements de
+position. Aucun de ces faits n’est additionné dans un score.
+
 ## Familles Par 3 et profil d’atterrissage
 
 Sans référence empirique, la stratégie Par 3 projette les mêmes candidats dans
@@ -156,3 +182,8 @@ de réussite d'un putt. Il ne transforme pas Power en yards et ne prétend pas
 qu'un sac atteindra le green. Les exigences correspondantes restent
 `indeterminate`, tandis que les statistiques et contributions réellement
 calculables restent comparables.
+
+Par 4 long et Par 5 restent volontairement distincts dans le registre, mais
+peuvent proposer les mêmes sacs. Sans modèle de distance validé ni données de
+portée par étape, les différencier artificiellement serait une règle inventée ;
+la GUI affiche explicitement cette limite.

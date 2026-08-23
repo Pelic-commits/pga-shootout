@@ -47,9 +47,9 @@ def test_real_inventory_and_levels_are_used_without_implicit_common_level(compon
 
     assert result.level_mode == "actual"
     assert result.scenario_level is None
-    assert result.search.origin_counts["reference_bag"] == 240
+    assert result.search.origin_counts["reference_bag"] == 138
     assert result.search.origin_counts["global_search"] == 10
-    assert result.search.candidates_evaluated == 250
+    assert result.search.candidates_evaluated == 148
     for club in result.retained_results[0].clubs:
         assert club.club_id in unlocked
         assert club.level == unlocked[club.club_id]
@@ -333,9 +333,9 @@ def test_structurally_exact_inventory_search_is_instrumented_and_bounded(compone
     result = optimizer.optimize(StrategyOptimizationRequest("par3", limit=2, max_evaluations=200))
     assert result.search.theoretical_candidates > 1_000_000
     assert result.search.reduced_candidates_generated < result.search.theoretical_candidates
-    assert result.search.origin_counts["reference_bag"] == 240
+    assert result.search.origin_counts["reference_bag"] == 138
     assert 0 < result.search.origin_counts["global_search"] <= 200
-    assert result.search.candidates_evaluated <= 440
+    assert result.search.candidates_evaluated <= 338
     assert result.search.safety_limit_reached
     assert result.search.completeness == "partial_bounded_search_with_exact_retained_order_spaces"
     assert result.search.permutations_structurally_distinct >= result.search.candidates_evaluated
@@ -364,10 +364,10 @@ def test_cli_json_exposes_the_same_stable_contract(capsys):
     assert payload["aggregate_score"] is None
     assert payload["search"]["origin_counts"] == {
         "global_search": 5,
-        "reference_bag": 240,
+        "reference_bag": 138,
         "reference_neighborhood": 0,
     }
-    assert payload["search"]["candidates_evaluated"] == 245
+    assert payload["search"]["candidates_evaluated"] == 143
     # The display limit applies per result family; both saved reference bags
     # remain visible as independent control candidates.
     assert len(payload["retained_results"]) == 2
