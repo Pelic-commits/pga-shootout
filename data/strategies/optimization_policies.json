@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0.0",
+  "default_primary_metric": "power",
+  "shot_functions": {
+    "advance_toward_target": {
+      "user_function": "progression",
+      "objective_metrics": ["power", "control", "spin"],
+      "important_landing_metrics_by_club_type": {}
+    },
+    "reach_target_zone": {
+      "user_function": "attack_green",
+      "objective_metrics": ["power", "control", "spin"],
+      "important_landing_metrics_by_club_type": {
+        "driver": ["bounce_reduction_percent"],
+        "wood": ["bounce_reduction_percent"],
+        "hybrid": ["bounce_reduction_percent"]
+      }
+    },
+    "finish": {
+      "user_function": "putt",
+      "objective_metrics": ["power", "control"],
+      "important_landing_metrics_by_club_type": {}
+    }
+  },
+  "descriptive_landing_metrics": [
+    "bounce_reduction_percent",
+    "groundspin",
+    "groundspin_increase_percent",
+    "loft_angle_degrees",
+    "wind_resistance_percent"
+  ]
+}

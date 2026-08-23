@@ -53,6 +53,9 @@ class StrategyOptimizationRequest:
     locked_positions: Mapping[int, str] | None = None
     keep_current_putter: bool = False
     fixed_step_id: str | None = None
+    club_roles: Mapping[str, str] | None = None
+    metric_minimums: Mapping[str, Mapping[str, float]] | None = None
+    primary_step_id: str | None = None
 
     @property
     def level_mode(self) -> str:
@@ -197,6 +200,8 @@ class StrategyCandidateResult:
     lost_contribution_ids: tuple[str, ...] = ()
     position_changes: Mapping[str, tuple[int | None, int | None]] | None = None
     metric_values_from_reference: Mapping[str, Mapping[str, float | None]] | None = None
+    optimization_badges: tuple[str, ...] = ()
+    metric_deltas_from_power_max: Mapping[str, float | None] | None = None
     aggregate_score: None = None
 
 
@@ -311,6 +316,10 @@ class StrategyOptimizationResult:
     inventory_observed_at: str | None = None
     inventory_changes: InventoryChangeSet = InventoryChangeSet()
     new_club_diagnostics: tuple[InventoryClubDiagnostic, ...] = ()
+    requested_minimums: Mapping[str, Mapping[str, float]] | None = None
+    attainable_ranges: Mapping[str, Mapping[str, tuple[float, ...]]] | None = None
+    criteria_satisfied: bool = True
+    closest_candidate_ids: tuple[str, ...] = ()
     aggregate_score: None = None
 
     def as_dict(self) -> dict[str, Any]:
@@ -714,6 +723,8 @@ class StrategyCandidateGenerator:
         required = set(required_club_ids)
         excluded = set(excluded_club_ids)
         locks = dict(locked_positions or {})
+        if any(position < 1 or position > definition.bag_size for position in locks):
+            raise StrategyOptimizationError("Une position verrouillée est hors du sac")
         if required & excluded:
             raise StrategyOptimizationError("Un club ne peut pas être à la fois obligatoire et exclu")
         if any(position < 1 or position > definition.bag_size for position in locks):
@@ -912,6 +923,168 @@ class StrategyCandidateGenerator:
             "permutations_distinct": len(generated),
             "permutations_equivalent": len(spaces) * math.factorial(definition.bag_size) - len(generated),
             "budget_reached": int(budget_reached or len(generated) >= max_generated),
+        }
+        return tuple(generated.values())
+
+    def generate_builder(
+        self,
+        strategy: ResolvedStrategy,
+        runtime: _RuntimeEvaluator,
+        *,
+        club_roles: Mapping[str, str],
+        excluded_club_ids: tuple[str, ...] = (),
+        locked_positions: Mapping[int, str] | None = None,
+        order_mode: str = "structural_exact",
+        max_generated: int = 4000,
+    ) -> tuple[CandidateSpec, ...]:
+        """Build bags around any number of required clubs and optional active roles."""
+        definition = strategy.definition
+        excluded = set(excluded_club_ids)
+        roles = dict(club_roles)
+        required = set(roles)
+        valid_roles = {"auto", "support", *(step.identifier for step in definition.sequence)}
+        unknown_roles = sorted(set(roles.values()) - valid_roles)
+        if unknown_roles:
+            raise StrategyOptimizationError("Rôle de club inconnu : " + ", ".join(unknown_roles))
+        if required & excluded:
+            raise StrategyOptimizationError("Un club ne peut pas être à la fois utilisé et exclu")
+        if len(required) > definition.bag_size:
+            raise StrategyOptimizationError("Le nombre de clubs imposés dépasse la taille du sac")
+        unavailable = sorted(required - set(runtime.clubs))
+        if unavailable:
+            raise StrategyOptimizationError("Clubs imposés indisponibles : " + ", ".join(unavailable))
+        forced_by_step: dict[str, str] = {}
+        for club_id, role in roles.items():
+            if role in {"auto", "support"}:
+                continue
+            if role in forced_by_step:
+                raise StrategyOptimizationError(f"Deux clubs ne peuvent pas occuper l'étape {role}")
+            step = next(item for item in definition.sequence if item.identifier == role)
+            if not _matches_step(runtime.clubs[club_id], step):
+                raise StrategyOptimizationError(
+                    f"{runtime.clubs[club_id].name} n'est pas compatible avec l'étape {step.name}"
+                )
+            forced_by_step[role] = club_id
+        eligible = tuple(item for item in runtime.clubs if item not in excluded)
+        support_only = {club_id for club_id, role in roles.items() if role == "support"}
+        auto_required = {club_id for club_id, role in roles.items() if role == "auto"}
+        pools: list[tuple[str, ...]] = []
+        for step in definition.sequence:
+            forced = forced_by_step.get(step.identifier)
+            if forced:
+                pools.append((forced,))
+                continue
+            compatible = tuple(
+                item for item in eligible
+                if item not in support_only and _matches_step(runtime.clubs[item], step)
+            )
+            preferred_auto = tuple(item for item in auto_required if item in compatible)
+            pools.append(tuple(dict.fromkeys((
+                *preferred_auto,
+                *self._pareto_active_pool(runtime, compatible, step),
+            ))))
+        assignments = tuple(
+            assigned for assigned in self._fair_assignments(tuple(pools), 1024)
+            if (definition.allow_active_club_reuse or len(set(assigned)) == len(assigned))
+            and all(
+                roles.get(club_id) in {None, "auto", step.identifier}
+                for step, club_id in zip(definition.sequence, assigned, strict=True)
+            )
+        )
+        generated: dict[tuple[Any, ...], CandidateSpec] = {}
+        spaces: set[tuple[str, ...]] = set()
+        locks = dict(locked_positions or {})
+        if any(position < 1 or position > definition.bag_size for position in locks):
+            raise StrategyOptimizationError("Une position verrouillée est hors du sac")
+        if any(club_id not in required for club_id in locks.values()):
+            raise StrategyOptimizationError("Une position ne peut verrouiller qu'un club imposé")
+        if len(set(locks.values())) != len(locks):
+            raise StrategyOptimizationError("Un même club ne peut pas être verrouillé à plusieurs positions")
+        budget_reached = False
+        active_pool = tuple(dict.fromkeys(item for pool in pools for item in pool))
+        compositions_by_assignment: dict[tuple[str, ...], tuple[tuple[str, ...], ...]] = {}
+        for assigned in assignments:
+            forced_supports = tuple(sorted(required - set(assigned)))
+            support_count = definition.bag_size - len(set(assigned))
+            if len(forced_supports) > support_count:
+                continue
+            fill_count = support_count - len(forced_supports)
+            base_sets = self._support_sets(runtime, eligible, assigned, support_count, active_pool)
+            structural = tuple(self.support_potential(runtime, assigned))
+            support_candidates = tuple(dict.fromkeys(
+                item
+                for values in base_sets
+                for item in values
+                if item not in assigned and item not in forced_supports
+            ))
+            fallback = tuple(
+                item for item in eligible
+                if item not in assigned and item not in forced_supports
+            )
+            pool = tuple(dict.fromkeys((*support_candidates, *structural, *fallback)))[:24]
+            if fill_count == 0:
+                fills = ((),)
+            else:
+                seeded: list[tuple[str, ...]] = []
+                for values in base_sets:
+                    fill = tuple(
+                        item for item in values
+                        if item not in assigned and item not in forced_supports
+                    )[:fill_count]
+                    if len(fill) == fill_count:
+                        seeded.append(fill)
+                for anchor in structural:
+                    fill = tuple(dict.fromkeys((
+                        anchor,
+                        *(item for item in pool if item != anchor),
+                    )))[:fill_count]
+                    if len(fill) == fill_count:
+                        seeded.append(fill)
+                fills = tuple(dict.fromkeys((*seeded, *combinations(pool, fill_count))))
+            compositions = []
+            for fill in fills:
+                composition = tuple(dict.fromkeys((*assigned, *forced_supports, *fill)))
+                if len(composition) != definition.bag_size or not required.issubset(composition):
+                    continue
+                compositions.append(composition)
+            compositions_by_assignment[assigned] = tuple(dict.fromkeys(compositions))
+        schedule = sorted(
+            (
+                (assignment_index, composition_index)
+                for assignment_index, assigned in enumerate(assignments)
+                for composition_index in range(len(compositions_by_assignment.get(assigned, ())))
+            ),
+            # Cover every active assignment once before spending the budget on
+            # a second support set for any assignment.
+            key=lambda item: (item[1], item[0]),
+        )
+        for assignment_index, composition_index in schedule:
+            assigned = assignments[assignment_index]
+            composition = compositions_by_assignment[assigned][composition_index]
+            selected_orders = self._orders_for(composition, runtime, order_mode)
+            matching = tuple(
+                (order, reason) for order, reason in selected_orders
+                if not any(order[position - 1] != club_id for position, club_id in locks.items())
+            )
+            if not matching:
+                continue
+            if generated and len(generated) + len(matching) > max_generated:
+                budget_reached = True
+                continue
+            spaces.add(tuple(sorted(composition)))
+            for order, reason in matching:
+                self._add(generated, order, definition, assigned, "interactive_builder", reason, len(matching))
+            if len(generated) >= max_generated:
+                break
+        self.last_generation_stats = {
+            "inventory": len(eligible),
+            "active_assignments": len(assignments),
+            "active_assignments_theoretical": math.prod(len(pool) for pool in pools),
+            "compositions": len(spaces),
+            "permutations_theoretical": len(spaces) * math.factorial(definition.bag_size),
+            "permutations_distinct": len(generated),
+            "permutations_equivalent": len(spaces) * math.factorial(definition.bag_size) - len(generated),
+            "budget_reached": int(budget_reached),
         }
         return tuple(generated.values())
 
@@ -1220,11 +1393,16 @@ class StrategyOptimizer:
         catalog_path: str | Path = "data/normalized/clubs_official.json",
         strategy_registry_path: str | Path = "data/strategies/strategies.json",
         metric_semantics_path: str | Path = "data/strategies/metric_semantics.json",
+        optimization_policy_path: str | Path = "data/strategies/optimization_policies.json",
     ) -> None:
         self.user_data_path = Path(user_data_path)
         self.catalog_path = Path(catalog_path)
         self.registry_path = Path(strategy_registry_path)
         self.metric_semantics = MetricSemanticsRegistry.load(metric_semantics_path)
+        policy_path = Path(optimization_policy_path)
+        self.optimization_policy = (
+            json.loads(policy_path.read_text(encoding="utf-8")) if policy_path.exists() else {}
+        )
         self.generator = StrategyCandidateGenerator(self.metric_semantics)
         initial = load_user_data(self.user_data_path)
         self._inventory_snapshot = self._inventory_signature(initial.inventory.entries)
@@ -1383,16 +1561,27 @@ class StrategyOptimizer:
             raise StrategyOptimizationError("Display limit must be at least 1")
         if request.max_evaluations < 1:
             raise StrategyOptimizationError("Evaluation safety limit must be at least 1")
-        if request.search_mode not in {"global", "improve_bag", "around_club", "test_new_club"}:
+        if request.search_mode not in {"global", "improve_bag", "around_club", "test_new_club", "interactive_builder"}:
             raise StrategyOptimizationError(f"Unsupported search mode: {request.search_mode}")
         if request.replacement_depth not in {1, 2}:
             raise StrategyOptimizationError("Replacement depth must be 1 or 2")
         registry = StrategyRegistry.load(self.registry_path)
         strategy = registry.resolve(request.strategy_id, request.variant_ids)
+        if request.metric_minimums:
+            step_ids = {step.identifier for step in strategy.definition.sequence}
+            unknown_steps = sorted(set(request.metric_minimums) - step_ids)
+            if unknown_steps:
+                raise StrategyOptimizationError("Étape inconnue dans les minimums : " + ", ".join(unknown_steps))
+            unknown_metrics = sorted({
+                metric for values in request.metric_minimums.values() for metric in values
+                if metric not in {"power", "control", "spin"}
+            })
+            if unknown_metrics:
+                raise StrategyOptimizationError("Métrique minimale inconnue : " + ", ".join(unknown_metrics))
         bundle = load_user_data(self.user_data_path)
         inventory_changes = self._inventory_changes(bundle.inventory.entries)
         runtime = _RuntimeEvaluator(self.catalog_path, bundle.inventory.entries, request.scenario_level)
-        constrained_ids = set(request.required_club_ids) | set(request.excluded_club_ids)
+        constrained_ids = set(request.required_club_ids) | set(request.excluded_club_ids) | set(request.club_roles or {})
         if request.fixed_club_id:
             constrained_ids.add(request.fixed_club_id)
         unavailable = tuple(sorted(constrained_ids - set(runtime.clubs)))
@@ -1411,6 +1600,41 @@ class StrategyOptimizer:
                 strategy, runtime, bundle.bags, request.order_mode,
                 max_generated=max(request.max_evaluations, math.factorial(strategy.definition.bag_size)),
             )
+        elif request.search_mode == "interactive_builder":
+            builder_roles = dict(request.club_roles or {
+                club_id: "auto" for club_id in request.required_club_ids
+            })
+            if request.keep_current_putter:
+                target_bag = next(
+                    (item for item in bundle.bags if item.identifier == request.target_bag_id),
+                    bundle.bags[0] if bundle.bags else None,
+                )
+                if target_bag is None:
+                    raise StrategyOptimizationError("Aucun sac enregistré ne permet de conserver le putter actuel")
+                assignment = self.generator._preferred_assignment(
+                    strategy.definition, runtime, target_bag.club_ids,
+                )
+                finish_index = next(
+                    (index for index, step in enumerate(strategy.definition.sequence) if step.function.identifier == "finish"),
+                    None,
+                )
+                if finish_index is not None and assignment:
+                    finish_step = strategy.definition.sequence[finish_index]
+                    existing = next((club_id for club_id, role in builder_roles.items() if role == finish_step.identifier), None)
+                    if existing and existing != assignment[finish_index]:
+                        raise StrategyOptimizationError("Le putter imposé diffère du putter actuel à conserver")
+                    builder_roles[assignment[finish_index]] = finish_step.identifier
+            generated = self.generator.generate_builder(
+                strategy,
+                runtime,
+                club_roles=builder_roles,
+                excluded_club_ids=request.excluded_club_ids,
+                locked_positions=request.locked_positions,
+                order_mode=request.order_mode,
+                max_generated=request.max_evaluations,
+            )
+            theoretical = int(self.generator.last_generation_stats.get("active_assignments_theoretical", 0))
+            eliminated = int(self.generator.last_generation_stats.get("permutations_equivalent", 0))
         else:
             if request.target_bag_id:
                 target_bag = next((item for item in bundle.bags if item.identifier == request.target_bag_id), None)
@@ -1481,7 +1705,7 @@ class StrategyOptimizer:
         excluded_candidates = 0
         reference_specs = tuple(item for item in generated if item.provenance == "reference_bag")
         search_specs = tuple(item for item in generated if item.provenance != "reference_bag")
-        if request.search_mode == "around_club" or (
+        if request.search_mode in {"around_club", "interactive_builder"} or (
             request.search_mode in {"improve_bag", "test_new_club"} and request.replacement_depth == 1
         ):
             # The one-replacement neighborhood is deliberately exhaustive.
@@ -1509,6 +1733,21 @@ class StrategyOptimizer:
                 evaluated.append(quick)
         evaluation_seconds = perf_counter() - evaluation_started
         comparison_started = perf_counter()
+        evaluated_before_minimums = len(evaluated)
+        attainable_ranges = _attainable_ranges(tuple(evaluated), strategy)
+        criteria_satisfied = True
+        closest_candidate_ids: tuple[str, ...] = ()
+        if request.search_mode == "interactive_builder" and request.metric_minimums:
+            satisfying = tuple(
+                item for item in evaluated if _meets_minimums(item, request.metric_minimums)
+            )
+            if satisfying:
+                evaluated = list(satisfying)
+            else:
+                criteria_satisfied = False
+                closest = _closest_to_minimums(tuple(evaluated), request.metric_minimums)
+                closest_candidate_ids = tuple(item.spec.identifier for item in closest)
+                evaluated = list(closest)
         current_saved_quick = (
             next(
                 (
@@ -1559,10 +1798,15 @@ class StrategyOptimizer:
             if request.search_mode != "global"
             else layered
         )
-        family_results, selected_quick, memberships = self._project_families(
-            projection_pool, strategy, runtime, request.limit, empirical_reference is not None,
-            force_generic=request.search_mode == "around_club",
-        )
+        if request.search_mode == "interactive_builder":
+            family_results, selected_quick, memberships = self._project_builder_families(
+                projection_pool, strategy, runtime, request, request.limit,
+            )
+        else:
+            family_results, selected_quick, memberships = self._project_families(
+                projection_pool, strategy, runtime, request.limit, empirical_reference is not None,
+                force_generic=request.search_mode == "around_club",
+            )
         if request.search_mode != "global" and target_bag is not None:
             current = current_saved_quick
             if current is not None:
@@ -1579,6 +1823,8 @@ class StrategyOptimizer:
             self._detail(item, strategy, runtime, request.mode, memberships.get(item.spec.identifier, ()))
             for item in selected_quick
         )
+        if request.search_mode == "interactive_builder" and detailed:
+            detailed = _attach_power_tier_deltas(detailed, strategy, request.primary_step_id)
         if request.search_mode != "global" and target_bag is not None:
             baseline = next(
                 (
@@ -1601,6 +1847,7 @@ class StrategyOptimizer:
         origin_names = (
             "reference_bag", "reference_neighborhood", "global_search",
             *(("around_club",) if request.search_mode == "around_club" else ()),
+            *(("interactive_builder",) if request.search_mode == "interactive_builder" else ()),
         )
         warnings = [
             "La portée réelle n'est pas modélisée ; atteindre le green reste indéterminable.",
@@ -1615,6 +1862,11 @@ class StrategyOptimizer:
             )
         elif request.search_mode in {"around_club", "test_new_club"}:
             warnings.append(f"Recherche centrée sur le club {request.fixed_club_id}.")
+        if request.search_mode == "interactive_builder" and not criteria_satisfied:
+            warnings.append(
+                "Aucun sac ne satisfait actuellement tous les minimums demandés ; "
+                "les solutions non dominées les plus proches sont affichées sans modifier les critères."
+            )
         if request.strategy_id in {"par4_long", "par5"}:
             warnings.append(
                 "Les besoins de distance de Par 4 long et Par 5 ne peuvent pas encore être distingués "
@@ -1648,7 +1900,7 @@ class StrategyOptimizer:
             search=SearchInstrumentation(
                 theoretical_candidates=theoretical,
                 reduced_candidates_generated=len(generated),
-                candidates_evaluated=len(evaluated) + excluded_candidates,
+                candidates_evaluated=evaluated_before_minimums + excluded_candidates,
                 candidate_result_duplicates_removed=len(evaluated) - len(unique_before_reference_guard),
                 permutations_eliminated_before_evaluation=eliminated,
                 safety_limit=request.max_evaluations,
@@ -1663,6 +1915,8 @@ class StrategyOptimizer:
                     if request.search_mode == "global"
                     else "bounded_composition_search_around_fixed_active_club"
                     if request.search_mode == "around_club"
+                    else "bounded_composition_search_around_required_clubs"
+                    if request.search_mode == "interactive_builder"
                     else "exhaustive_one_replacement"
                     if request.replacement_depth == 1
                     else "structurally_reduced_two_replacements"
@@ -1727,6 +1981,10 @@ class StrategyOptimizer:
                 self._club_diagnostic(item, strategy, runtime)
                 for item in inventory_changes.added_club_ids if item in runtime.clubs
             ),
+            requested_minimums=request.metric_minimums or {},
+            attainable_ranges=attainable_ranges,
+            criteria_satisfied=criteria_satisfied,
+            closest_candidate_ids=closest_candidate_ids,
         )
 
     @staticmethod
@@ -1904,6 +2162,106 @@ class StrategyOptimizer:
                 memberships.setdefault(item.spec.identifier, []).append(definition.identifier)
         return (
             tuple(family_results), tuple(selected_by_id.values()),
+            {key: tuple(value) for key, value in memberships.items()},
+        )
+
+    def _project_builder_families(
+        self,
+        candidates: tuple[_QuickCandidate, ...],
+        strategy: ResolvedStrategy,
+        runtime: _RuntimeEvaluator,
+        request: StrategyOptimizationRequest,
+        limit: int,
+    ) -> tuple[tuple[ResultFamilyResult, ...], tuple[_QuickCandidate, ...], dict[str, tuple[str, ...]]]:
+        """Expose factual Power tiers without combining metrics into a synthetic score."""
+        if not candidates:
+            return (), (), {}
+        step = next(
+            (
+                item for item in strategy.definition.sequence
+                if item.identifier == request.primary_step_id
+            ),
+            next(
+                item for item in strategy.definition.sequence
+                if item.function.identifier != "finish"
+            ),
+        )
+        finish = next(
+            (item for item in strategy.definition.sequence if item.function.identifier == "finish"),
+            None,
+        )
+
+        def key(item: _QuickCandidate, secondary: str) -> tuple[float, ...]:
+            return (
+                _quick_metric(item, step.identifier, "power"),
+                _quick_metric(item, step.identifier, secondary),
+                _quick_metric(item, step.identifier, "spin" if secondary == "control" else "control"),
+                _quick_metric(item, finish.identifier, "power") if finish else -math.inf,
+                _quick_metric(item, finish.identifier, "control") if finish else -math.inf,
+            )
+
+        maximum = max(candidates, key=lambda item: key(item, "control"))
+        maximum_power = _quick_metric(maximum, step.identifier, "power")
+        maximum_control = _quick_metric(maximum, step.identifier, "control")
+        maximum_spin = _quick_metric(maximum, step.identifier, "spin")
+        selected: dict[str, _QuickCandidate] = {maximum.spec.identifier: maximum}
+        memberships: dict[str, list[str]] = {maximum.spec.identifier: ["power_max"]}
+        families: list[ResultFamilyResult] = [ResultFamilyResult(
+            "power_max", "PUISSANCE MAXIMALE",
+            f"Power maximale observée pour {step.name}, puis Control, Spin et qualité finale du putt.",
+            (maximum.spec.identifier,), "lexicographic_power_first",
+        )]
+        levels = sorted(
+            {_quick_metric(item, step.identifier, "power") for item in candidates if _quick_metric(item, step.identifier, "power") < maximum_power},
+            reverse=True,
+        )
+        for power in levels:
+            tier = tuple(item for item in candidates if _quick_metric(item, step.identifier, "power") == power)
+            loss = maximum_power - power
+            for metric, baseline in (("control", maximum_control), ("spin", maximum_spin)):
+                best = max(tier, key=lambda item: key(item, metric))
+                gain = _quick_metric(best, step.identifier, metric) - baseline
+                if gain <= 0:
+                    continue
+                identifier = f"{metric}_plus_{gain:g}_for_minus_{loss:g}_power".replace(".", "_")
+                label = f"{metric.upper()} +{gain:g} POUR -{loss:g} POWER"
+                families.append(ResultFamilyResult(
+                    identifier, label,
+                    f"Meilleur {metric.title()} observé au palier réel de Power {power:g}.",
+                    (best.spec.identifier,), "best_secondary_at_exact_power_tier",
+                ))
+                selected.setdefault(best.spec.identifier, best)
+                memberships.setdefault(best.spec.identifier, []).append(identifier)
+            if len(selected) >= limit:
+                break
+
+        function_policy = self.optimization_policy.get("shot_functions", {}).get(
+            step.function.identifier, {}
+        )
+        landing_by_type = function_policy.get("important_landing_metrics_by_club_type", {})
+        landing_candidates: list[tuple[float, _QuickCandidate, str]] = []
+        for item in candidates:
+            club_id = item.spec.active_assignments[step.identifier]
+            club_type = runtime.clubs[club_id].club_type
+            for metric in landing_by_type.get(club_type, ()):
+                value = _quick_metric(item, step.identifier, metric)
+                if value != -math.inf:
+                    landing_candidates.append((value, item, metric))
+        if landing_candidates:
+            value, landing, metric = max(
+                landing_candidates,
+                key=lambda entry: (entry[0], _quick_metric(entry[1], step.identifier, "power")),
+            )
+            families.append(ResultFamilyResult(
+                "landing_profile", "MEILLEUR ATTERRISSAGE",
+                f"Meilleure valeur calculable de {metric} ({value:g}) selon la politique fonction/type.",
+                (landing.spec.identifier,), "best_declared_landing_metric",
+            ))
+            selected.setdefault(landing.spec.identifier, landing)
+            memberships.setdefault(landing.spec.identifier, []).append("landing_profile")
+        return (
+            tuple(families),
+            tuple(selected.values())[:limit],
             {key: tuple(value) for key, value in memberships.items()},
         )
 
@@ -2467,6 +2825,112 @@ def _quick_metric(candidate: _QuickCandidate, step_id: str, metric: str) -> floa
     return float(_summary_metrics(step.summary).get(metric, -math.inf))
 
 
+def _attainable_ranges(
+    candidates: tuple[_QuickCandidate, ...],
+    strategy: ResolvedStrategy,
+) -> dict[str, dict[str, tuple[float, ...]]]:
+    return {
+        step.identifier: {
+            metric: tuple(sorted({
+                value for item in candidates
+                if (value := _quick_metric(item, step.identifier, metric)) != -math.inf
+            }))
+            for metric in ("power", "control", "spin")
+        }
+        for step in strategy.definition.sequence
+    }
+
+
+def _meets_minimums(
+    candidate: _QuickCandidate,
+    minimums: Mapping[str, Mapping[str, float]],
+) -> bool:
+    return all(
+        _quick_metric(candidate, step_id, metric) >= float(expected)
+        for step_id, values in minimums.items()
+        for metric, expected in values.items()
+    )
+
+
+def _closest_to_minimums(
+    candidates: tuple[_QuickCandidate, ...],
+    minimums: Mapping[str, Mapping[str, float]],
+) -> tuple[_QuickCandidate, ...]:
+    """Return the non-dominated deficit frontier; deficits are never summed."""
+    requested = tuple(
+        (step_id, metric, float(expected))
+        for step_id, values in minimums.items()
+        for metric, expected in values.items()
+    )
+
+    def deficits(item: _QuickCandidate) -> tuple[float, ...]:
+        return tuple(
+            max(0.0, expected - _quick_metric(item, step_id, metric))
+            for step_id, metric, expected in requested
+        )
+
+    result = []
+    for item in candidates:
+        current = deficits(item)
+        if any(
+            all(left <= right for left, right in zip(deficits(other), current, strict=True))
+            and any(left < right for left, right in zip(deficits(other), current, strict=True))
+            for other in candidates if other is not item
+        ):
+            continue
+        result.append(item)
+    return tuple(result)
+
+
+def _candidate_active_metrics(candidate: StrategyCandidateResult) -> dict[str, float | None]:
+    clubs = {item.club_id: item for item in candidate.clubs}
+    values: dict[str, float | None] = {}
+    for step_id, club_id in candidate.active_assignments.items():
+        step = next(item for item in clubs[club_id].steps if item.step_id == step_id)
+        values.update({f"{step_id}.{metric}": value for metric, value in step.final_stats.items()})
+        values.update({f"{step_id}.{metric}": value for metric, value in step.additional_metrics.items()})
+    return values
+
+
+def _builder_badge(family_id: str) -> str:
+    if family_id == "power_max":
+        return "PUISSANCE MAXIMALE"
+    if family_id == "landing_profile":
+        return "MEILLEUR ATTERRISSAGE"
+    for metric in ("control", "spin"):
+        prefix = f"{metric}_plus_"
+        if family_id.startswith(prefix):
+            gain, loss = family_id[len(prefix):].split("_for_minus_", 1)
+            return f"{metric.upper()} +{gain.replace('_', '.')} POUR -{loss.removesuffix('_power').replace('_', '.')} POWER"
+    return family_id.replace("_", " ").upper()
+
+
+def _attach_power_tier_deltas(
+    candidates: tuple[StrategyCandidateResult, ...],
+    strategy: ResolvedStrategy,
+    primary_step_id: str | None,
+) -> tuple[StrategyCandidateResult, ...]:
+    baseline = next(
+        (item for item in candidates if "power_max" in item.result_family_ids),
+        candidates[0],
+    )
+    before = _candidate_active_metrics(baseline)
+    result = []
+    for item in candidates:
+        after = _candidate_active_metrics(item)
+        deltas = {
+            key: None if before.get(key) is None or after.get(key) is None
+            else float(after[key]) - float(before[key])
+            for key in sorted(set(before) | set(after))
+        }
+        result.append(replace(
+            item,
+            optimization_badges=tuple(_builder_badge(value) for value in item.result_family_ids),
+            metric_deltas_from_power_max=deltas,
+        ))
+    return tuple(result)
+
+
 def _family_matches(
     candidate: _QuickCandidate,
     family: ResultFamilyDefinition,
@@ -2757,6 +3221,16 @@ def render_strategy_optimization(result: StrategyOptimizationResult) -> str:
             )
     if result.empirical_reference:
         lines.extend(["", result.empirical_reference.statement])
+    if result.requested_minimums:
+        lines.extend((
+            "",
+            "Minimums demandés : " + ", ".join(
+                f"{step}.{metric}>={value:g}"
+                for step, metrics in result.requested_minimums.items()
+                for metric, value in metrics.items()
+            ),
+            "Critères satisfaits : " + ("oui" if result.criteria_satisfied else "non"),
+        ))
     if result.result_families:
         lines.extend(["", "Familles de résultats"])
         lines.extend(
@@ -2790,6 +3264,7 @@ def _candidate_lines(candidate: StrategyCandidateResult) -> list[str]:
         "-" * 88,
         f"Sac {candidate.candidate_id} — couche {candidate.comparison_layer}",
         f"Origine : {candidate.origin}",
+        "Badge : " + (" / ".join(candidate.optimization_badges) or "aucun"),
         "Familles : " + (", ".join(candidate.result_family_ids) or "générique"),
         "Composition : " + " | ".join(
             f"{club.position}. {club.club_name}" for club in candidate.clubs
@@ -2814,6 +3289,11 @@ def _candidate_lines(candidate: StrategyCandidateResult) -> list[str]:
             ),
             "Contributions gagnées : " + (", ".join(candidate.gained_contribution_ids) or "aucune"),
             "Contributions perdues : " + (", ".join(candidate.lost_contribution_ids) or "aucune"),
+        ))
+    if candidate.metric_deltas_from_power_max is not None:
+        lines.append("Écarts avec la variante Power maximale : " + ", ".join(
+            f"{key}={'indéterminé' if value is None else '=' if value == 0 else f'{value:+g}'}"
+            for key, value in candidate.metric_deltas_from_power_max.items()
         ))
     lines.extend(
         f"  {item.step_id}/{item.requirement_id}: {item.status}"
