@@ -52,6 +52,19 @@ def par4_long_result():
     ).optimize(StrategyOptimizationRequest("par4_long", limit=2, max_evaluations=10))
 
 
+@pytest.fixture(scope="module")
+def interactive_result():
+    return StrategyOptimizer(
+        user_data_path=DATABASE,
+        catalog_path=CATALOG,
+        strategy_registry_path=REGISTRY,
+    ).optimize(StrategyOptimizationRequest(
+        "par3", search_mode="interactive_builder",
+        club_roles={"high_flight": "attack", "ember": "putt"},
+        primary_step_id="attack", limit=5, max_evaluations=1000,
+    ))
+
+
 def test_loads_strategy_names_dynamically_without_internal_ids(presenter):
     choices = presenter.strategy_choices()
     assert [item.label for item in choices] == ["Sac Par 3", "Sac Par 4 court", "Sac Par 4 long", "Sac Par 5"]
@@ -103,6 +116,19 @@ def test_user_constraints_are_transmitted_as_structural_options():
     assert request.excluded_club_ids == ("sunstorm",)
     assert request.locked_positions == {3: "ember"}
     assert request.keep_current_putter and request.fixed_step_id == "putt"
+
+
+def test_interactive_builder_options_transmit_roles_and_factual_minimums():
+    request = OptimizationGuiOptions(
+        "par3", search_mode="interactive_builder",
+        club_roles={"high_flight": "attack", "ember": "putt", "maelstrom": "support"},
+        metric_minimums={"attack": {"control": 11, "spin": 10}, "putt": {"power": 12, "control": 12}},
+        primary_step_id="attack", locked_positions={3: "maelstrom"},
+    ).to_request()
+    assert request.club_roles == {"high_flight": "attack", "ember": "putt", "maelstrom": "support"}
+    assert request.metric_minimums["putt"] == {"power": 12, "control": 12}
+    assert request.primary_step_id == "attack"
+    assert request.locked_positions == {3: "maelstrom"}
 
 
 def test_scenario_mode_requires_and_transmits_explicit_level():
@@ -296,6 +322,19 @@ def test_three_step_strategy_can_be_presented_without_special_case(presenter, pa
     expected = [step.name for step in presenter.registry.get("par4_long").sequence]
     assert [item.label for item in presentation.details[0].steps] == expected
     assert all(len(candidate.clubs) == 5 for candidate in par4_long_result.retained_results)
+
+
+def test_interactive_presentation_shows_badge_and_deltas_without_opening_technical_details(
+    presenter, interactive_result,
+):
+    presentation = presenter.present(interactive_result)
+    assert presentation.candidates[0].strengths.startswith("PUISSANCE MAXIMALE")
+    assert "PUISSANCE MAXIMALE" in presentation.details[0].overview
+    alternative = next(
+        detail for candidate, detail in zip(interactive_result.retained_results, presentation.details, strict=True)
+        if any("POUR -" in badge for badge in candidate.optimization_badges)
+    )
+    assert "ÉCART AVEC LA VARIANTE PUISSANCE MAXIMALE" in alternative.overview
 
 
 def test_local_presentation_separates_attack_landing_and_exact_before_after(presenter):

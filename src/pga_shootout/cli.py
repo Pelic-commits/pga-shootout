@@ -66,6 +66,23 @@ def _locked_position(value: str) -> tuple[int, str]:
         raise argparse.ArgumentTypeError("expected POSITION=club_id") from error
 
 
+def _club_role(value: str) -> tuple[str, str]:
+    try:
+        club_id, role = value.split("=", 1)
+        return club_id, role
+    except (ValueError, TypeError) as error:
+        raise argparse.ArgumentTypeError("expected CLUB_ID=auto|support|STEP_ID") from error
+
+
+def _metric_minimum(value: str) -> tuple[str, str, float]:
+    try:
+        subject, expected = value.split("=", 1)
+        step_id, metric = subject.split(".", 1)
+        return step_id, metric, float(expected)
+    except (ValueError, TypeError) as error:
+        raise argparse.ArgumentTypeError("expected STEP_ID.METRIC=VALUE") from error
+
+
 def _add_scenario_level(parser: argparse.ArgumentParser, *, required: bool) -> None:
     group = parser.add_mutually_exclusive_group(required=required)
     group.add_argument(
@@ -266,7 +283,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--reference-bag", help="saved bag used as an empirical minimum-Power reference",
     )
     optimize_strategy_parser.add_argument(
-        "--search-mode", choices=("global", "improve_bag", "around_club", "test_new_club"), default="global",
+        "--search-mode", choices=("global", "improve_bag", "around_club", "test_new_club", "interactive_builder"), default="global",
     )
     optimize_strategy_parser.add_argument("--target-bag", help="saved bag used for local improvement search")
     optimize_strategy_parser.add_argument("--fixed-club", help="owned club fixed as the first active club")
@@ -275,6 +292,9 @@ def build_parser() -> argparse.ArgumentParser:
     optimize_strategy_parser.add_argument("--exclude-club", action="append", default=[], help="owned club excluded from every candidate")
     optimize_strategy_parser.add_argument("--lock-position", action="append", default=[], type=_locked_position, help="keep POSITION=club_id fixed")
     optimize_strategy_parser.add_argument("--keep-current-putter", action="store_true")
+    optimize_strategy_parser.add_argument("--club-role", action="append", default=[], type=_club_role, help="required CLUB_ID=auto|support|STEP_ID")
+    optimize_strategy_parser.add_argument("--minimum", action="append", default=[], type=_metric_minimum, help="final STEP_ID.METRIC=VALUE minimum")
+    optimize_strategy_parser.add_argument("--primary-step", help="active step whose Power defines the displayed tiers")
     optimize_strategy_parser.add_argument("--replacement-depth", type=int, choices=(1, 2), default=1)
     optimize_strategy_parser.add_argument("--user-dir", default="data/pga_shootout.sqlite")
     optimize_strategy_parser.add_argument("--catalog", default="data/normalized/clubs_official.json")
@@ -373,6 +393,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(render_strategy(strategy, compatible))
     elif args.command == "optimize-strategy":
         mode = EvaluationMode.STRICT if args.strict else EvaluationMode.PARTIAL
+        minimums: dict[str, dict[str, float]] = {}
+        for step_id, metric, expected in args.minimum:
+            minimums.setdefault(step_id, {})[metric] = expected
         result = StrategyOptimizer(
             user_data_path=args.user_dir,
             catalog_path=args.catalog,
@@ -396,6 +419,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                 locked_positions=dict(args.lock_position),
                 keep_current_putter=args.keep_current_putter,
                 fixed_step_id=args.fixed_step,
+                club_roles=dict(args.club_role),
+                metric_minimums=minimums,
+                primary_step_id=args.primary_step,
             )
         )
         if hasattr(sys.stdout, "reconfigure"):

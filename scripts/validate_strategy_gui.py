@@ -42,6 +42,29 @@ def _close_root(root: tk.Tk) -> None:
     root.destroy()
 
 
+def _clear_chosen(app: StrategyOptimizerApp) -> None:
+    for row in tuple(app.chosen_club_rows):
+        app._remove_chosen_club(row)
+
+
+def _run_builder(app: StrategyOptimizerApp, roles: tuple[tuple[str, str], ...]) -> dict[str, object]:
+    _clear_chosen(app)
+    for club_id, role in roles:
+        app._add_chosen_club(club_id, role)
+    app._start()
+    assert app.controller.running  # the real Tk window remains responsive while the worker runs
+    app.root.update()
+    _wait(app)
+    assert app.result is not None and app.result.retained_results
+    first = app.result.retained_results[0]
+    return {
+        "badges": first.optimization_badges,
+        "composition": first.composition,
+        "active_assignments": dict(first.active_assignments),
+        "seconds": app.result.search.total_seconds,
+    }
+
+
 def _validate_values(app: StrategyOptimizerApp) -> dict[str, object]:
     assert app.result is not None
     result = app.result
@@ -166,6 +189,35 @@ def main() -> int:
         app._start()
         _wait(app)
         evidence["strategies"][strategy_id] = _validate_strategy(app, strategy_id)
+
+    builder_label = next(label for label, identifier in app.search_mode_by_label.items() if identifier == "interactive_builder")
+    app.search_mode_name.set(builder_label)
+    app.strategy_name.set(next(label for label, identifier in app.strategy_by_label.items() if identifier == "par3"))
+    app._refresh_variants()
+    app._toggle_search_mode()
+    app.max_evaluations.set("600")
+    evidence["interactive_builder"] = {}
+    evidence["interactive_builder"]["high_flight"] = _run_builder(app, (("high_flight", "attack"),))
+    app.step_minimum_vars["attack"]["control"][0].set("10")
+    evidence["interactive_builder"]["high_flight_control_min"] = _run_builder(app, (("high_flight", "attack"),))
+    app.step_minimum_vars["attack"]["control"][0].set("Aucun")
+    app.step_minimum_vars["attack"]["spin"][0].set("7")
+    evidence["interactive_builder"]["high_flight_spin_min"] = _run_builder(app, (("high_flight", "attack"),))
+    app.step_minimum_vars["attack"]["spin"][0].set("Aucun")
+    evidence["interactive_builder"]["high_flight_ember"] = _run_builder(
+        app, (("high_flight", "attack"), ("ember", "putt")),
+    )
+    evidence["interactive_builder"]["high_flight_ember_maelstrom"] = _run_builder(
+        app, (("high_flight", "attack"), ("ember", "putt"), ("maelstrom", "support")),
+    )
+    evidence["interactive_builder"]["divebomb"] = _run_builder(app, (("divebomb", "attack"),))
+    evidence["interactive_builder"]["gearshift"] = _run_builder(app, (("gearshift", "auto"),))
+    evidence["interactive_builder"]["wave"] = _run_builder(app, (("wave", "auto"),))
+    app.strategy_name.set(next(label for label, identifier in app.strategy_by_label.items() if identifier == "par5"))
+    app._refresh_variants()
+    evidence["interactive_builder"]["three_steps"] = _run_builder(
+        app, (("high_flight", "drive"), ("divebomb", "approach"), ("ember", "putt")),
+    )
     _close_root(app.root)
 
     # A second real root proves normal closure and relaunch in the same launcher path.

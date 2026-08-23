@@ -202,6 +202,32 @@ class CliTests(unittest.TestCase):
             self.assertIn("# User Inventory Status", inventory_path.read_text(encoding="utf-8"))
             self.assertIn("# Project Status", project_path.read_text(encoding="utf-8"))
 
+    def test_interactive_builder_cli_exports_roles_minimums_and_observed_ranges(self):
+        root = Path(__file__).resolve().parents[1]
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            result = main([
+                "optimize-strategy", "par3",
+                "--search-mode", "interactive_builder",
+                "--club-role", "high_flight=attack",
+                "--club-role", "ember=putt",
+                "--minimum", "attack.control=10",
+                "--minimum", "putt.power=8",
+                "--primary-step", "attack",
+                "--max-evaluations", "200",
+                "--limit", "5",
+                "--user-dir", str(root / "data" / "pga_shootout.sqlite"),
+                "--catalog", str(root / "data" / "normalized" / "clubs_official.json"),
+                "--registry", str(root / "data" / "strategies" / "strategies.json"),
+                "--json",
+            ])
+        self.assertEqual(result, 0)
+        payload = json.loads(output.getvalue())
+        self.assertEqual(payload["requested_minimums"]["attack"]["control"], 10.0)
+        self.assertTrue(payload["criteria_satisfied"])
+        self.assertIn("attack", payload["attainable_ranges"])
+        self.assertEqual(payload["retained_results"][0]["optimization_badges"], ["PUISSANCE MAXIMALE"])
+
 
 if __name__ == "__main__":
     unittest.main()

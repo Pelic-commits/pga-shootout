@@ -90,6 +90,9 @@ class OptimizationGuiOptions:
     locked_positions: Mapping[int, str] | None = None
     keep_current_putter: bool = False
     fixed_step_id: str | None = None
+    club_roles: Mapping[str, str] | None = None
+    metric_minimums: Mapping[str, Mapping[str, float]] | None = None
+    primary_step_id: str | None = None
 
     def to_request(self) -> StrategyOptimizationRequest:
         if self.limit not in {5, 10, 20}:
@@ -117,6 +120,9 @@ class OptimizationGuiOptions:
             locked_positions=self.locked_positions or {},
             keep_current_putter=self.keep_current_putter,
             fixed_step_id=self.fixed_step_id,
+            club_roles=self.club_roles or {},
+            metric_minimums=self.metric_minimums or {},
+            primary_step_id=self.primary_step_id,
         )
 
 
@@ -218,11 +224,19 @@ class StrategyOptimizerPresenter:
                 "reference_bag": "Sac enregistré",
                 "reference_neighborhood": "Amélioration locale",
                 "global_search": "Recherche globale",
+                "interactive_builder": "Constructeur interactif",
             }.get(candidate.origin, candidate.origin),
         )
 
     def _strengths(self, candidate: StrategyCandidateResult, step_labels: Mapping[str, str]) -> str:
         facts: list[str] = []
+        facts.extend(candidate.optimization_badges)
+        if candidate.metric_deltas_from_power_max:
+            facts.extend(
+                f"{key} {value:+g}"
+                for key, value in candidate.metric_deltas_from_power_max.items()
+                if value not in {None, 0}
+            )
         if candidate.removed_club_ids or candidate.added_club_ids:
             facts.append(
                 "Remplacement " + ", ".join(candidate.removed_club_ids or ("aucun",))
@@ -282,6 +296,16 @@ class StrategyOptimizerPresenter:
     ) -> str:
         clubs = {item.club_id: item for item in candidate.clubs}
         lines = ["Résumé des clubs essentiels", "=" * 28]
+        if candidate.optimization_badges:
+            lines.extend(("", " / ".join(candidate.optimization_badges)))
+        if candidate.metric_deltas_from_power_max:
+            lines.extend(("", "ÉCART AVEC LA VARIANTE PUISSANCE MAXIMALE"))
+            lines.extend(
+                f"- {step_labels.get(key.split('.', 1)[0], key)} / {_metric_label(key.split('.', 1)[1])} : "
+                + ("inconnu" if value is None else "=" if value == 0 else f"{value:+g}")
+                for key, value in candidate.metric_deltas_from_power_max.items()
+                if key.rsplit(".", 1)[-1] in METRIC_LABELS
+            )
         if candidate.metric_values_from_reference is not None:
             lines.extend(("", self._reference_comparison(candidate, step_labels)))
         for step_id, club_id in candidate.active_assignments.items():
@@ -492,6 +516,8 @@ class StrategyOptimizerPresenter:
         if result.inventory_changes.added_club_ids:
             lines.append("• Nouveau(x) club(s) détecté(s) depuis la précédente analyse :")
             lines.extend(f"  - {item.club_name} — niveau {item.level}" for item in result.new_club_diagnostics)
+        if not result.criteria_satisfied:
+            lines.append("• Aucun sac ne satisfait actuellement ces critères ; les solutions les plus proches sont affichées sans modifier vos minimums.")
         return "\n".join(lines)
 
     @staticmethod
@@ -660,12 +686,13 @@ class StrategyOptimizerApp:
         self.reference_by_label = {"Aucun": None, **{bag.name: bag.identifier for bag in bundle.bags}}
         self.reference_name = tk.StringVar(value="Aucun")
         self.search_mode_by_label = {
+            "Optimiser autour de mes clubs": "interactive_builder",
             "Chercher de nouveaux sacs": "global",
             "Améliorer un de mes sacs": "improve_bag",
             "Optimiser autour d’un club": "around_club",
             "Tester un nouveau club dans mes sacs": "test_new_club",
         }
-        self.search_mode_name = tk.StringVar(value="Chercher de nouveaux sacs")
+        self.search_mode_name = tk.StringVar(value="Optimiser autour de mes clubs")
         self.target_bag_by_label = {bag.name: bag.identifier for bag in bundle.bags}
         self.target_bag_name = tk.StringVar(value=next(iter(self.target_bag_by_label), ""))
         owned = tuple(item for item in bundle.inventory.entries if item.unlocked and item.current_level is not None)
@@ -676,6 +703,8 @@ class StrategyOptimizerApp:
         self.keep_current_putter = tk.BooleanVar(value=False)
         self.lock_required_positions = tk.BooleanVar(value=False)
         self.last_detected_club_ids: tuple[str, ...] = ()
+        self.chosen_club_rows: list[dict[str, object]] = []
+        self.step_minimum_vars: dict[str, dict[str, object]] = {}
         self._callback_queue: Queue[Callable[[], None]] = Queue()
         self.controller = StrategyOptimizerGuiController(
             self.optimizer,
@@ -701,7 +730,7 @@ class StrategyOptimizerApp:
         ttk.Label(parameters, text="Stratégie :").grid(row=0, column=0, sticky="w")
         strategy_box = ttk.Combobox(parameters, textvariable=self.strategy_name, values=tuple(self.strategy_by_label), state="readonly", width=28)
         strategy_box.grid(row=0, column=1, padx=(5, 18))
-        strategy_box.bind("<<ComboboxSelected>>", lambda _event: self._refresh_variants())
+        strategy_box.bind("<<ComboboxSelected>>", lambda _event: self._strategy_changed())
         ttk.Label(parameters, text="Variante :").grid(row=0, column=2, sticky="w")
         self.variant_box = ttk.Combobox(parameters, textvariable=self.variant_name, state="readonly", width=28)
         self.variant_box.grid(row=0, column=3, padx=(5, 18))
@@ -747,8 +776,21 @@ class StrategyOptimizerApp:
         )
         self.depth_box.grid(row=3, column=10, pady=(8, 0), sticky="w")
 
-        constraints = ttk.LabelFrame(parameters, text="Contraintes facultatives", padding=6)
-        constraints.grid(row=4, column=0, columnspan=12, sticky="ew", pady=(8, 0))
+        self.builder_frame = ttk.LabelFrame(parameters, text="Clubs choisis et objectifs", padding=6)
+        self.builder_frame.grid(row=4, column=0, columnspan=12, sticky="ew", pady=(8, 0))
+        self.builder_frame.columnconfigure(0, weight=2)
+        self.builder_frame.columnconfigure(1, weight=3)
+        chosen = ttk.LabelFrame(self.builder_frame, text="Clubs à utiliser", padding=5)
+        chosen.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
+        self.chosen_rows_frame = ttk.Frame(chosen)
+        self.chosen_rows_frame.pack(fill="x")
+        ttk.Button(chosen, text="+ Ajouter un club", command=self._add_chosen_club).pack(anchor="w", pady=(5, 0))
+        self.objectives_frame = ttk.LabelFrame(self.builder_frame, text="Objectifs — Power est maximisée par défaut", padding=5)
+        self.objectives_frame.grid(row=0, column=1, sticky="nsew")
+
+        constraints = ttk.LabelFrame(parameters, text="Contraintes facultatives des anciens modes", padding=6)
+        constraints.grid(row=5, column=0, columnspan=12, sticky="ew", pady=(8, 0))
+        self.legacy_constraints = constraints
         ttk.Label(constraints, text="Clubs à conserver / obligatoires").grid(row=0, column=0, sticky="w")
         self.required_list = tk.Listbox(constraints, selectmode="multiple", exportselection=False, height=4, width=28)
         self.required_list.grid(row=1, column=0, padx=(0, 12), sticky="ew")
@@ -851,19 +893,116 @@ class StrategyOptimizerApp:
         self.fixed_step_by_label = {step.name: step.identifier for step in strategy.sequence}
         self.fixed_step_box.configure(values=tuple(self.fixed_step_by_label))
         self.fixed_step_name.set(next(iter(self.fixed_step_by_label), ""))
+        self._refresh_chosen_roles()
+        self._rebuild_objectives()
+
+    def _strategy_changed(self) -> None:
+        self._refresh_variants()
+        self._toggle_search_mode()
+
+    def _role_choices(self) -> dict[str, str]:
+        strategy_id = self.strategy_by_label[self.strategy_name.get()]
+        strategy = self.presenter.registry.get(strategy_id)
+        result = {"Automatique": "auto", "Support uniquement": "support"}
+        result.update({f"Actif — {step.name}": step.identifier for step in strategy.sequence})
+        return result
+
+    def _add_chosen_club(self, club_id: str | None = None, role: str = "auto") -> None:
+        if len(self.chosen_club_rows) >= 5:
+            self.status.set("Un sac contient cinq clubs au maximum.")
+            return
+        used = {self.fixed_club_by_label.get(str(row["club_var"].get())) for row in self.chosen_club_rows}
+        label = next(
+            (name for name, value in self.fixed_club_by_label.items() if value == club_id),
+            next((name for name, value in self.fixed_club_by_label.items() if value not in used), ""),
+        )
+        roles = self._role_choices()
+        role_label = next((name for name, value in roles.items() if value == role), "Automatique")
+        row_frame = self.ttk.Frame(self.chosen_rows_frame)
+        row_frame.pack(fill="x", pady=2)
+        club_var = self.tk.StringVar(value=label)
+        role_var = self.tk.StringVar(value=role_label)
+        position_var = self.tk.StringVar(value="Libre")
+        club_box = self.ttk.Combobox(
+            row_frame, textvariable=club_var, values=tuple(self.fixed_club_by_label), state="readonly", width=24,
+        )
+        role_box = self.ttk.Combobox(
+            row_frame, textvariable=role_var, values=tuple(roles), state="readonly", width=25,
+        )
+        position_box = self.ttk.Combobox(
+            row_frame, textvariable=position_var, values=("Libre", "1", "2", "3", "4", "5"), state="readonly", width=7,
+        )
+        club_box.pack(side="left")
+        role_box.pack(side="left", padx=4)
+        position_box.pack(side="left")
+        row: dict[str, object] = {
+            "frame": row_frame, "club_var": club_var, "role_var": role_var,
+            "position_var": position_var, "club_box": club_box, "role_box": role_box,
+        }
+        self.ttk.Button(row_frame, text="Supprimer", command=lambda: self._remove_chosen_club(row)).pack(side="left", padx=4)
+        self.chosen_club_rows.append(row)
+
+    def _remove_chosen_club(self, row: dict[str, object]) -> None:
+        row["frame"].destroy()
+        self.chosen_club_rows.remove(row)
+
+    def _refresh_chosen_roles(self) -> None:
+        roles = self._role_choices()
+        for row in self.chosen_club_rows:
+            current = str(row["role_var"].get())
+            row["role_box"].configure(values=tuple(roles))
+            if current not in roles:
+                row["role_var"].set("Automatique")
+
+    def _rebuild_objectives(self) -> None:
+        for child in self.objectives_frame.winfo_children():
+            child.destroy()
+        self.step_minimum_vars = {}
+        strategy_id = self.strategy_by_label[self.strategy_name.get()]
+        strategy = self.presenter.registry.get(strategy_id)
+        for row_index, step in enumerate(strategy.sequence):
+            function_label = {
+                "advance_toward_target": "PROGRESSER",
+                "reach_target_zone": "ATTAQUER LE GREEN",
+                "finish": "PUTT",
+            }.get(step.function.identifier, step.function.identifier)
+            self.ttk.Label(self.objectives_frame, text=f"{step.name} — {function_label}").grid(
+                row=row_index, column=0, sticky="w", padx=(0, 8), pady=2,
+            )
+            metrics = ("power", "control") if step.function.identifier == "finish" else ("control", "spin")
+            values: dict[str, object] = {}
+            for column, metric in enumerate(metrics, 1):
+                variable = self.tk.StringVar(value="Aucun")
+                box = self.ttk.Combobox(
+                    self.objectives_frame, textvariable=variable, values=("Aucun",), width=12,
+                )
+                box.grid(row=row_index, column=column, padx=3, pady=2)
+                self.ttk.Label(self.objectives_frame, text=f"{METRIC_LABELS[metric]} minimum").grid(
+                    row=row_index + len(strategy.sequence), column=column, padx=3, sticky="n",
+                ) if row_index == 0 else None
+                values[metric] = (variable, box)
+            self.step_minimum_vars[step.identifier] = values
 
     def _toggle_mode(self) -> None:
         self.scenario_entry.configure(state="disabled" if self.real_mode.get() else "normal")
 
     def _toggle_search_mode(self) -> None:
         mode = self.search_mode_by_label[self.search_mode_name.get()]
-        local_mode = mode in {"improve_bag", "around_club", "test_new_club"}
+        local_mode = mode in {"improve_bag", "around_club", "test_new_club", "interactive_builder"}
         self.target_bag_box.configure(state="readonly" if local_mode else "disabled")
         self.fixed_club_box.configure(state="readonly" if mode in {"around_club", "test_new_club"} else "disabled")
         self.fixed_step_box.configure(state="readonly" if mode == "around_club" else "disabled")
         self.depth_box.configure(state="readonly" if mode != "global" else "disabled")
+        if mode == "interactive_builder":
+            self.builder_frame.grid()
+            self.legacy_constraints.grid_remove()
+        else:
+            self.builder_frame.grid_remove()
+            self.legacy_constraints.grid()
         self.analyze_button.configure(
-            text="Chercher des améliorations" if mode == "improve_bag" else "Tester ce club" if mode == "test_new_club" else "Lancer l’analyse"
+            text="OPTIMISER MON SAC" if mode == "interactive_builder"
+            else "Chercher des améliorations" if mode == "improve_bag"
+            else "Tester ce club" if mode == "test_new_club" else "Lancer l’analyse"
         )
 
     def _refresh_inventory_choices(self) -> None:
@@ -876,6 +1015,8 @@ class StrategyOptimizerApp:
         self.fixed_club_by_label = {item.display_name: item.club_id for item in owned}
         self.target_bag_box.configure(values=tuple(self.target_bag_by_label))
         self.fixed_club_box.configure(values=tuple(self.fixed_club_by_label))
+        for row in self.chosen_club_rows:
+            row["club_box"].configure(values=tuple(self.fixed_club_by_label))
         for widget in (self.required_list, self.excluded_list):
             selected = {widget.get(index) for index in widget.curselection()}
             widget.delete(0, "end")
@@ -937,6 +1078,39 @@ class StrategyOptimizerApp:
                 position: club_id for position, club_id in enumerate(bag.club_ids, 1)
                 if club_id in required_ids
             }
+        search_mode = self.search_mode_by_label[self.search_mode_name.get()]
+        club_roles: dict[str, str] = {}
+        metric_minimums: dict[str, dict[str, float]] = {}
+        primary_step_id = None
+        if search_mode == "interactive_builder":
+            role_choices = self._role_choices()
+            for row in self.chosen_club_rows:
+                label = str(row["club_var"].get())
+                club_id = self.fixed_club_by_label[label]
+                if club_id in club_roles:
+                    raise ValueError(f"Le club {label} a été ajouté plusieurs fois.")
+                club_roles[club_id] = role_choices[str(row["role_var"].get())]
+                position = str(row["position_var"].get())
+                if position != "Libre":
+                    numeric = int(position)
+                    if numeric in locked_positions:
+                        raise ValueError(f"La position {numeric} est verrouillée deux fois.")
+                    locked_positions[numeric] = club_id
+            strategy = self.presenter.registry.get(self.strategy_by_label[self.strategy_name.get()])
+            primary_step_id = next(
+                step.identifier for step in strategy.sequence if step.function.identifier != "finish"
+            )
+            for step_id, values in self.step_minimum_vars.items():
+                parsed: dict[str, float] = {}
+                for metric, (variable, _box) in values.items():
+                    raw = str(variable.get()).strip()
+                    if raw and raw.casefold() != "aucun":
+                        try:
+                            parsed[metric] = float(raw.replace(",", "."))
+                        except ValueError as error:
+                            raise ValueError(f"Minimum invalide pour {METRIC_LABELS[metric]} : {raw}") from error
+                if parsed:
+                    metric_minimums[step_id] = parsed
         return OptimizationGuiOptions(
             strategy_id=self.strategy_by_label[self.strategy_name.get()],
             variant_id=self.variant_by_label[self.variant_name.get()],
@@ -945,7 +1119,7 @@ class StrategyOptimizerApp:
             limit=limit,
             max_evaluations=max_evaluations,
             reference_bag_id=self.reference_by_label[self.reference_name.get()],
-            search_mode=self.search_mode_by_label[self.search_mode_name.get()],
+            search_mode=search_mode,
             target_bag_id=target_bag_id,
             fixed_club_id=self.fixed_club_by_label.get(self.fixed_club_name.get()),
             replacement_depth=int(self.replacement_depth.get()),
@@ -954,6 +1128,9 @@ class StrategyOptimizerApp:
             locked_positions=locked_positions,
             keep_current_putter=self.keep_current_putter.get(),
             fixed_step_id=self.fixed_step_by_label.get(self.fixed_step_name.get()),
+            club_roles=club_roles,
+            metric_minimums=metric_minimums,
+            primary_step_id=primary_step_id,
         )
 
     def _start(self) -> None:
@@ -978,6 +1155,11 @@ class StrategyOptimizerApp:
         self.presentation = self.presenter.present(result)
         self._set_text(self.warning, self.presentation.warning_text)
         self.candidate_tree.delete(*self.candidate_tree.get_children())
+        for step_id, metrics in (result.attainable_ranges or {}).items():
+            for metric, values in metrics.items():
+                entry = self.step_minimum_vars.get(step_id, {}).get(metric)
+                if entry:
+                    entry[1].configure(values=("Aucun", *(f"{value:g}" for value in values)))
         for index, item in enumerate(self.presentation.candidates):
             self.candidate_tree.insert("", "end", iid=str(index), values=(
                 item.display_number, item.origin, item.families, item.category, item.composition, item.active_clubs,

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Ajout du constructeur interactif autour de plusieurs clubs avec rôles et positions facultatifs.
+- Ajout des minimums factuels Control/Spin et Power/Control final du putt.
+- Présentation de la Power maximale puis des compromis utiles à chaque palier réel de Power.
+- Séparation déclarative de la préférence Progression/Attaque du green et Bounce Reduction hors du Rule Engine.
+- Exposition des critères, plages observées, badges et deltas dans la GUI et les exports JSON/texte.
 - Ajout des contraintes pratiques de sacs, de la détection fraîche de l’inventaire, de l’audit générique des nouveaux clubs et des comparaisons avant/après séparant attaque et atterrissage.
 - Généralisation de la recherche autour d’un club et du test local d’un nouveau club, avec rôles actifs configurables et prise en charge des usages de support.
 - Réduction exacte des permutations locales par signature structurelle, validée contre l’énumération historique complète.

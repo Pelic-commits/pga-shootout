@@ -1,5 +1,24 @@
 # Optimiseur de sacs par stratégie
 
+## Constructeur interactif de sac
+
+Le parcours principal de `OPTIMISER_MES_SACS.bat` est désormais **Optimiser autour de mes clubs**.
+
+1. Choisir une stratégie.
+2. Ajouter zéro à cinq clubs possédés.
+3. Pour chaque club, choisir `Automatique`, `Support uniquement` ou une étape active compatible.
+4. Laisser sa position libre ou la verrouiller de 1 à 5.
+5. Laisser les minimums sur `Aucun`, ou saisir un minimum final de Control/Spin et de Power/Control au putt.
+6. Lancer **OPTIMISER MON SAC**.
+
+Power est l'objectif principal par défaut. Il n'existe aucun coefficient ni score global. Les résultats exposent la Power maximale observée, puis les gains réels de Control ou de Spin aux paliers inférieurs de Power. Un minimum impossible n'est jamais assoupli silencieusement : le résultat l'indique et montre seulement le front non dominé des déficits les plus proches.
+
+La politique déclarative `data/strategies/optimization_policies.json` sépare les préférences utilisateur des faits du Rule Engine. Une progression traite Bounce Reduction comme descriptive. Pour une attaque du green, Bounce Reduction peut conserver une variante distincte avec Driver, Wood ou Hybrid ; elle reste descriptive par défaut avec un Iron. Aucun score d'atterrissage n'est calculé.
+
+Les minimums du putt portent sur les statistiques finales après toutes les contributions validées, y compris les effets différés et Chains. Deux Putters restent autorisés lorsque l'un est actif et l'autre support.
+
+La recherche est bornée et l'interface affiche ses limites. Chaque composition retenue conserve l'évaluation structurellement exacte de l'ordre ; imposer davantage de clubs réduit normalement le nombre de compositions à explorer.
+
 `optimize-strategy` est la première recherche automatique de sacs fondée sur une
 `StrategyDefinition`. Le cas de validation actuel est `par3`, mais le générateur
 ne contient aucune branche liée à cet identifiant : il lit la séquence, les
