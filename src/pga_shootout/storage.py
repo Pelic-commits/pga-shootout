@@ -553,6 +553,10 @@ class PgaDatabase:
                 raise ValueError("Le club principal doit appartenir au sac.")
             if profile.club_notes and not set(profile.club_notes).issubset(clubs):
                 raise ValueError("Une note de club ne peut viser qu'un club du sac.")
+            if profile.reference_roles and not set(profile.reference_roles).issubset(clubs):
+                raise ValueError("Un rôle observé ne peut viser qu'un club du sac.")
+            if profile.reference_roles and any(not str(role).strip() for role in profile.reference_roles.values()):
+                raise ValueError("Un rôle observé ne peut pas être vide.")
             before = json.loads(row["payload_json"])
             after = {**before, "status": "user_reference", "reference": asdict(profile)}
             connection.execute(

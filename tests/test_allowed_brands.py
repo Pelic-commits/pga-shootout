@@ -94,6 +94,13 @@ def test_cli_accepts_a_repeatable_allowed_brand_constraint():
     assert args.allowed_brand == ["nautilus", "palo"]
 
 
+def test_cli_exposes_replacement_type_policy_without_changing_global_filters():
+    args = build_parser().parse_args([
+        "optimize-strategy", "par5", "--replacement-type-policy", "all_types",
+    ])
+    assert args.replacement_type_policy == "all_types"
+
+
 def test_unknown_brand_is_rejected_before_search():
     with pytest.raises(StrategyOptimizationError, match="Marques inconnues : inconnue"):
         optimizer().optimize(StrategyOptimizationRequest("par3", allowed_brands=("inconnue",)))

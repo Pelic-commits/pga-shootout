@@ -44,9 +44,11 @@ ROLE_LABELS = {
 GROUP_LABELS = {
     "without_observed_loss": "Amélioration sans contrepartie observée",
     "tradeoff": "Compromis",
-    "with_warnings": "Résultat avec avertissements",
+    "with_warnings": "Compromis partiellement évalué",
     "excluded": "Candidat exclu",
     "neutral": "Neutre",
+    "best_admissible": "Meilleur sac admissible sous la restriction",
+    "inferior": "Alternative inférieure",
 }
 METRIC_LABELS = {
     "power": "Power",
@@ -102,6 +104,7 @@ class OptimizationGuiOptions:
     metric_minimums: Mapping[str, Mapping[str, float]] | None = None
     primary_step_id: str | None = None
     allowed_brands: tuple[str, ...] = ()
+    replacement_type_policy: str = "same_type"
 
     def to_request(self) -> StrategyOptimizationRequest:
         if self.limit not in {5, 10, 20}:
@@ -134,6 +137,7 @@ class OptimizationGuiOptions:
             metric_minimums=self.metric_minimums or {},
             primary_step_id=self.primary_step_id,
             allowed_brands=self.allowed_brands,
+            replacement_type_policy=self.replacement_type_policy,
         )
 
 
@@ -237,6 +241,21 @@ class StrategyOptimizerPresenter:
                 lines.append(f"{step_labels.get(step_id, step_id)} — {club.club_name} — {values}")
         if reference.note:
             lines.append("Note : " + reference.note)
+        if reference.reference_roles:
+            role_labels = {
+                "automatic": "Automatique", "support": "Support", "variable": "Variable",
+                **step_labels,
+            }
+            names = {
+                club.club_id: club.club_name
+                for candidate in result.retained_results for club in candidate.clubs
+            }
+            lines.append("Rôles observés : " + ", ".join(
+                f"{names.get(club_id, club_id)}={role_labels.get(role, role)}"
+                for club_id, role in reference.reference_roles.items()
+            ))
+        if result.reference_is_admissible and not result.improvement_without_loss_found:
+            lines.append("Aucune amélioration sans perte calculable trouvée.")
         return "\n".join(lines)
 
     def _candidate_list(
@@ -253,9 +272,14 @@ class StrategyOptimizerPresenter:
         )
         return CandidateListPresentation(
             display_number=index,
-            composition=" · ".join(club.club_name for club in candidate.clubs),
+            composition=" · ".join(f"{club.club_name} — {club.club_type.title()}" for club in candidate.clubs),
             active_clubs=active,
-            category=GROUP_LABELS.get(candidate.comparison_group, "Proposition retenue"),
+            category=(
+                "SAC ACTUEL — MEILLEUR RÉSULTAT CONNU"
+                if candidate.result_status == "current_best_known"
+                else "SAC ACTUEL" if candidate.result_status == "current_bag"
+                else GROUP_LABELS.get(candidate.comparison_group, "Proposition retenue")
+            ),
             unresolved_count=len(candidate.unresolved_abilities),
             has_neutral_club=any(club.role == "neutral" for club in candidate.clubs),
             strengths=self._strengths(candidate, step_labels),
@@ -313,7 +337,8 @@ class StrategyOptimizerPresenter:
             StepPresentation(step_id, label, self._step_content(candidate, step_id, label, step_labels))
             for step_id, label in step_labels.items()
         )
-        title = f"Proposition {index} — " + " · ".join(club.club_name for club in candidate.clubs)
+        prefix = "SAC ACTUEL" if candidate.result_status in {"current_bag", "current_best_known"} else f"Proposition {index}"
+        title = prefix + " — " + " · ".join(club.club_name for club in candidate.clubs)
         clipboard = "\n".join((
             title,
             GROUP_LABELS.get(candidate.comparison_group, "Proposition retenue"),
@@ -337,6 +362,11 @@ class StrategyOptimizerPresenter:
     ) -> str:
         clubs = {item.club_id: item for item in candidate.clubs}
         lines = ["Résumé des clubs essentiels", "=" * 28]
+        lines.extend((
+            f"Statut : {candidate.result_status}",
+            f"Pourquoi ce résultat est affiché : {candidate.reason_for_display}",
+            f"Clubs remplacés : {candidate.replacement_depth}",
+        ))
         if candidate.optimization_badges:
             lines.extend(("", " / ".join(candidate.optimization_badges)))
         if candidate.metric_deltas_from_power_max:
@@ -503,7 +533,16 @@ class StrategyOptimizerPresenter:
         return "\n".join(lines)
 
     def _technical(self, candidate: StrategyCandidateResult, step_labels: Mapping[str, str]) -> str:
-        lines = [f"Origine : {candidate.origin}", "Exigences"]
+        lines = [
+            f"Origine : {candidate.origin}",
+            f"replacement_depth : {candidate.replacement_depth}",
+            f"result_status : {candidate.result_status}",
+            f"reason_for_display : {candidate.reason_for_display}",
+            "Gains : " + (", ".join(candidate.gains) or "aucun"),
+            "Pertes : " + (", ".join(candidate.losses) or "aucune"),
+            "Inconnus : " + (", ".join(candidate.unknowns) or "aucun"),
+            "Exigences",
+        ]
         if candidate.metric_deltas_from_reference is not None:
             lines.extend((
                 "",
@@ -565,16 +604,26 @@ class StrategyOptimizerPresenter:
             lines.extend(f"  - {item.club_name} — niveau {item.level}" for item in result.new_club_diagnostics)
         if not result.criteria_satisfied:
             lines.append("• Aucun sac ne satisfait actuellement ces critères ; les solutions les plus proches sont affichées sans modifier vos minimums.")
+        if result.reference_is_admissible and not result.improvement_without_loss_found and result.comparison_reference:
+            lines.append("• Aucune amélioration sans perte calculable trouvée.")
+        if result.inferior_results_hidden_count:
+            lines.append(f"• {result.inferior_results_hidden_count} résultat(s) strictement inférieur(s) masqué(s).")
         return "\n".join(lines)
 
     @staticmethod
     def _search_information(result: StrategyOptimizationResult) -> str:
         total = result.search.total_seconds
         brands = ", ".join(result.allowed_brand_names) if result.allowed_brands else "Toutes"
+        replacement_type = (
+            "Même type" if result.replacement_type_policy == "same_type" else "Tous les types admissibles"
+        )
         return "\n".join((
             "Informations sur la recherche",
             f"Marques : {brands}",
             f"Origine de la contrainte : {result.admissibility_provenance}",
+            f"Type de remplaçant : {replacement_type}",
+            f"Remplacements autorisés : jusqu’à {result.search.replacement_depth}",
+            f"Résultats inférieurs masqués : {result.inferior_results_hidden_count}",
             f"Candidats générés : {result.search.reduced_candidates_generated}",
             f"Candidats évalués : {result.search.candidates_evaluated}",
             f"Doublons éliminés : {result.search.candidate_result_duplicates_removed}",
@@ -762,7 +811,12 @@ class StrategyOptimizerApp:
         self.fixed_club_by_label = {item.display_name: item.club_id for item in owned}
         self.fixed_club_name = tk.StringVar(value=next(iter(self.fixed_club_by_label), ""))
         self.fixed_step_name = tk.StringVar(value="")
-        self.replacement_depth = tk.StringVar(value="1")
+        self.replacement_depth = tk.StringVar(value="Jusqu’à 1 remplacement")
+        self.replacement_type_by_label = {
+            "Même type que le club actuel": "same_type",
+            "Tous les types admissibles": "all_types",
+        }
+        self.replacement_type_name = tk.StringVar(value="Même type que le club actuel")
         self.keep_current_putter = tk.BooleanVar(value=False)
         self.lock_required_positions = tk.BooleanVar(value=False)
         self.last_detected_club_ids: tuple[str, ...] = ()
@@ -849,11 +903,6 @@ class StrategyOptimizerApp:
             values=tuple(self.fixed_club_by_label), state="disabled", width=22,
         )
         self.fixed_club_box.grid(row=3, column=7, columnspan=2, pady=(8, 0), sticky="w")
-        ttk.Label(parameters, text="Remplacements :").grid(row=3, column=9, pady=(8, 0), sticky="e")
-        self.depth_box = ttk.Combobox(
-            parameters, textvariable=self.replacement_depth, values=("1", "2"), state="disabled", width=4,
-        )
-        self.depth_box.grid(row=3, column=10, pady=(8, 0), sticky="w")
         ttk.Button(parameters, text="Définir comme référence", command=self._mark_reference).grid(
             row=3, column=11, pady=(8, 0), padx=(6, 0), sticky="w",
         )
@@ -891,6 +940,21 @@ class StrategyOptimizerApp:
             constraints, textvariable=self.fixed_step_name, state="disabled", width=22,
         )
         self.fixed_step_box.grid(row=1, column=3, padx=(14, 0), sticky="nw")
+        ttk.Label(constraints, text="Type de remplaçant :").grid(row=0, column=4, padx=(14, 0), sticky="w")
+        self.replacement_type_box = ttk.Combobox(
+            constraints, textvariable=self.replacement_type_name,
+            values=tuple(self.replacement_type_by_label), state="disabled", width=29,
+        )
+        self.replacement_type_box.grid(row=1, column=4, padx=(14, 0), sticky="nw")
+        ttk.Label(constraints, text="Profondeur :").grid(row=0, column=5, padx=(14, 0), sticky="w")
+        self.depth_box = ttk.Combobox(
+            constraints, textvariable=self.replacement_depth,
+            values=("Jusqu’à 1 remplacement", "Jusqu’à 2 remplacements"), state="disabled", width=25,
+        )
+        self.depth_box.grid(row=1, column=5, padx=(14, 0), sticky="nw")
+        ttk.Button(
+            constraints, text="Utiliser les rôles de la référence", command=self._use_reference_roles,
+        ).grid(row=1, column=6, padx=(14, 0), sticky="nw")
 
         self.analyze_button = ttk.Button(parameters, text="Lancer l’analyse", command=self._start)
         self.analyze_button.grid(row=0, column=10, padx=(20, 6))
@@ -1086,6 +1150,7 @@ class StrategyOptimizerApp:
         self.fixed_club_box.configure(state="readonly" if mode in {"replace_club", "around_club", "test_new_club"} else "disabled")
         self.fixed_step_box.configure(state="readonly" if mode == "around_club" else "disabled")
         self.depth_box.configure(state="readonly" if mode != "global" else "disabled")
+        self.replacement_type_box.configure(state="readonly" if mode == "replace_club" else "disabled")
         if mode == "interactive_builder":
             self.builder_frame.grid()
             self.legacy_constraints.grid_remove()
@@ -1250,7 +1315,9 @@ class StrategyOptimizerApp:
                 self.fixed_club_by_label.get(self.fixed_club_name.get())
                 if search_mode == "replace_club" else None
             ),
-            replacement_depth=int(self.replacement_depth.get()),
+            replacement_depth=(
+                2 if "2" in self.replacement_depth.get() else 1
+            ),
             required_club_ids=required_ids,
             excluded_club_ids=tuple(self.fixed_club_by_label[item] for item in excluded_labels),
             locked_positions=locked_positions,
@@ -1260,6 +1327,7 @@ class StrategyOptimizerApp:
             metric_minimums=metric_minimums,
             primary_step_id=primary_step_id,
             allowed_brands=allowed_brands,
+            replacement_type_policy=self.replacement_type_by_label[self.replacement_type_name.get()],
         )
 
     def _start(self) -> None:
@@ -1418,6 +1486,12 @@ class StrategyOptimizerApp:
             current.primary_club_id if current and current.primary_club_id
             else selected_primary if selected_primary in bag.club_ids else None
         )
+        reference_roles = self._edit_reference_roles_dialog(
+            bag,
+            dict(current.reference_roles or {}) if current else {},
+        )
+        if reference_roles is None:
+            return
         profile = BagReferenceProfile(
             label=label, usage=usage or "",
             strategy_id=self.strategy_by_label[self.strategy_name.get()],
@@ -1428,6 +1502,7 @@ class StrategyOptimizerApp:
                 else {primary: note or ""} if primary and note else {}
             ),
             observed_metrics=dict(current.observed_metrics or {}) if current else {},
+            reference_roles=reference_roles,
         )
         try:
             PgaDatabase(self.user_data_path).mark_bag_reference(bag_id, profile)
@@ -1439,6 +1514,81 @@ class StrategyOptimizerApp:
             name for name, value in self.target_bag_by_label.items() if value == bag_id
         ))
         self.status.set(f"{label} est maintenant un sac de référence utilisateur.")
+
+    def _edit_reference_roles_dialog(
+        self,
+        bag,
+        current_roles: Mapping[str, str],
+    ) -> dict[str, str] | None:
+        strategy = self.presenter.registry.get(self.strategy_by_label[self.strategy_name.get()])
+        choices = {
+            "Automatique": "automatic",
+            **{step.name: step.identifier for step in strategy.sequence},
+            "Support": "support",
+            "Variable": "variable",
+        }
+        labels_by_value = {value: label for label, value in choices.items()}
+        window = self.tk.Toplevel(self.root)
+        window.title("Rôles observés dans ce sac")
+        window.transient(self.root)
+        window.grab_set()
+        self.ttk.Label(
+            window,
+            text="Ces rôles décrivent votre usage réel. Ils ne modifient ni le catalogue ni le moteur.",
+            padding=10,
+        ).grid(row=0, column=0, columnspan=2, sticky="w")
+        variables: dict[str, object] = {}
+        for row, club_id in enumerate(bag.club_ids, 1):
+            name = next((label for label, value in self.fixed_club_by_label.items() if value == club_id), club_id)
+            self.ttk.Label(window, text=name).grid(row=row, column=0, padx=10, pady=3, sticky="w")
+            variable = self.tk.StringVar(
+                value=labels_by_value.get(current_roles.get(club_id, "automatic"), "Automatique")
+            )
+            self.ttk.Combobox(
+                window, textvariable=variable, values=tuple(choices), state="readonly", width=32,
+            ).grid(row=row, column=1, padx=10, pady=3, sticky="ew")
+            variables[club_id] = variable
+        answer: dict[str, object] = {"value": None}
+
+        def save() -> None:
+            answer["value"] = {
+                club_id: choices[str(variable.get())]
+                for club_id, variable in variables.items()
+            }
+            window.destroy()
+
+        buttons = self.ttk.Frame(window, padding=10)
+        buttons.grid(row=len(bag.club_ids) + 1, column=0, columnspan=2, sticky="e")
+        self.ttk.Button(buttons, text="Annuler", command=window.destroy).pack(side="left")
+        self.ttk.Button(buttons, text="Enregistrer", command=save).pack(side="left", padx=(8, 0))
+        window.protocol("WM_DELETE_WINDOW", window.destroy)
+        self.root.wait_window(window)
+        return answer["value"]
+
+    def _use_reference_roles(self) -> None:
+        bag_id = self.target_bag_by_label.get(self.target_bag_name.get())
+        if not bag_id:
+            self.status.set("Choisissez d’abord un sac de référence.")
+            return
+        bag = next(item for item in load_user_data(self.user_data_path).bags if item.identifier == bag_id)
+        if bag.reference is None:
+            self.status.set("Ce sac ne possède pas encore de rôles utilisateur.")
+            return
+        if bag.reference.strategy_id and bag.reference.strategy_id != self.strategy_by_label[self.strategy_name.get()]:
+            self.status.set("Choisissez d’abord la stratégie associée à cette référence.")
+            return
+        builder_label = next(
+            label for label, mode in self.search_mode_by_label.items() if mode == "interactive_builder"
+        )
+        self.search_mode_name.set(builder_label)
+        self._toggle_search_mode()
+        for row in tuple(self.chosen_club_rows):
+            self._remove_chosen_club(row)
+        roles = dict(bag.reference.reference_roles or {})
+        for club_id in bag.club_ids:
+            role = roles.get(club_id, "automatic")
+            self._add_chosen_club(club_id, "auto" if role in {"automatic", "variable"} else role)
+        self.status.set("Rôles de la référence préremplis. Modifiez-les si nécessaire, puis lancez l’analyse.")
 
     def _add_text_tab(self, label: str, content: str) -> None:
         frame = self.ttk.Frame(self.notebook)

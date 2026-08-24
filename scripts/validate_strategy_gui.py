@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import shutil
 import tempfile
 import time
 import tkinter as tk
@@ -17,7 +18,8 @@ from pga_shootout.strategy_optimizer_gui import (
     export_result_json,
     export_result_text,
 )
-from pga_shootout.user_data import load_user_data
+from pga_shootout.storage import PgaDatabase
+from pga_shootout.user_data import BagReferenceProfile, load_user_data
 
 
 def _wait(app: StrategyOptimizerApp, timeout: float = 90.0) -> None:
@@ -39,6 +41,17 @@ def _club_step(candidate, club_name: str, step_id: str):
 
 def _candidate_for_family(result, family_id: str):
     return next(item for item in result.retained_results if family_id in item.result_family_ids)
+
+
+def _best_power(result, step_id: str) -> float:
+    values = []
+    for candidate in result.retained_results:
+        club_id = candidate.active_assignments[step_id]
+        club = next(item for item in candidate.clubs if item.club_id == club_id)
+        step = next(item for item in club.steps if item.step_id == step_id)
+        if step.final_stats.get("power") is not None:
+            values.append(step.final_stats["power"])
+    return max(values)
 
 
 def _direct_stats(
@@ -338,6 +351,11 @@ def main() -> int:
     assert app.result.comparison_reference is not None
     assert app.result.comparison_reference.bag_id == "par3_divebomb"
     assert "RÉFÉRENCE" in app.reference_summary.get()
+    assert not app.result.improvement_without_loss_found
+    assert "Aucune amélioration sans perte calculable" in app.reference_summary.get()
+    current = next(item for item in app.result.retained_results if "current_bag" in item.result_family_ids)
+    assert current.result_status == "current_best_known"
+    assert all(item.result_status != "strictly_inferior" for item in app.result.retained_results)
     evidence["interactive_builder"]["divebomb_ember"] = _run_builder(
         app, (("divebomb", "attack"), ("ember", "putt")),
     )
@@ -411,6 +429,128 @@ def main() -> int:
 
     app._select_all_brands()
     _close_root(app.root)
+
+    # A disposable SQLite copy validates the destructive/reference-role paths,
+    # targeted replacement policies and cumulative two-change semantics.
+    temp_database = export_dir / "gui-validation.sqlite"
+    shutil.copy2(Path("data/pga_shootout.sqlite"), temp_database)
+    database = PgaDatabase(temp_database)
+    _, length_id = database.save_bag(
+        "Validation XLR8R", ("xlr8r", "jumpstart", "divebomb", "sparky", "sunstorm"),
+    )
+    database.mark_bag_reference(length_id, BagReferenceProfile(
+        label="Longueur max", strategy_id="par5", primary_club_id="xlr8r",
+        observed_metrics={"drive": {"power": 15, "control": 8, "spin": 10}},
+    ))
+    _, comfort_id = database.save_bag(
+        "Validation confort", ("homestead", "kinship", "steadfast", "cyclotron", "jumpstart"),
+    )
+    comfort_roles = {
+        "cyclotron": "drive", "kinship": "approach", "homestead": "putt",
+        "steadfast": "support", "jumpstart": "variable",
+    }
+    role_backup = database.mark_bag_reference(comfort_id, BagReferenceProfile(
+        label="Confort Par 4/5", strategy_id="par5", reference_roles=comfort_roles,
+        observed_metrics={
+            "drive": {"power": 16, "control": 9, "spin": 12},
+            "approach": {"power": 13, "control": 9, "spin": 9},
+        },
+    ))
+    assert role_backup.exists()
+
+    temp_root = tk.Tk()
+    temp_app = StrategyOptimizerApp(root=temp_root, user_data_path=temp_database)
+    temp_root.update()
+    temp_app.strategy_name.set(next(
+        label for label, identifier in temp_app.strategy_by_label.items() if identifier == "par5"
+    ))
+    temp_app._refresh_variants()
+    temp_replace_label = next(
+        label for label, identifier in temp_app.search_mode_by_label.items() if identifier == "replace_club"
+    )
+    temp_app.search_mode_name.set(temp_replace_label)
+    temp_app._toggle_search_mode()
+    temp_app.target_bag_name.set(next(
+        label for label, bag_id in temp_app.target_bag_by_label.items() if bag_id == length_id
+    ))
+    temp_app.fixed_club_name.set(next(
+        label for label, club_id in temp_app.fixed_club_by_label.items() if club_id == "xlr8r"
+    ))
+    temp_app.limit.set("10")
+    temp_app.max_evaluations.set("120")
+    temp_app.replacement_depth.set("Jusqu’à 1 remplacement")
+    temp_app.replacement_type_name.set("Même type que le club actuel")
+    _select_brands(temp_app, "Corvid", "Mythical", "Phoenix", "Ryusei")
+    temp_app._start()
+    _wait(temp_app)
+    same_type_result = temp_app.result
+    catalog = json.loads(temp_app.catalog_path.read_text(encoding="utf-8"))["clubs"]
+    same_added = {
+        club_id for candidate in same_type_result.retained_results if candidate.origin != "reference_bag"
+        for club_id in candidate.added_club_ids
+    }
+    assert same_added and all(catalog[item]["club_type"]["id"] == "driver" for item in same_added)
+    assert all(
+        catalog[club_id]["brand"]["id"] in same_type_result.allowed_brands
+        for candidate in same_type_result.retained_results for club_id in candidate.composition
+    )
+
+    temp_app._select_all_brands()
+    temp_app.replacement_type_name.set("Tous les types admissibles")
+    temp_app._start()
+    _wait(temp_app)
+    all_types_result = temp_app.result
+    all_added = {
+        club_id for candidate in all_types_result.retained_results if candidate.origin != "reference_bag"
+        for club_id in candidate.added_club_ids
+    }
+    assert any(catalog[item]["club_type"]["id"] != "driver" for item in all_added)
+
+    temp_app.replacement_type_name.set("Même type que le club actuel")
+    temp_app.replacement_depth.set("Jusqu’à 2 remplacements")
+    temp_app._start()
+    _wait(temp_app)
+    depth_two_result = temp_app.result
+    assert _best_power(depth_two_result, "drive") >= _best_power(same_type_result, "drive")
+    assert {candidate.replacement_depth for candidate in depth_two_result.retained_results} >= {0, 1}
+    assert depth_two_result.search.optimality_status == "best_found"
+
+    comfort_label = next(
+        label for label, bag_id in temp_app.target_bag_by_label.items() if bag_id == comfort_id
+    )
+    temp_app.target_bag_name.set(comfort_label)
+    temp_app._use_reference_roles()
+    chosen_roles = {
+        temp_app.fixed_club_by_label[str(row["club_var"].get())]:
+        temp_app._role_choices()[str(row["role_var"].get())]
+        for row in temp_app.chosen_club_rows
+    }
+    assert chosen_roles == {
+        "cyclotron": "drive", "kinship": "approach", "homestead": "putt",
+        "steadfast": "support", "jumpstart": "auto",
+    }
+    temp_app.max_evaluations.set("200")
+    temp_app._start()
+    _wait(temp_app)
+    comfort_current = next(
+        candidate for candidate in temp_app.result.retained_results if "current_bag" in candidate.result_family_ids
+    )
+    assert comfort_current.active_assignments == {
+        "drive": "cyclotron", "approach": "kinship", "putt": "homestead",
+    }
+    evidence["stabilization"] = {
+        "same_type_added": sorted(same_added),
+        "all_types_added": sorted(all_added),
+        "depth_one_power": _best_power(same_type_result, "drive"),
+        "depth_two_power": _best_power(depth_two_result, "drive"),
+        "same_type_seconds": same_type_result.search.total_seconds,
+        "all_types_seconds": all_types_result.search.total_seconds,
+        "depth_two_seconds": depth_two_result.search.total_seconds,
+        "depth_two_status": depth_two_result.search.optimality_status,
+        "reference_roles": comfort_roles,
+        "reference_backup": str(role_backup),
+    }
+    _close_root(temp_root)
 
     # A second real root proves normal closure and relaunch in the same launcher path.
     second_root = tk.Tk()

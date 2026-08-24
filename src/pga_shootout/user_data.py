@@ -87,6 +87,7 @@ class BagReferenceProfile:
     note: str = ""
     club_notes: Mapping[str, str] | None = None
     observed_metrics: Mapping[str, Mapping[str, float]] | None = None
+    reference_roles: Mapping[str, str] | None = None
 
 
 @dataclass(frozen=True)
@@ -258,10 +259,14 @@ def _reference_profile(value: Any) -> BagReferenceProfile | None:
         primary_club_id=str(value["primary_club_id"]) if value.get("primary_club_id") else None,
         role=str(value.get("role") or "stable"),
         note=str(value.get("note") or ""),
-        club_notes={str(key): str(note) for key, note in value.get("club_notes", {}).items()},
+        club_notes={str(key): str(note) for key, note in (value.get("club_notes") or {}).items()},
         observed_metrics={
             str(step): {str(metric): float(amount) for metric, amount in metrics.items()}
-            for step, metrics in value.get("observed_metrics", {}).items()
+            for step, metrics in (value.get("observed_metrics") or {}).items()
+        },
+        reference_roles={
+            str(club_id): str(role)
+            for club_id, role in (value.get("reference_roles") or {}).items()
         },
     )
 

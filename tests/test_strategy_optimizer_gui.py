@@ -106,6 +106,15 @@ def test_local_search_modes_are_transmitted_without_new_business_rules():
     assert (around.search_mode, around.fixed_club_id) == ("around_club", "gearshift")
 
 
+def test_targeted_replacement_type_policy_is_explicit_and_defaults_to_same_type():
+    default = OptimizationGuiOptions("par5", search_mode="replace_club").to_request()
+    broad = OptimizationGuiOptions(
+        "par5", search_mode="replace_club", replacement_type_policy="all_types",
+    ).to_request()
+    assert default.replacement_type_policy == "same_type"
+    assert broad.replacement_type_policy == "all_types"
+
+
 def test_user_constraints_are_transmitted_as_structural_options():
     request = OptimizationGuiOptions(
         "par3", search_mode="improve_bag", target_bag_id="par3_high_flight",
@@ -213,7 +222,7 @@ def test_presenter_builds_continuous_user_list_without_technical_ranking_terms(p
     first = presentation.candidates[0]
     assert first.display_number == 1
     assert first.composition.count(" · ") == 4
-    assert first.category == "Résultat avec avertissements"
+    assert first.category == "Compromis partiellement évalué"
     combined = "\n".join(vars(item).__str__() for item in presentation.candidates)
     assert "candidate_id" not in combined
     assert "comparison_layer" not in combined

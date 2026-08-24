@@ -336,7 +336,11 @@ def test_two_replacement_search_is_explicitly_structurally_reduced(local_databas
     assert service.generator.last_generation_stats["replacement_depth"] == 2
     assert any(len(set(item.club_ids) - set(bag.club_ids)) == 2 for item in generated)
     selected = service._bounded_local_order_spaces(generated, bag, 240)
-    assert 0 < len(selected) <= 240
+    generated_cumulative = [item for item in generated if item.replacement_depth <= 1]
+    selected_cumulative = [item for item in selected if item.replacement_depth <= 1]
+    selected_pairs = [item for item in selected if item.replacement_depth == 2]
+    assert len(selected_cumulative) == len(generated_cumulative)
+    assert 0 < len(selected_pairs) <= 240
     depths = {len(set(item.club_ids) - set(bag.club_ids)) for item in selected}
     assert {0, 2}.issubset(depths) and depths.issubset({0, 1, 2})
 

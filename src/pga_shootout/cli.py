@@ -301,6 +301,10 @@ def build_parser() -> argparse.ArgumentParser:
     optimize_strategy_parser.add_argument("--minimum", action="append", default=[], type=_metric_minimum, help="final STEP_ID.METRIC=VALUE minimum")
     optimize_strategy_parser.add_argument("--primary-step", help="active step whose Power defines the displayed tiers")
     optimize_strategy_parser.add_argument("--replacement-depth", type=int, choices=(1, 2), default=1)
+    optimize_strategy_parser.add_argument(
+        "--replacement-type-policy", choices=("same_type", "all_types"), default="same_type",
+        help="targeted replacement type policy (default: same type as outgoing club)",
+    )
     optimize_strategy_parser.add_argument("--user-dir", default="data/pga_shootout.sqlite")
     optimize_strategy_parser.add_argument("--catalog", default="data/normalized/clubs_official.json")
     optimize_strategy_parser.add_argument("--registry", default="data/strategies/strategies.json")
@@ -429,6 +433,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 metric_minimums=minimums,
                 primary_step_id=args.primary_step,
                 allowed_brands=tuple(args.allowed_brand),
+                replacement_type_policy=args.replacement_type_policy,
             )
         )
         if hasattr(sys.stdout, "reconfigure"):
