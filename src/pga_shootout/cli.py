@@ -290,6 +290,10 @@ def build_parser() -> argparse.ArgumentParser:
     optimize_strategy_parser.add_argument("--replace-club", help="club in the target bag that must be replaced")
     optimize_strategy_parser.add_argument("--fixed-step", help="strategy step where the fixed club must be active")
     optimize_strategy_parser.add_argument("--require-club", action="append", default=[], help="owned club required in every candidate")
+    optimize_strategy_parser.add_argument(
+        "--allowed-brand", action="append", default=[],
+        help="canonical brand identifier allowed in candidates; may be repeated",
+    )
     optimize_strategy_parser.add_argument("--exclude-club", action="append", default=[], help="owned club excluded from every candidate")
     optimize_strategy_parser.add_argument("--lock-position", action="append", default=[], type=_locked_position, help="keep POSITION=club_id fixed")
     optimize_strategy_parser.add_argument("--keep-current-putter", action="store_true")
@@ -424,6 +428,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 club_roles=dict(args.club_role),
                 metric_minimums=minimums,
                 primary_step_id=args.primary_step,
+                allowed_brands=tuple(args.allowed_brand),
             )
         )
         if hasattr(sys.stdout, "reconfigure"):

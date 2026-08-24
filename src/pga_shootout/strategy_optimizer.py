@@ -57,6 +57,8 @@ class StrategyOptimizationRequest:
     club_roles: Mapping[str, str] | None = None
     metric_minimums: Mapping[str, Mapping[str, float]] | None = None
     primary_step_id: str | None = None
+    allowed_brands: tuple[str, ...] = ()
+    admissibility_provenance: str = "user_constraint"
 
     @property
     def level_mode(self) -> str:
@@ -342,6 +344,10 @@ class StrategyOptimizationResult:
     criteria_satisfied: bool = True
     closest_candidate_ids: tuple[str, ...] = ()
     aggregate_score: None = None
+    allowed_brands: tuple[str, ...] = ()
+    allowed_brand_names: tuple[str, ...] = ()
+    admissibility_provenance: str = "user_constraint"
+    reference_brand_violations: tuple[str, ...] = ()
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -599,9 +605,11 @@ class StrategyCandidateGenerator:
         saved_bags: tuple[SavedBag, ...],
         order_mode: str = "structural_exact",
         max_generated: int | None = None,
+        excluded_club_ids: tuple[str, ...] = (),
     ) -> tuple[tuple[CandidateSpec, ...], int, int]:
         definition = strategy.definition
-        eligible_ids = tuple(runtime.clubs)
+        excluded = set(excluded_club_ids)
+        eligible_ids = tuple(club_id for club_id in runtime.clubs if club_id not in excluded)
         role_count = len(definition.expected_active_roles)
         if len(eligible_ids) < definition.bag_size:
             raise StrategyOptimizationError("Not enough eligible owned clubs to build a bag")
@@ -622,9 +630,13 @@ class StrategyCandidateGenerator:
         searched_order_spaces: set[tuple[Any, ...]] = set()
         permutations_eliminated = 0
         budget_reached = False
-        saved_club_ids = tuple(dict.fromkeys(club_id for bag in saved_bags for club_id in bag.club_ids))
+        saved_club_ids = tuple(dict.fromkeys(
+            club_id for bag in saved_bags for club_id in bag.club_ids if club_id not in excluded
+        ))
         references = self.reference_candidates(strategy, runtime, saved_bags, order_mode)
         for spec in references:
+            if excluded.intersection(spec.club_ids):
+                continue
             key = (spec.club_ids, tuple(spec.active_assignments.items()))
             generated[key] = spec
 
@@ -1539,6 +1551,7 @@ class StrategyOptimizer:
             request.scenario_level,
             request.mode.value,
             request.order_mode,
+            tuple(sorted(request.allowed_brands)),
         )
 
     def _compatible_known_candidates(
@@ -1705,6 +1718,18 @@ class StrategyOptimizer:
         bundle = load_user_data(self.user_data_path)
         inventory_changes = self._inventory_changes(bundle.inventory.entries)
         runtime = _RuntimeEvaluator(self.catalog_path, bundle.inventory.entries, request.scenario_level)
+        brand_names = {
+            str(item["brand"]["id"]): str(item["brand"]["name"])
+            for item in runtime.catalog_document["clubs"].values()
+        }
+        allowed_brands = set(request.allowed_brands)
+        unknown_brands = sorted(allowed_brands - set(brand_names))
+        if unknown_brands:
+            raise StrategyOptimizationError("Marques inconnues : " + ", ".join(unknown_brands))
+        forbidden_ids = {
+            club_id for club_id, club in runtime.clubs.items()
+            if allowed_brands and club.brand not in allowed_brands
+        }
         inventory_signature = self._inventory_signature(bundle.inventory.entries)
         known_context_key = self._known_context_key(request, strategy, runtime, inventory_signature)
         constrained_ids = set(request.required_club_ids) | set(request.excluded_club_ids) | set(request.club_roles or {})
@@ -1719,11 +1744,38 @@ class StrategyOptimizer:
             )
         if set(request.required_club_ids) & set(request.excluded_club_ids):
             raise StrategyOptimizationError("Un club ne peut pas être à la fois obligatoire et exclu")
+        forced_for_brand = (
+            set(request.required_club_ids) | set(request.club_roles or {})
+            | set((request.locked_positions or {}).values())
+        )
+        if request.fixed_club_id and request.search_mode in {"around_club", "test_new_club"}:
+            forced_for_brand.add(request.fixed_club_id)
+        brand_conflicts = sorted(forced_for_brand & forbidden_ids)
+        if brand_conflicts:
+            raise StrategyOptimizationError(
+                "; ".join(
+                    f"{runtime.clubs[item].name} ne fait pas partie des marques autorisées pour cette recherche"
+                    for item in brand_conflicts
+                )
+            )
+        effective_excluded = tuple(sorted(set(request.excluded_club_ids) | forbidden_ids))
         target_bag: SavedBag | None = next(
             (item for item in bundle.bags if item.identifier == request.target_bag_id), None,
         ) if request.target_bag_id else None
         if request.target_bag_id and target_bag is None:
             raise StrategyOptimizationError(f"Sac enregistré inconnu : {request.target_bag_id}")
+        if request.search_mode == "replace_club" and target_bag is not None and request.replace_club_id:
+            retained_forbidden = [
+                item for item in target_bag.club_ids
+                if item != request.replace_club_id and item in forbidden_ids
+            ]
+            support_capacity = request.replacement_depth - 1
+            if len(retained_forbidden) > support_capacity:
+                raise StrategyOptimizationError(
+                    "Le sac ne peut pas devenir conforme avec les remplacements autorisés : "
+                    + ", ".join(runtime.clubs[item].name for item in retained_forbidden)
+                    + " reste(nt) hors marques autorisées."
+                )
 
         generation_started = perf_counter()
         references = self.generator.reference_candidates(strategy, runtime, bundle.bags, request.order_mode)
@@ -1733,6 +1785,7 @@ class StrategyOptimizer:
             generated, theoretical, eliminated = self.generator.generate(
                 strategy, runtime, bundle.bags, request.order_mode,
                 max_generated=max(request.max_evaluations, math.factorial(strategy.definition.bag_size)),
+                excluded_club_ids=effective_excluded,
             )
             generation_stats = dict(self.generator.last_generation_stats)
         elif request.search_mode == "interactive_builder":
@@ -1755,6 +1808,11 @@ class StrategyOptimizer:
                 )
                 if finish_index is not None and assignment:
                     finish_step = strategy.definition.sequence[finish_index]
+                    if assignment[finish_index] in forbidden_ids:
+                        club = runtime.clubs[assignment[finish_index]]
+                        raise StrategyOptimizationError(
+                            f"{club.name} ne fait pas partie des marques autorisées pour cette recherche"
+                        )
                     existing = next((club_id for club_id, role in builder_roles.items() if role == finish_step.identifier), None)
                     if existing and existing != assignment[finish_index]:
                         raise StrategyOptimizationError("Le putter imposé diffère du putter actuel à conserver")
@@ -1763,7 +1821,7 @@ class StrategyOptimizer:
                 strategy,
                 runtime,
                 club_roles=builder_roles,
-                excluded_club_ids=request.excluded_club_ids,
+                excluded_club_ids=effective_excluded,
                 locked_positions=request.locked_positions,
                 order_mode=request.order_mode,
                 max_generated=request.max_evaluations,
@@ -1772,7 +1830,7 @@ class StrategyOptimizer:
             compatible_references = tuple(
                 item for item in references
                 if self._candidate_satisfies_builder_constraints(
-                    item, builder_roles, request.excluded_club_ids, request.locked_positions,
+                    item, builder_roles, effective_excluded, request.locked_positions,
                 )
                 or target_bag is not None and item.club_ids == target_bag.club_ids
             )
@@ -1785,6 +1843,10 @@ class StrategyOptimizer:
             seeded_stats: list[Mapping[str, int]] = []
             seeded_role_maps: set[tuple[tuple[str, str], ...]] = set()
             for reference in compatible_references:
+                if forbidden_ids.intersection(reference.club_ids):
+                    # A nonconforming saved bag is a comparison control only;
+                    # it must never seed the admissible search space.
+                    continue
                 seeded_roles = dict(builder_roles)
                 conflict = False
                 for step_id, club_id in reference.active_assignments.items():
@@ -1808,7 +1870,7 @@ class StrategyOptimizer:
                     strategy,
                     runtime,
                     club_roles=seeded_roles,
-                    excluded_club_ids=request.excluded_club_ids,
+                    excluded_club_ids=effective_excluded,
                     locked_positions=request.locked_positions,
                     order_mode=request.order_mode,
                     max_generated=request.max_evaluations,
@@ -1870,7 +1932,7 @@ class StrategyOptimizer:
                     order_mode=request.order_mode,
                     max_generated=max(request.max_evaluations, math.factorial(strategy.definition.bag_size)),
                     required_club_ids=tuple(around_required),
-                    excluded_club_ids=request.excluded_club_ids,
+                    excluded_club_ids=effective_excluded,
                 )
                 if request.locked_positions:
                     local = tuple(
@@ -1892,7 +1954,7 @@ class StrategyOptimizer:
                     replace_club_id=request.replace_club_id,
                     order_mode=request.order_mode,
                     required_club_ids=tuple(local_required),
-                    excluded_club_ids=request.excluded_club_ids,
+                    excluded_club_ids=effective_excluded,
                     locked_positions=request.locked_positions or {},
                     fixed_step_id=request.fixed_step_id,
                     keep_current_putter=request.keep_current_putter,
@@ -1907,6 +1969,19 @@ class StrategyOptimizer:
             theoretical = len(local)
             eliminated = 0
             generation_stats = dict(self.generator.last_generation_stats)
+        reference_brand_violations = tuple(
+            item for item in (target_bag.club_ids if target_bag else ()) if item in forbidden_ids
+        )
+        generated = tuple(
+            item for item in generated
+            if not allowed_brands
+            or all(runtime.clubs[club_id].brand in allowed_brands for club_id in item.club_ids)
+            or (
+                target_bag is not None
+                and item.provenance == "reference_bag"
+                and item.club_ids == target_bag.club_ids
+            )
+        )
         generation_seconds = perf_counter() - generation_started
 
         evaluation_started = perf_counter()
@@ -1958,6 +2033,18 @@ class StrategyOptimizer:
                 observed_quick = self._evaluate_quick(observed_spec, strategy, runtime, request.mode)
                 if not observed_quick.strict_failed:
                     evaluated.append(observed_quick)
+        comparison_only_current = next(
+            (
+                item for item in evaluated
+                if reference_brand_violations
+                and target_bag is not None
+                and item.spec.provenance == "reference_bag"
+                and item.spec.club_ids == target_bag.club_ids
+            ),
+            None,
+        )
+        if comparison_only_current is not None:
+            evaluated = [item for item in evaluated if item is not comparison_only_current]
         evaluation_seconds = perf_counter() - evaluation_started
         comparison_started = perf_counter()
         evaluated_before_minimums = len(evaluated)
@@ -1975,7 +2062,7 @@ class StrategyOptimizer:
                 closest = _closest_to_minimums(tuple(evaluated), request.metric_minimums)
                 closest_candidate_ids = tuple(item.spec.identifier for item in closest)
                 evaluated = list(closest)
-        current_saved_quick = (
+        current_saved_quick = comparison_only_current or (
             next(
                 (
                     item for item in evaluated
@@ -2154,6 +2241,11 @@ class StrategyOptimizer:
             )
         if empirical_reference:
             warnings.append(empirical_reference.statement)
+        if reference_brand_violations:
+            warnings.append(
+                f"Votre sac de référence contient {len(reference_brand_violations)} club(s) non autorisé(s) "
+                "dans cette recherche. Il reste visible uniquement pour la comparaison."
+            )
         forced_ids = set(request.required_club_ids) | set(request.club_roles or {})
         if request.fixed_club_id:
             forced_ids.add(request.fixed_club_id)
@@ -2268,6 +2360,10 @@ class StrategyOptimizer:
             result_families=family_results,
             empirical_reference=empirical_reference,
             comparison_reference=comparison_reference,
+            allowed_brands=tuple(sorted(allowed_brands)),
+            allowed_brand_names=tuple(brand_names[item] for item in sorted(allowed_brands)),
+            admissibility_provenance=request.admissibility_provenance,
+            reference_brand_violations=tuple(runtime.clubs[item].name for item in reference_brand_violations),
             type_comparison=type_comparison,
             inventory_owned_count=sum(item.unlocked for item in bundle.inventory.entries),
             inventory_observed_at=bundle.inventory.observed_at,
@@ -3472,6 +3568,7 @@ def render_strategy_optimization_json(result: StrategyOptimizationResult) -> str
 
 
 def render_strategy_optimization(result: StrategyOptimizationResult) -> str:
+    brand_summary = ", ".join(result.allowed_brand_names) if result.allowed_brands else "Toutes"
     lines = [
         "=" * 88,
         f"Optimisation de stratégie : {result.strategy_id}",
@@ -3479,6 +3576,8 @@ def render_strategy_optimization(result: StrategyOptimizationResult) -> str:
         *[f"- {item}" for item in result.warnings],
         "",
         f"Mode de niveaux : {result.level_mode}",
+        f"Marques autorisées : {brand_summary}",
+        f"Origine de la contrainte : {result.admissibility_provenance}",
         *([f"Niveau hypothétique : {result.scenario_level}"] if result.scenario_level is not None else []),
         f"Méthode : {result.search.search_method}",
         f"Complétude : {result.search.completeness}",
@@ -3504,6 +3603,11 @@ def render_strategy_optimization(result: StrategyOptimizationResult) -> str:
         f"Inventaire : {result.inventory_owned_count} clubs possédés — observation {result.inventory_observed_at or 'inconnue'}",
         "Aucun score global n'a été calculé.",
     ]
+    if result.reference_brand_violations:
+        lines.extend((
+            "Sac de référence hors restriction : " + ", ".join(result.reference_brand_violations),
+            "Ce sac est conservé uniquement comme référence de comparaison.",
+        ))
     if result.inventory_changes.added_club_ids:
         lines.extend((
             "",

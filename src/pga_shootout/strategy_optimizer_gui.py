@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+import json
 import sqlite3
 from pathlib import Path
 from queue import Empty, Queue
@@ -100,6 +101,7 @@ class OptimizationGuiOptions:
     club_roles: Mapping[str, str] | None = None
     metric_minimums: Mapping[str, Mapping[str, float]] | None = None
     primary_step_id: str | None = None
+    allowed_brands: tuple[str, ...] = ()
 
     def to_request(self) -> StrategyOptimizationRequest:
         if self.limit not in {5, 10, 20}:
@@ -131,6 +133,7 @@ class OptimizationGuiOptions:
             club_roles=self.club_roles or {},
             metric_minimums=self.metric_minimums or {},
             primary_step_id=self.primary_step_id,
+            allowed_brands=self.allowed_brands,
         )
 
 
@@ -551,6 +554,12 @@ class StrategyOptimizerPresenter:
             lines.extend(f"  - {item.club_name} : {item.reason}" for item in result.excluded_clubs)
         if result.empirical_reference:
             lines.append("• " + result.empirical_reference.statement)
+        if result.reference_brand_violations:
+            lines.append(
+                "• Le sac de référence contient des clubs hors marques autorisées : "
+                + ", ".join(result.reference_brand_violations)
+                + ". Il reste visible uniquement pour la comparaison."
+            )
         if result.inventory_changes.added_club_ids:
             lines.append("• Nouveau(x) club(s) détecté(s) depuis la précédente analyse :")
             lines.extend(f"  - {item.club_name} — niveau {item.level}" for item in result.new_club_diagnostics)
@@ -561,8 +570,11 @@ class StrategyOptimizerPresenter:
     @staticmethod
     def _search_information(result: StrategyOptimizationResult) -> str:
         total = result.search.total_seconds
+        brands = ", ".join(result.allowed_brand_names) if result.allowed_brands else "Toutes"
         return "\n".join((
             "Informations sur la recherche",
+            f"Marques : {brands}",
+            f"Origine de la contrainte : {result.admissibility_provenance}",
             f"Candidats générés : {result.search.reduced_candidates_generated}",
             f"Candidats évalués : {result.search.candidates_evaluated}",
             f"Doublons éliminés : {result.search.candidate_result_duplicates_removed}",
@@ -723,6 +735,13 @@ class StrategyOptimizerApp:
         self.scenario_level = tk.StringVar(value="12")
         self.limit = tk.StringVar(value="5")
         self.max_evaluations = tk.StringVar(value="2000")
+        catalog_document = json.loads(self.catalog_path.read_text(encoding="utf-8"))
+        canonical_brands = sorted({
+            (str(club["brand"]["name"]), str(club["brand"]["id"]))
+            for club in catalog_document["clubs"].values()
+        })
+        self.brand_id_by_label = dict(canonical_brands)
+        self.all_brands = tk.BooleanVar(value=True)
         self.status = tk.StringVar(value="Choisissez une stratégie puis lancez l’analyse.")
         self.show_advanced = tk.BooleanVar(value=False)
         bundle = load_user_data(self.user_data_path)
@@ -794,6 +813,22 @@ class StrategyOptimizerApp:
         ttk.Label(
             parameters, text="Option empirique : aucun calcul de distance n'est effectué.",
         ).grid(row=2, column=3, columnspan=5, pady=(8, 0), sticky="w")
+
+        brands = ttk.LabelFrame(parameters, text="Marques autorisées", padding=4)
+        brands.grid(row=2, column=8, columnspan=4, rowspan=1, padx=(8, 0), pady=(5, 0), sticky="ew")
+        ttk.Checkbutton(
+            brands, text="Toutes les marques", variable=self.all_brands, command=self._toggle_all_brands,
+        ).grid(row=0, column=0, sticky="nw")
+        self.brand_list = tk.Listbox(
+            brands, selectmode="multiple", exportselection=False, height=3, width=19,
+        )
+        self.brand_list.grid(row=0, column=1, rowspan=2, padx=5, sticky="ew")
+        for label in self.brand_id_by_label:
+            self.brand_list.insert("end", label)
+        self.brand_list.bind("<<ListboxSelect>>", self._brand_selection_changed)
+        ttk.Button(brands, text="Tout sélectionner", command=self._select_all_brands).grid(row=0, column=2, sticky="ew")
+        ttk.Button(brands, text="Tout désélectionner", command=self._clear_all_brands).grid(row=1, column=2, sticky="ew")
+        self._toggle_all_brands()
 
         ttk.Label(parameters, text="Mode de recherche :").grid(row=3, column=0, pady=(8, 0), sticky="w")
         self.search_mode_box = ttk.Combobox(
@@ -1113,6 +1148,27 @@ class StrategyOptimizerApp:
         else:
             self.advanced_frame.grid_remove()
 
+    def _toggle_all_brands(self) -> None:
+        if self.all_brands.get():
+            self.brand_list.selection_clear(0, "end")
+            self.brand_list.configure(state="disabled")
+        else:
+            self.brand_list.configure(state="normal")
+
+    def _select_all_brands(self) -> None:
+        self.all_brands.set(True)
+        self._toggle_all_brands()
+
+    def _clear_all_brands(self) -> None:
+        self.all_brands.set(False)
+        self.brand_list.configure(state="normal")
+        self.brand_list.selection_clear(0, "end")
+
+    def _brand_selection_changed(self, _event=None) -> None:
+        if self.brand_list.curselection():
+            self.all_brands.set(False)
+            self.brand_list.configure(state="normal")
+
     def _options(self) -> OptimizationGuiOptions:
         scenario = None
         if not self.real_mode.get():
@@ -1128,6 +1184,13 @@ class StrategyOptimizerApp:
         required_labels = tuple(self.required_list.get(index) for index in self.required_list.curselection())
         excluded_labels = tuple(self.excluded_list.get(index) for index in self.excluded_list.curselection())
         required_ids = tuple(self.fixed_club_by_label[item] for item in required_labels)
+        if self.all_brands.get():
+            allowed_brands: tuple[str, ...] = ()
+        else:
+            brand_labels = tuple(self.brand_list.get(index) for index in self.brand_list.curselection())
+            if not brand_labels:
+                raise ValueError("Sélectionnez au moins une marque, ou choisissez Toutes les marques.")
+            allowed_brands = tuple(self.brand_id_by_label[item] for item in brand_labels)
         target_bag_id = self.target_bag_by_label.get(self.target_bag_name.get())
         locked_positions: dict[int, str] = {}
         if self.lock_required_positions.get() and target_bag_id:
@@ -1196,6 +1259,7 @@ class StrategyOptimizerApp:
             club_roles=club_roles,
             metric_minimums=metric_minimums,
             primary_step_id=primary_step_id,
+            allowed_brands=allowed_brands,
         )
 
     def _start(self) -> None:

@@ -9,7 +9,9 @@ import time
 import tkinter as tk
 
 from pga_shootout.models import EvaluationMode
-from pga_shootout.strategy_optimizer import CandidateSpec, _RuntimeEvaluator
+from pga_shootout.strategy_optimizer import (
+    CandidateSpec, StrategyOptimizationError, StrategyOptimizationRequest, _RuntimeEvaluator,
+)
 from pga_shootout.strategy_optimizer_gui import (
     StrategyOptimizerApp,
     export_result_json,
@@ -93,6 +95,14 @@ def _close_root(root: tk.Tk) -> None:
 def _clear_chosen(app: StrategyOptimizerApp) -> None:
     for row in tuple(app.chosen_club_rows):
         app._remove_chosen_club(row)
+
+
+def _select_brands(app: StrategyOptimizerApp, *labels: str) -> None:
+    app._clear_all_brands()
+    for index in range(app.brand_list.size()):
+        if app.brand_list.get(index) in labels:
+            app.brand_list.selection_set(index)
+    app._brand_selection_changed()
 
 
 def _run_builder(app: StrategyOptimizerApp, roles: tuple[tuple[str, str], ...]) -> dict[str, object]:
@@ -217,6 +227,17 @@ def main() -> int:
     app.reference_name.set("Aucun")
     app.limit.set("20")
     app.max_evaluations.set("2000")
+    assert app.all_brands.get() and app._options().allowed_brands == ()
+    assert tuple(app.brand_id_by_label) == (
+        "Corvid", "Forester", "Mythical", "Nautilus", "PALO",
+        "Phoenix", "Ryusei", "Stanchion", "Willoughsby",
+    )
+    _select_brands(app, "Corvid")
+    assert app._options().allowed_brands == ("corvid",)
+    _select_brands(app, "Corvid", "Willoughsby")
+    assert set(app._options().allowed_brands) == {"corvid", "willoughsby"}
+    app._select_all_brands()
+    assert app._options().allowed_brands == ()
     improve_label = next(label for label, identifier in app.search_mode_by_label.items() if identifier == "improve_bag")
     around_label = next(label for label, identifier in app.search_mode_by_label.items() if identifier == "around_club")
     test_new_label = next(label for label, identifier in app.search_mode_by_label.items() if identifier == "test_new_club")
@@ -332,6 +353,63 @@ def main() -> int:
     evidence["interactive_builder"]["three_steps"] = _run_builder(
         app, (("high_flight", "drive"), ("divebomb", "approach"), ("ember", "putt")),
     )
+
+    # Real tournament-constrained paths: mono-brand, multi-brand, a conflicting
+    # imposed club and a nonconforming reference kept only as comparison.
+    app.strategy_name.set(next(label for label, identifier in app.strategy_by_label.items() if identifier == "par3"))
+    app._refresh_variants()
+    app.search_mode_name.set(global_label)
+    app._toggle_search_mode()
+    app.max_evaluations.set("300")
+    _select_brands(app, "Corvid")
+    app._start()
+    _wait(app)
+    catalog = json.loads(app.catalog_path.read_text(encoding="utf-8"))["clubs"]
+    assert all(
+        catalog[club_id]["brand"]["id"] == "corvid"
+        for candidate in app.result.retained_results if candidate.origin != "reference_bag"
+        for club_id in candidate.composition
+    )
+    evidence["brands"] = {
+        "single": app.result.allowed_brand_names,
+        "single_candidates": len(app.result.retained_results),
+    }
+
+    _select_brands(app, "Corvid", "Ryusei", "Willoughsby", "PALO")
+    app.search_mode_name.set(builder_label)
+    app._toggle_search_mode()
+    app.target_bag_name.set(par3_reference_label)
+    constrained_reference = _run_builder(app, (("divebomb", "attack"),))
+    assert set(app.result.reference_brand_violations) == {"Ember", "Sunstorm"}
+    assert "hors marques autorisées" in app.presentation.warning_text
+    assert all(
+        candidate.origin == "reference_bag" or all(
+            catalog[club_id]["brand"]["id"] in app.result.allowed_brands
+            for club_id in candidate.composition
+        )
+        for candidate in app.result.retained_results
+    )
+    restricted_json = export_result_json(app.result, export_dir / "par3_marques.json")
+    restricted_text = export_result_text(app.result, export_dir / "par3_marques.txt")
+    evidence["brands"].update({
+        "multiple": app.result.allowed_brand_names,
+        "reference_violations": app.result.reference_brand_violations,
+        "comparison": constrained_reference,
+        "exports": [str(restricted_json), str(restricted_text)],
+    })
+
+    try:
+        app.optimizer.optimize(StrategyOptimizationRequest(
+            "par3", search_mode="interactive_builder", club_roles={"high_flight": "attack"},
+            allowed_brands=("willoughsby",), max_evaluations=20,
+        ))
+    except StrategyOptimizationError as error:
+        assert "High Flight ne fait pas partie des marques autorisées" in str(error)
+        evidence["brands"]["forbidden_required_club"] = str(error)
+    else:
+        raise AssertionError("Un club imposé hors marques aurait dû être refusé")
+
+    app._select_all_brands()
     _close_root(app.root)
 
     # A second real root proves normal closure and relaunch in the same launcher path.
