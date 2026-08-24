@@ -236,6 +236,12 @@ class SearchInstrumentation:
     evaluation_cache_misses: int = 0
     comparison_seconds: float = 0.0
     total_seconds: float = 0.0
+    optimality_status: str = "best_found"
+    support_clubs_considered: int = 0
+    compositions_removed: int = 0
+    removal_reasons: Mapping[str, int] | None = None
+    saved_bag_candidates_injected: int = 0
+    known_candidates_injected: int = 0
 
 
 @dataclass(frozen=True)
@@ -1003,6 +1009,7 @@ class StrategyCandidateGenerator:
         budget_reached = False
         active_pool = tuple(dict.fromkeys(item for pool in pools for item in pool))
         compositions_by_assignment: dict[tuple[str, ...], tuple[tuple[str, ...], ...]] = {}
+        support_pool_truncated_assignments = 0
         for assigned in assignments:
             forced_supports = tuple(sorted(required - set(assigned)))
             support_count = definition.bag_size - len(set(assigned))
@@ -1021,7 +1028,10 @@ class StrategyCandidateGenerator:
                 item for item in eligible
                 if item not in assigned and item not in forced_supports
             )
-            pool = tuple(dict.fromkeys((*support_candidates, *structural, *fallback)))[:24]
+            full_pool = tuple(dict.fromkeys((*support_candidates, *structural, *fallback)))
+            if len(full_pool) > 24:
+                support_pool_truncated_assignments += 1
+            pool = full_pool[:24]
             if fill_count == 0:
                 fills = ((),)
             else:
@@ -1058,6 +1068,8 @@ class StrategyCandidateGenerator:
             # a second support set for any assignment.
             key=lambda item: (item[1], item[0]),
         )
+        position_lock_removed = 0
+        budget_removed = 0
         for assignment_index, composition_index in schedule:
             assigned = assignments[assignment_index]
             composition = compositions_by_assignment[assigned][composition_index]
@@ -1067,9 +1079,11 @@ class StrategyCandidateGenerator:
                 if not any(order[position - 1] != club_id for position, club_id in locks.items())
             )
             if not matching:
+                position_lock_removed += 1
                 continue
             if generated and len(generated) + len(matching) > max_generated:
                 budget_reached = True
+                budget_removed += 1
                 continue
             spaces.add(tuple(sorted(composition)))
             for order, reason in matching:
@@ -1085,6 +1099,11 @@ class StrategyCandidateGenerator:
             "permutations_distinct": len(generated),
             "permutations_equivalent": len(spaces) * math.factorial(definition.bag_size) - len(generated),
             "budget_reached": int(budget_reached),
+            "theoretical_compositions": len(schedule),
+            "support_clubs_considered": len(active_pool),
+            "position_lock_removed": position_lock_removed,
+            "budget_removed": budget_removed,
+            "support_pool_truncated_assignments": support_pool_truncated_assignments,
         }
         return tuple(generated.values())
 
@@ -1406,6 +1425,9 @@ class StrategyOptimizer:
         self.generator = StrategyCandidateGenerator(self.metric_semantics)
         initial = load_user_data(self.user_data_path)
         self._inventory_snapshot = self._inventory_signature(initial.inventory.entries)
+        # Session-only guardrail. Entries are additionally scoped by the exact
+        # inventory, catalog, strategy and evaluation context before reuse.
+        self._known_candidates: dict[tuple[Any, ...], dict[tuple[Any, ...], CandidateSpec]] = {}
 
     @staticmethod
     def _inventory_signature(
@@ -1444,6 +1466,81 @@ class StrategyOptimizer:
         )
         self._inventory_snapshot = current
         return changes
+
+    @staticmethod
+    def _candidate_satisfies_builder_constraints(
+        spec: CandidateSpec,
+        roles: Mapping[str, str],
+        excluded_club_ids: tuple[str, ...],
+        locked_positions: Mapping[int, str] | None,
+    ) -> bool:
+        composition = set(spec.club_ids)
+        if not set(roles).issubset(composition) or composition.intersection(excluded_club_ids):
+            return False
+        if any(spec.club_ids[position - 1] != club_id for position, club_id in (locked_positions or {}).items()):
+            return False
+        active = set(spec.active_assignments.values())
+        for club_id, role in roles.items():
+            if role == "support" and club_id in active:
+                return False
+            if role not in {"auto", "support"} and spec.active_assignments.get(role) != club_id:
+                return False
+        return True
+
+    @staticmethod
+    def _merge_candidate_specs(*groups: tuple[CandidateSpec, ...]) -> tuple[CandidateSpec, ...]:
+        merged: dict[tuple[Any, ...], CandidateSpec] = {}
+        for group in groups:
+            for item in group:
+                key = (item.club_ids, tuple(item.active_assignments.items()))
+                merged.setdefault(key, item)
+        return tuple(merged.values())
+
+    def _known_context_key(
+        self,
+        request: StrategyOptimizationRequest,
+        strategy: ResolvedStrategy,
+        runtime: _RuntimeEvaluator,
+        inventory_signature: Mapping[str, tuple[bool, int | None, int | None]],
+    ) -> tuple[Any, ...]:
+        return (
+            tuple(sorted(inventory_signature.items())),
+            runtime.catalog_version,
+            strategy.definition.identifier,
+            strategy.definition.version,
+            strategy.applied_variant_ids,
+            request.scenario_level,
+            request.mode.value,
+            request.order_mode,
+        )
+
+    def _compatible_known_candidates(
+        self,
+        context_key: tuple[Any, ...],
+        roles: Mapping[str, str],
+        request: StrategyOptimizationRequest,
+    ) -> tuple[CandidateSpec, ...]:
+        compatible = []
+        for item in self._known_candidates.get(context_key, {}).values():
+            if self._candidate_satisfies_builder_constraints(
+                item, roles, request.excluded_club_ids, request.locked_positions,
+            ):
+                compatible.append(replace(item, provenance="known_candidate"))
+        return tuple(compatible)
+
+    def _remember_candidates(
+        self,
+        context_key: tuple[Any, ...],
+        candidates: tuple[_QuickCandidate, ...],
+    ) -> None:
+        target = self._known_candidates.setdefault(context_key, {})
+        for candidate in candidates:
+            spec = candidate.spec
+            key = (spec.club_ids, tuple(spec.active_assignments.items()))
+            target[key] = replace(spec, provenance="known_candidate")
+        # The cache is a guardrail, not an unbounded second search index.
+        while len(target) > 100:
+            target.pop(next(iter(target)))
 
     @staticmethod
     def _club_diagnostic(
@@ -1581,6 +1678,8 @@ class StrategyOptimizer:
         bundle = load_user_data(self.user_data_path)
         inventory_changes = self._inventory_changes(bundle.inventory.entries)
         runtime = _RuntimeEvaluator(self.catalog_path, bundle.inventory.entries, request.scenario_level)
+        inventory_signature = self._inventory_signature(bundle.inventory.entries)
+        known_context_key = self._known_context_key(request, strategy, runtime, inventory_signature)
         constrained_ids = set(request.required_club_ids) | set(request.excluded_club_ids) | set(request.club_roles or {})
         if request.fixed_club_id:
             constrained_ids.add(request.fixed_club_id)
@@ -1595,11 +1694,14 @@ class StrategyOptimizer:
 
         generation_started = perf_counter()
         references = self.generator.reference_candidates(strategy, runtime, bundle.bags, request.order_mode)
+        injected_saved = 0
+        injected_known = 0
         if request.search_mode == "global":
             generated, theoretical, eliminated = self.generator.generate(
                 strategy, runtime, bundle.bags, request.order_mode,
                 max_generated=max(request.max_evaluations, math.factorial(strategy.definition.bag_size)),
             )
+            generation_stats = dict(self.generator.last_generation_stats)
         elif request.search_mode == "interactive_builder":
             builder_roles = dict(request.club_roles or {
                 club_id: "auto" for club_id in request.required_club_ids
@@ -1624,7 +1726,7 @@ class StrategyOptimizer:
                     if existing and existing != assignment[finish_index]:
                         raise StrategyOptimizationError("Le putter imposé diffère du putter actuel à conserver")
                     builder_roles[assignment[finish_index]] = finish_step.identifier
-            generated = self.generator.generate_builder(
+            broad = self.generator.generate_builder(
                 strategy,
                 runtime,
                 club_roles=builder_roles,
@@ -1633,8 +1735,81 @@ class StrategyOptimizer:
                 order_mode=request.order_mode,
                 max_generated=request.max_evaluations,
             )
-            theoretical = int(self.generator.last_generation_stats.get("active_assignments_theoretical", 0))
-            eliminated = int(self.generator.last_generation_stats.get("permutations_equivalent", 0))
+            broad_stats = dict(self.generator.last_generation_stats)
+            compatible_references = tuple(
+                item for item in references
+                if self._candidate_satisfies_builder_constraints(
+                    item, builder_roles, request.excluded_club_ids, request.locked_positions,
+                )
+            )
+            known = self._compatible_known_candidates(known_context_key, builder_roles, request)
+
+            # A saved bag provides a factual active-role seed. Deepening this
+            # subspace is generic and prevents a broader query from receiving
+            # less attention than the same query with one of those roles added.
+            seeded_groups: list[tuple[CandidateSpec, ...]] = []
+            seeded_stats: list[Mapping[str, int]] = []
+            seeded_role_maps: set[tuple[tuple[str, str], ...]] = set()
+            for reference in compatible_references:
+                seeded_roles = dict(builder_roles)
+                conflict = False
+                for step_id, club_id in reference.active_assignments.items():
+                    current = seeded_roles.get(club_id)
+                    if current == "support":
+                        conflict = True
+                        break
+                    occupied = next(
+                        (item for item, role in seeded_roles.items() if role == step_id and item != club_id),
+                        None,
+                    )
+                    if occupied is not None:
+                        conflict = True
+                        break
+                    seeded_roles.setdefault(club_id, step_id)
+                signature = tuple(sorted(seeded_roles.items()))
+                if conflict or signature == tuple(sorted(builder_roles.items())) or signature in seeded_role_maps:
+                    continue
+                seeded_role_maps.add(signature)
+                seeded_groups.append(self.generator.generate_builder(
+                    strategy,
+                    runtime,
+                    club_roles=seeded_roles,
+                    excluded_club_ids=request.excluded_club_ids,
+                    locked_positions=request.locked_positions,
+                    order_mode=request.order_mode,
+                    max_generated=request.max_evaluations,
+                ))
+                seeded_stats.append(dict(self.generator.last_generation_stats))
+
+            generated = self._merge_candidate_specs(
+                compatible_references, known, *seeded_groups, broad,
+            )
+            injected_saved = len(compatible_references)
+            injected_known = len(known)
+            all_stats = (broad_stats, *seeded_stats)
+            generation_stats = {
+                "inventory": broad_stats.get("inventory", len(runtime.clubs)),
+                "active_assignments": sum(item.get("active_assignments", 0) for item in all_stats),
+                "active_assignments_theoretical": broad_stats.get("active_assignments_theoretical", 0),
+                "compositions": len({item.order_space_id for item in generated}),
+                "permutations_theoretical": sum(item.get("permutations_theoretical", 0) for item in all_stats),
+                "permutations_distinct": len(generated),
+                "permutations_equivalent": sum(item.get("permutations_equivalent", 0) for item in all_stats),
+                "budget_reached": int(any(item.get("budget_reached", 0) for item in all_stats)),
+                "theoretical_compositions": sum(item.get("theoretical_compositions", 0) for item in all_stats),
+                "support_clubs_considered": broad_stats.get("support_clubs_considered", 0),
+                "position_lock_removed": sum(item.get("position_lock_removed", 0) for item in all_stats),
+                "budget_removed": sum(item.get("budget_removed", 0) for item in all_stats),
+                "support_pool_truncated_assignments": sum(
+                    item.get("support_pool_truncated_assignments", 0) for item in all_stats
+                ),
+                "seeded_saved_bag_searches": len(seeded_groups),
+                "reference_candidates": injected_saved,
+                "known_candidates": injected_known,
+            }
+            self.generator.last_generation_stats = generation_stats
+            theoretical = int(broad_stats.get("active_assignments_theoretical", 0))
+            eliminated = int(generation_stats.get("permutations_equivalent", 0))
         else:
             if request.target_bag_id:
                 target_bag = next((item for item in bundle.bags if item.identifier == request.target_bag_id), None)
@@ -1698,6 +1873,7 @@ class StrategyOptimizer:
             generated = tuple(merged.values())
             theoretical = len(local)
             eliminated = 0
+            generation_stats = dict(self.generator.last_generation_stats)
         generation_seconds = perf_counter() - generation_started
 
         evaluation_started = perf_counter()
@@ -1795,7 +1971,7 @@ class StrategyOptimizer:
         layered = self._assign_layers(unique)
         projection_pool = (
             tuple(item for item in layered if item.spec.provenance != "reference_bag")
-            if request.search_mode != "global"
+            if request.search_mode not in {"global", "interactive_builder"}
             else layered
         )
         if request.search_mode == "interactive_builder":
@@ -1807,6 +1983,8 @@ class StrategyOptimizer:
                 projection_pool, strategy, runtime, request.limit, empirical_reference is not None,
                 force_generic=request.search_mode == "around_club",
             )
+        if request.search_mode == "interactive_builder":
+            self._remember_candidates(known_context_key, selected_quick)
         if request.search_mode != "global" and target_bag is not None:
             current = current_saved_quick
             if current is not None:
@@ -1841,13 +2019,19 @@ class StrategyOptimizer:
         safety_reached = (
             len(search_specs) > request.max_evaluations
             and not (request.search_mode != "global" and request.replacement_depth == 1)
-            or bool(self.generator.last_generation_stats.get("budget_reached"))
+            or bool(generation_stats.get("budget_reached"))
         )
-        generation_stats = self.generator.last_generation_stats
+        optimality_status = (
+            "maximum_proven"
+            if request.search_mode in {"improve_bag", "test_new_club"}
+            and request.replacement_depth == 1 and not safety_reached
+            else "best_found"
+        )
         origin_names = (
             "reference_bag", "reference_neighborhood", "global_search",
             *(("around_club",) if request.search_mode == "around_club" else ()),
             *(("interactive_builder",) if request.search_mode == "interactive_builder" else ()),
+            *(("known_candidate",) if request.search_mode == "interactive_builder" else ()),
         )
         warnings = [
             "La portée réelle n'est pas modélisée ; atteindre le green reste indéterminable.",
@@ -1967,6 +2151,20 @@ class StrategyOptimizer:
                 evaluation_cache_misses=runtime.evaluation_cache_misses,
                 comparison_seconds=round(comparison_seconds, 6),
                 total_seconds=round(total_seconds, 6),
+                optimality_status=optimality_status,
+                support_clubs_considered=generation_stats.get("support_clubs_considered", 0),
+                compositions_removed=sum((
+                    generation_stats.get("position_lock_removed", 0),
+                    generation_stats.get("budget_removed", 0),
+                )),
+                removal_reasons={
+                    "safe_order_equivalence": generation_stats.get("permutations_equivalent", 0),
+                    "position_constraint": generation_stats.get("position_lock_removed", 0),
+                    "heuristic_support_pool_cap": generation_stats.get("support_pool_truncated_assignments", 0),
+                    "budget_limit": generation_stats.get("budget_removed", 0),
+                },
+                saved_bag_candidates_injected=injected_saved,
+                known_candidates_injected=injected_known,
             ),
             retained_results=detailed,
             excluded_candidate_count=excluded_candidates,
@@ -2207,8 +2405,8 @@ class StrategyOptimizer:
         selected: dict[str, _QuickCandidate] = {maximum.spec.identifier: maximum}
         memberships: dict[str, list[str]] = {maximum.spec.identifier: ["power_max"]}
         families: list[ResultFamilyResult] = [ResultFamilyResult(
-            "power_max", "PUISSANCE MAXIMALE",
-            f"Power maximale observée pour {step.name}, puis Control, Spin et qualité finale du putt.",
+            "power_max", "MEILLEURE PUISSANCE TROUVÉE",
+            f"Meilleure Power observée dans la recherche bornée pour {step.name}, puis Control, Spin et qualité finale du putt.",
             (maximum.spec.identifier,), "lexicographic_power_first",
         )]
         levels = sorted(
@@ -2309,13 +2507,13 @@ class StrategyOptimizer:
                 families.extend((
                     ResultFamilyDefinition(
                         f"{step.identifier}_max_power",
-                        f"{step.name} — Power maximale",
+                        f"{step.name} — meilleure Power trouvée",
                         "derived_from_shot_function",
                         "lexicographic_best",
                         (),
                         (*power_first, *secondary_objectives(step.identifier)),
                         (),
-                        "Power maximale calculable, sans prétendre à une distance réelle.",
+                        "Meilleure Power calculable trouvée, sans prétendre à une distance réelle ni à un optimum exhaustif.",
                     ),
                     ResultFamilyDefinition(
                         f"{step.identifier}_power_control",
@@ -2894,7 +3092,7 @@ def _candidate_active_metrics(candidate: StrategyCandidateResult) -> dict[str, f
 
 def _builder_badge(family_id: str) -> str:
     if family_id == "power_max":
-        return "PUISSANCE MAXIMALE"
+        return "MEILLEURE PUISSANCE TROUVÉE"
     if family_id == "landing_profile":
         return "MEILLEUR ATTERRISSAGE"
     for metric in ("control", "spin"):
@@ -3291,7 +3489,7 @@ def _candidate_lines(candidate: StrategyCandidateResult) -> list[str]:
             "Contributions perdues : " + (", ".join(candidate.lost_contribution_ids) or "aucune"),
         ))
     if candidate.metric_deltas_from_power_max is not None:
-        lines.append("Écarts avec la variante Power maximale : " + ", ".join(
+        lines.append("Écarts avec la meilleure Power trouvée : " + ", ".join(
             f"{key}={'indéterminé' if value is None else '=' if value == 0 else f'{value:+g}'}"
             for key, value in candidate.metric_deltas_from_power_max.items()
         ))

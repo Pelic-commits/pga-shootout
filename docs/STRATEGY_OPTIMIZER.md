@@ -11,13 +11,13 @@ Le parcours principal de `OPTIMISER_MES_SACS.bat` est désormais **Optimiser aut
 5. Laisser les minimums sur `Aucun`, ou saisir un minimum final de Control/Spin et de Power/Control au putt.
 6. Lancer **OPTIMISER MON SAC**.
 
-Power est l'objectif principal par défaut. Il n'existe aucun coefficient ni score global. Les résultats exposent la Power maximale observée, puis les gains réels de Control ou de Spin aux paliers inférieurs de Power. Un minimum impossible n'est jamais assoupli silencieusement : le résultat l'indique et montre seulement le front non dominé des déficits les plus proches.
+Power est l'objectif principal par défaut. Il n'existe aucun coefficient ni score global. Les résultats exposent la meilleure Power trouvée, puis les gains réels de Control ou de Spin aux paliers inférieurs de Power. Un minimum impossible n'est jamais assoupli silencieusement : le résultat l'indique et montre seulement le front non dominé des déficits les plus proches.
 
 La politique déclarative `data/strategies/optimization_policies.json` sépare les préférences utilisateur des faits du Rule Engine. Une progression traite Bounce Reduction comme descriptive. Pour une attaque du green, Bounce Reduction peut conserver une variante distincte avec Driver, Wood ou Hybrid ; elle reste descriptive par défaut avec un Iron. Aucun score d'atterrissage n'est calculé.
 
 Les minimums du putt portent sur les statistiques finales après toutes les contributions validées, y compris les effets différés et Chains. Deux Putters restent autorisés lorsque l'un est actif et l'autre support.
 
-La recherche est bornée et l'interface affiche ses limites. Chaque composition retenue conserve l'évaluation structurellement exacte de l'ordre ; imposer davantage de clubs réduit normalement le nombre de compositions à explorer.
+La recherche est bornée et l'interface affiche ses limites. Chaque composition retenue conserve l'évaluation structurellement exacte de l'ordre. Les sacs enregistrés compatibles sont toujours injectés, leurs rôles actifs guident une passe approfondie, et les solutions retenues compatibles peuvent être réutilisées pendant la même session. L'interface ne parle de maximum prouvé que pour un espace réellement exhaustif.
 
 `optimize-strategy` est la première recherche automatique de sacs fondée sur une
 `StrategyDefinition`. Le cas de validation actuel est `par3`, mais le générateur

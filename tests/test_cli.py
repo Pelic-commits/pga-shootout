@@ -226,7 +226,7 @@ class CliTests(unittest.TestCase):
         self.assertEqual(payload["requested_minimums"]["attack"]["control"], 10.0)
         self.assertTrue(payload["criteria_satisfied"])
         self.assertIn("attack", payload["attainable_ranges"])
-        self.assertEqual(payload["retained_results"][0]["optimization_badges"], ["PUISSANCE MAXIMALE"])
+        self.assertIn("MEILLEURE PUISSANCE TROUVÉE", payload["retained_results"][0]["optimization_badges"])
 
 
 if __name__ == "__main__":

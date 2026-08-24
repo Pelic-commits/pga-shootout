@@ -225,6 +225,7 @@ class StrategyOptimizerPresenter:
                 "reference_neighborhood": "Amélioration locale",
                 "global_search": "Recherche globale",
                 "interactive_builder": "Constructeur interactif",
+                "known_candidate": "Solution connue de la session",
             }.get(candidate.origin, candidate.origin),
         )
 
@@ -299,7 +300,7 @@ class StrategyOptimizerPresenter:
         if candidate.optimization_badges:
             lines.extend(("", " / ".join(candidate.optimization_badges)))
         if candidate.metric_deltas_from_power_max:
-            lines.extend(("", "ÉCART AVEC LA VARIANTE PUISSANCE MAXIMALE"))
+            lines.extend(("", "ÉCART AVEC LA MEILLEURE PUISSANCE TROUVÉE"))
             lines.extend(
                 f"- {step_labels.get(key.split('.', 1)[0], key)} / {_metric_label(key.split('.', 1)[1])} : "
                 + ("inconnu" if value is None else "=" if value == 0 else f"{value:+g}")
@@ -533,15 +534,20 @@ class StrategyOptimizerPresenter:
             f"Moteur : {result.search.evaluation_seconds:.2f} s",
             f"Comparaison et détails : {result.search.comparison_seconds:.2f} s",
             f"Limite de sécurité atteinte : {'oui' if result.search.safety_limit_reached else 'non'}",
+            f"Statut du résultat : {'MAXIMUM PROUVÉ' if result.search.optimality_status == 'maximum_proven' else 'MEILLEUR TROUVÉ'}",
             f"Compositions : {result.search.compositions_generated}",
             f"Compositions théoriques : {result.search.theoretical_compositions}",
             f"Compositions évaluées : {result.search.compositions_evaluated}",
             f"Affectations actives : {result.search.active_assignments_considered} / {result.search.active_assignments_theoretical}",
+            f"Supports considérés : {result.search.support_clubs_considered}",
             f"Permutations théoriques : {result.search.permutations_theoretical}",
             f"Permutations prouvées équivalentes : {result.search.permutations_proven_equivalent}",
             f"Permutations structurellement distinctes : {result.search.permutations_structurally_distinct}",
             f"Cache d’évaluation : {result.search.evaluation_cache_hits} hits / {result.search.evaluation_cache_misses} misses",
             f"Origines : {dict(result.search.origin_counts or {})}",
+            f"Candidats issus de sacs enregistrés injectés : {result.search.saved_bag_candidates_injected}",
+            f"Solutions de session injectées : {result.search.known_candidates_injected}",
+            f"Suppressions par raison : {dict(result.search.removal_reasons or {})}",
             f"Complétude locale : {result.search.local_search_completeness}",
             f"Inventaire utilisé : {result.inventory_owned_count} clubs possédés — observation {result.inventory_observed_at or 'inconnue'}",
         ))
@@ -1166,7 +1172,8 @@ class StrategyOptimizerApp:
                 item.unresolved_count, "Oui" if item.has_neutral_club else "Non", item.strengths,
             ))
         self.status.set(
-            f"Analyse terminée — inventaire utilisé : {result.inventory_owned_count} clubs possédés "
+            f"Analyse terminée — {'maximum prouvé' if result.search.optimality_status == 'maximum_proven' else 'meilleur résultat trouvé'} — "
+            f"inventaire utilisé : {result.inventory_owned_count} clubs possédés "
             f"(observation {result.inventory_observed_at or 'inconnue'})."
         )
         for button in (self.export_json_button, self.export_text_button, self.search_info_button):

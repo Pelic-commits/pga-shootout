@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-08-24 — Fiabilité de la recherche contrainte
+
+- Injecte les sacs enregistrés compatibles avant les réductions du constructeur interactif.
+- Approfondit les affectations actives factuelles issues de ces sacs et réutilise les meilleures solutions compatibles pendant la session.
+- Ajoute les diagnostics de réduction et distingue « meilleur trouvé » de « maximum prouvé ».
+- Fige High Flight 19/10/13 et Divebomb 16/9/9 comme contrôles de non-régression, sans inventer le Spin 14 observé dans le jeu.
+
 ## Unreleased
 
 - Ajout du constructeur interactif autour de plusieurs clubs avec rôles et positions facultatifs.

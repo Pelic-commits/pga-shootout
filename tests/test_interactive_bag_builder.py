@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from functools import lru_cache
 import json
 from pathlib import Path
+import shutil
+import sqlite3
 
 import pytest
 
@@ -49,11 +52,15 @@ def _active_step(candidate, step_id):
     return next(item for item in club.steps if item.step_id == step_id)
 
 
+def _best_metric(result, step_id, metric):
+    return max(_active_step(item, step_id).final_stats[metric] for item in result.retained_results)
+
+
 def test_one_required_active_club_and_power_tier_feedback():
     result = _run()
     assert all("high_flight" in item.composition for item in result.retained_results)
     assert all(item.active_assignments["attack"] == "high_flight" for item in result.retained_results)
-    assert result.retained_results[0].optimization_badges == ("PUISSANCE MAXIMALE",)
+    assert result.retained_results[0].optimization_badges == ("MEILLEURE PUISSANCE TROUVÉE",)
     assert any("POUR -" in badge for item in result.retained_results for badge in item.optimization_badges)
     assert all(item.metric_deltas_from_power_max is not None for item in result.retained_results)
 
@@ -186,3 +193,107 @@ def test_more_imposed_roles_reduce_the_active_assignment_search_space():
     three = _run(roles=(("high_flight", "attack"), ("ember", "putt"), ("maelstrom", "support")))
     assert two.search.active_assignments_theoretical < one.search.active_assignments_theoretical
     assert three.search.active_assignments_theoretical == two.search.active_assignments_theoretical
+
+
+def test_real_saved_bags_are_injected_and_remain_visible_as_regression_controls():
+    high_flight = _run()
+    reference = next(
+        item for item in high_flight.retained_results
+        if item.composition == ("high_flight", "cyclotron", "ember", "maelstrom", "sunstorm")
+    )
+    assert _active_step(reference, "attack").final_stats == {
+        "power": 19.0, "control": 10.0, "spin": 13.0,
+    }
+    assert reference.origin == "reference_bag"
+    assert high_flight.search.saved_bag_candidates_injected > 0
+
+    divebomb = _run(roles=(("divebomb", "attack"),))
+    reference = next(
+        item for item in divebomb.retained_results
+        if item.composition == ("divebomb", "jumpstart", "steadfast", "ember", "sunstorm")
+    )
+    assert _active_step(reference, "attack").final_stats == {
+        "power": 16.0, "control": 9.0, "spin": 9.0,
+    }
+
+
+def test_required_club_monotonicity_for_real_bags_and_identical_objectives():
+    high_flight = _run()
+    high_flight_ember = _run(roles=(("high_flight", "attack"), ("ember", "putt")))
+    high_flight_ember_maelstrom = _run(roles=(
+        ("high_flight", "attack"), ("ember", "putt"), ("maelstrom", "support"),
+    ))
+    assert _best_metric(high_flight, "attack", "power") >= _best_metric(high_flight_ember, "attack", "power")
+    assert _best_metric(high_flight_ember, "attack", "power") >= _best_metric(
+        high_flight_ember_maelstrom, "attack", "power",
+    )
+
+    divebomb = _run(roles=(("divebomb", "attack"),))
+    divebomb_ember = _run(roles=(("divebomb", "attack"), ("ember", "putt")))
+    assert _best_metric(divebomb, "attack", "power") >= _best_metric(divebomb_ember, "attack", "power")
+
+
+@pytest.mark.parametrize("minimums", (
+    (("attack", "control", 10.0),),
+    (("attack", "spin", 10.0),),
+    (("attack", "control", 10.0), ("attack", "spin", 10.0)),
+    (("putt", "power", 10.0), ("putt", "control", 12.0)),
+))
+def test_required_club_monotonicity_with_identical_metric_minimums(minimums):
+    broad = _run(minimums=minimums)
+    constrained = _run(
+        roles=(("high_flight", "attack"), ("ember", "putt")),
+        minimums=minimums,
+    )
+    assert broad.criteria_satisfied == constrained.criteria_satisfied
+    assert _best_metric(broad, "attack", "power") >= _best_metric(constrained, "attack", "power")
+
+
+def test_more_constrained_discovery_is_reused_by_a_broader_query_for_three_steps():
+    service = StrategyOptimizer(
+        user_data_path=ROOT / "data" / "pga_shootout.sqlite",
+        catalog_path=ROOT / "data" / "normalized" / "clubs_official.json",
+        strategy_registry_path=ROOT / "data" / "strategies" / "strategies.json",
+    )
+
+    def run(roles):
+        return service.optimize(StrategyOptimizationRequest(
+            "par5", search_mode="interactive_builder", club_roles=roles,
+            primary_step_id="drive", limit=5, max_evaluations=50,
+        ))
+
+    constrained = run({"high_flight": "drive", "divebomb": "approach", "ember": "putt"})
+    broader = run({"high_flight": "drive", "divebomb": "approach"})
+    assert broader.search.known_candidates_injected > 0
+    assert _best_metric(broader, "drive", "power") >= _best_metric(constrained, "drive", "power")
+
+
+def test_bounded_search_diagnostic_separates_safe_heuristic_and_budget_reductions():
+    result = _run()
+    assert result.search.optimality_status == "best_found"
+    assert result.search.safety_limit_reached
+    assert result.search.removal_reasons is not None
+    assert set(result.search.removal_reasons) == {
+        "safe_order_equivalence", "position_constraint",
+        "heuristic_support_pool_cap", "budget_limit",
+    }
+
+
+def test_session_candidates_are_not_reused_after_inventory_level_changes(tmp_path):
+    database = tmp_path / "inventory.sqlite"
+    shutil.copy2(ROOT / "data" / "pga_shootout.sqlite", database)
+    service = StrategyOptimizer(
+        user_data_path=database,
+        catalog_path=ROOT / "data" / "normalized" / "clubs_official.json",
+        strategy_registry_path=ROOT / "data" / "strategies" / "strategies.json",
+    )
+    request = StrategyOptimizationRequest(
+        "par3", search_mode="interactive_builder",
+        club_roles={"high_flight": "attack", "ember": "putt"},
+        primary_step_id="attack", limit=5, max_evaluations=50,
+    )
+    service.optimize(request)
+    with sqlite3.connect(database) as connection:
+        connection.execute("UPDATE user_clubs SET current_level = 7 WHERE club_id = 'high_flight'")
+    refreshed = service.optimize(replace(request, club_roles={"high_flight": "attack"}))
+    assert refreshed.search.known_candidates_injected == 0

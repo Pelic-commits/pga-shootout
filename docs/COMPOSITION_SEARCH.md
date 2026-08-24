@@ -17,17 +17,25 @@ High Flight part de **12 Power / 8 Control / 5 Spin** et reçoit :
 
 Le résultat reproductible est donc **19 / 10 / 13**. Les 120 ordres de cette
 composition ne produisent que `17/8/7`, `17/8/11`, `19/10/9` ou `19/10/13`.
-Aucun ne produit 14 Spin. Le point annoncé dans `19/10/14` n'existe dans aucune
-contribution validée de la base actuelle. Il s'agit d'un écart de donnée ou de
-règle à valider dans le jeu, et non d'une composition que le générateur aurait
-supprimée. Le moteur ne l'invente pas.
+Aucun ne produit 14 Spin. La valeur **19/10/14 est désormais visuellement
+confirmée dans le jeu** pour ce sac exact. Le Rule Engine reste néanmoins à
+19/10/13 : le point de Spin supplémentaire n'existe dans aucune contribution
+officielle actuellement qualifiée et n'est pas ajouté artificiellement.
 
 ## Références et garde-fou
 
 Chaque sac enregistré compatible est injecté indépendamment de la présélection
-globale avec `origin = reference_bag`. Son ordre enregistré et, si nécessaire,
-ses 120 permutations sont évalués. En recherche locale, la ligne `SAC ACTUEL`
-désigne toujours l'ordre réellement sauvegardé.
+globale avec `origin = reference_bag`, y compris dans le constructeur
+interactif. Son ordre enregistré et toutes ses permutations structurellement
+distinctes sont évalués. Les rôles actifs observés dans une référence compatible
+servent aussi à approfondir prioritairement ce sous-espace sans coder le nom
+d'un club.
+
+Les meilleures solutions retenues enrichissent un cache de session. Une
+recherche moins contrainte réutilise toute solution antérieure compatible. La
+clé comprend la signature exacte de l'inventaire, la version du catalogue, la
+stratégie, ses variantes, le scénario, le mode d'évaluation et le mode d'ordre ;
+une donnée périmée ne peut donc pas être réinjectée.
 
 Après évaluation, une proposition dominée sur toutes les métriques objectives
 par une référence est retirée. Une proposition reste visible si elle apporte un
@@ -59,8 +67,37 @@ pga-shootout trace-composition par3 high_flight cyclotron ember maelstrom sunsto
 
 Cette commande indique l'étape exacte à laquelle une composition est conservée
 ou éliminée. Les exports contiennent les volumes par étape, les origines, le
-nombre de permutations, la profondeur et la complétude. Les trois origines sont
-`reference_bag`, `reference_neighborhood` et `global_search`.
+nombre de permutations, la profondeur et la complétude. Le diagnostic distingue
+les équivalences d'ordre prouvées sûres, les contraintes de position, la
+réduction heuristique du pool de supports et la limite de budget. Les solutions
+réutilisées portent l'origine `known_candidate`.
+
+## Audit des anomalies du constructeur interactif
+
+La divergence High Flight 17 → 20 venait de l'ordonnancement en largeur : avec
+High Flight seul, le budget offrait un premier jeu de supports à de nombreuses
+affectations de putter, sans approfondir suffisamment l'affectation Ember. Une
+fois Ember imposé, les mêmes 1 000 évaluations se concentraient sur ce seul
+sous-espace et trouvaient 20. Le sous-espace actif issu du sac enregistré est
+maintenant approfondi en plus de la passe large.
+
+La divergence Divebomb 12/7/5 → 16/9/9 avait une cause plus directe : le sac
+enregistré Divebomb / Jumpstart / Steadfast / Ember / Sunstorm était construit
+par `reference_candidates`, mais n'était jamais fusionné dans la branche
+`interactive_builder`. Il est désormais injecté avant toute réduction et ne
+peut pas être supprimé par le budget.
+
+Une recherche interactive bornée annonce **MEILLEURE PUISSANCE TROUVÉE**. Le
+statut **MAXIMUM PROUVÉ** est réservé aux espaces réellement exhaustifs.
+
+La propriété de contrôle est la suivante : pour une stratégie, un contexte, un
+objectif et des minimums identiques, si les clubs obligatoires de A sont inclus
+dans ceux de B, toute solution B déjà observée est admissible dans A. Le meilleur
+objectif connu de A doit donc être supérieur ou égal à celui de B. Les tests
+appliquent cette monotonie à Power, aux minimums Control/Spin, au putt et aux
+séquences de deux ou trois coups. Pour une recherche bornée, cette garantie porte
+sur les références et solutions effectivement connues ; elle ne transforme pas
+une exploration heuristique en preuve d'optimum absolu.
 
 ## Fraîcheur et Gearshift
 
@@ -83,4 +120,3 @@ de milliers de permutations. Les mesures de ce lot sont environ 86 à 116
 secondes selon le club fixé et le sac. La GUI reste réactive pendant le calcul,
 mais cette durée dépasse la cible idéale de quelques secondes. La recherche
 globale bornée à 2 000 candidats prend environ huit secondes sur la même machine.
-

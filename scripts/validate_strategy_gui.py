@@ -57,11 +57,20 @@ def _run_builder(app: StrategyOptimizerApp, roles: tuple[tuple[str, str], ...]) 
     _wait(app)
     assert app.result is not None and app.result.retained_results
     first = app.result.retained_results[0]
+    active_values = {}
+    for step_id, club_id in first.active_assignments.items():
+        club = next(item for item in first.clubs if item.club_id == club_id)
+        step = next(item for item in club.steps if item.step_id == step_id)
+        active_values[step_id] = dict(step.final_stats)
     return {
         "badges": first.optimization_badges,
         "composition": first.composition,
         "active_assignments": dict(first.active_assignments),
+        "active_values": active_values,
         "seconds": app.result.search.total_seconds,
+        "optimality_status": app.result.search.optimality_status,
+        "saved_candidates_injected": app.result.search.saved_bag_candidates_injected,
+        "known_candidates_injected": app.result.search.known_candidates_injected,
     }
 
 
@@ -195,7 +204,7 @@ def main() -> int:
     app.strategy_name.set(next(label for label, identifier in app.strategy_by_label.items() if identifier == "par3"))
     app._refresh_variants()
     app._toggle_search_mode()
-    app.max_evaluations.set("600")
+    app.max_evaluations.set("1000")
     evidence["interactive_builder"] = {}
     evidence["interactive_builder"]["high_flight"] = _run_builder(app, (("high_flight", "attack"),))
     app.step_minimum_vars["attack"]["control"][0].set("10")
@@ -210,7 +219,27 @@ def main() -> int:
     evidence["interactive_builder"]["high_flight_ember_maelstrom"] = _run_builder(
         app, (("high_flight", "attack"), ("ember", "putt"), ("maelstrom", "support")),
     )
+    assert any(
+        item.composition == ("high_flight", "cyclotron", "ember", "maelstrom", "sunstorm")
+        and _club_step(item, "High Flight", "attack").final_stats
+        == {"power": 19.0, "control": 10.0, "spin": 13.0}
+        for item in app.result.retained_results
+    )
     evidence["interactive_builder"]["divebomb"] = _run_builder(app, (("divebomb", "attack"),))
+    evidence["interactive_builder"]["divebomb_ember"] = _run_builder(
+        app, (("divebomb", "attack"), ("ember", "putt")),
+    )
+    assert evidence["interactive_builder"]["high_flight"]["active_values"]["attack"] == {
+        "power": 20.0, "control": 10.0, "spin": 5.0,
+    }
+    assert evidence["interactive_builder"]["high_flight_ember"]["active_values"]["attack"]["power"] == 20.0
+    assert evidence["interactive_builder"]["high_flight_ember_maelstrom"]["active_values"]["attack"]["power"] <= 20.0
+    assert evidence["interactive_builder"]["divebomb"]["active_values"]["attack"] == {
+        "power": 16.0, "control": 9.0, "spin": 9.0,
+    }
+    assert evidence["interactive_builder"]["divebomb_ember"]["active_values"]["attack"] == {
+        "power": 16.0, "control": 9.0, "spin": 9.0,
+    }
     evidence["interactive_builder"]["gearshift"] = _run_builder(app, (("gearshift", "auto"),))
     evidence["interactive_builder"]["wave"] = _run_builder(app, (("wave", "auto"),))
     app.strategy_name.set(next(label for label, identifier in app.strategy_by_label.items() if identifier == "par5"))

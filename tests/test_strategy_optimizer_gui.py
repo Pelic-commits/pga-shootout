@@ -328,13 +328,13 @@ def test_interactive_presentation_shows_badge_and_deltas_without_opening_technic
     presenter, interactive_result,
 ):
     presentation = presenter.present(interactive_result)
-    assert presentation.candidates[0].strengths.startswith("PUISSANCE MAXIMALE")
-    assert "PUISSANCE MAXIMALE" in presentation.details[0].overview
+    assert presentation.candidates[0].strengths.startswith("MEILLEURE PUISSANCE TROUVÉE")
+    assert "MEILLEURE PUISSANCE TROUVÉE" in presentation.details[0].overview
     alternative = next(
         detail for candidate, detail in zip(interactive_result.retained_results, presentation.details, strict=True)
         if any("POUR -" in badge for badge in candidate.optimization_badges)
     )
-    assert "ÉCART AVEC LA VARIANTE PUISSANCE MAXIMALE" in alternative.overview
+    assert "ÉCART AVEC LA MEILLEURE PUISSANCE TROUVÉE" in alternative.overview
 
 
 def test_local_presentation_separates_attack_landing_and_exact_before_after(presenter):
