@@ -78,12 +78,25 @@ class UserPreferences:
 
 
 @dataclass(frozen=True)
+class BagReferenceProfile:
+    label: str
+    usage: str = ""
+    strategy_id: str | None = None
+    primary_club_id: str | None = None
+    role: str = "stable"
+    note: str = ""
+    club_notes: Mapping[str, str] | None = None
+    observed_metrics: Mapping[str, Mapping[str, float]] | None = None
+
+
+@dataclass(frozen=True)
 class SavedBag:
     identifier: str
     name: str
     status: str
     club_ids: tuple[str, ...]
     notes: tuple[str, ...]
+    reference: BagReferenceProfile | None = None
 
 
 @dataclass(frozen=True)
@@ -218,6 +231,7 @@ def load_user_data(user_dir: str | Path) -> UserDataBundle:
             status=str(item["status"]),
             club_ids=tuple(str(value) for value in item["club_ids"]),
             notes=tuple(str(value) for value in item.get("notes", [])),
+            reference=_reference_profile(item.get("reference")),
         )
         for item in bags_data["bags"]
     )
@@ -232,6 +246,24 @@ def load_user_data(user_dir: str | Path) -> UserDataBundle:
         for item in observations_data["observations"]
     )
     return UserDataBundle(account, inventory, preferences, bags, observations)
+
+
+def _reference_profile(value: Any) -> BagReferenceProfile | None:
+    if not isinstance(value, Mapping):
+        return None
+    return BagReferenceProfile(
+        label=str(value.get("label") or "Référence utilisateur"),
+        usage=str(value.get("usage") or ""),
+        strategy_id=str(value["strategy_id"]) if value.get("strategy_id") else None,
+        primary_club_id=str(value["primary_club_id"]) if value.get("primary_club_id") else None,
+        role=str(value.get("role") or "stable"),
+        note=str(value.get("note") or ""),
+        club_notes={str(key): str(note) for key, note in value.get("club_notes", {}).items()},
+        observed_metrics={
+            str(step): {str(metric): float(amount) for metric, amount in metrics.items()}
+            for step, metrics in value.get("observed_metrics", {}).items()
+        },
+    )
 
 
 def _duplicates(values: list[str]) -> set[str]:

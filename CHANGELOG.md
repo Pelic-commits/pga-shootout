@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-08-24 — Sacs réels comme références utilisateur
+
+- Ajoute les métadonnées et notes de référence au profil utilisateur sans les injecter dans les règles du jeu.
+- Compare chaque étape avant/après au sac réel, y compris lorsque des métriques observées ont été renseignées.
+- Ajoute le remplacement ciblé d'un club, l'exploration facultative des supports et la sauvegarde confirmée des propositions.
+- Corrige l'affectation des rôles d'un sac multi-étapes afin de réserver les clubs contraints aux étapes futures.
+
 ## 2026-08-24 — Audit exhaustif des capacités restantes
 
 - Recalcule la couverture depuis l'inventaire SQLite actuel (80 clubs possédés) au lieu de reprendre les anciens totaux documentaires.

@@ -81,7 +81,7 @@ pga-shootout data-dashboard
 
 `strategy-list` et `strategy-show` consultent la bibliothèque déclarative de plans de jeu. Ces préréglages décrivent des séquences, des rôles et des exigences génériques ; ils ne déclenchent aucune règle particulière dans le moteur. Voir [docs/STRATEGY_MODEL.md](docs/STRATEGY_MODEL.md).
 
-`optimize-strategy` recherche des sacs ordonnés dans l'inventaire réel, les évalue étape par étape et conserve plusieurs compromis sans score global. La recherche initiale est explicitement partielle et réduite ; la portée réelle et la réussite du putt restent indéterminables. Voir [docs/STRATEGY_OPTIMIZER.md](docs/STRATEGY_OPTIMIZER.md).
+`optimize-strategy` recherche des sacs ordonnés dans l'inventaire réel, les évalue étape par étape et conserve plusieurs compromis sans score global. La recherche initiale est explicitement partielle et réduite ; la portée réelle et la réussite du putt restent indéterminables. Les sacs enregistrés peuvent servir de références factuelles dans le constructeur interactif ; leurs libellés, usages et notes restent des données utilisateur sans effet sur le Rule Engine. Le mode `replace_club` teste le remplacement ciblé d'un club avant l'exploration facultative d'un second support. Voir [docs/STRATEGY_OPTIMIZER.md](docs/STRATEGY_OPTIMIZER.md).
 
 Le mode `strict` échoue sur une mécanique inconnue. Le mode `partial` conserve le résultat calculable et signale explicitement chaque élément non évalué.
 

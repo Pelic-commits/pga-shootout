@@ -47,6 +47,7 @@ class StrategyOptimizationRequest:
     search_mode: str = "global"
     target_bag_id: str | None = None
     fixed_club_id: str | None = None
+    replace_club_id: str | None = None
     replacement_depth: int = 1
     required_club_ids: tuple[str, ...] = ()
     excluded_club_ids: tuple[str, ...] = ()
@@ -283,6 +284,19 @@ class EmpiricalReference:
 
 
 @dataclass(frozen=True)
+class ComparisonReference:
+    bag_id: str
+    bag_name: str
+    label: str
+    usage: str
+    role: str
+    note: str
+    club_notes: Mapping[str, str]
+    observed_metrics: Mapping[str, Mapping[str, float]]
+    composition: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class TypeComparisonRow:
     club_type: str
     owned_clubs: int
@@ -317,6 +331,7 @@ class StrategyOptimizationResult:
     warnings: tuple[str, ...]
     result_families: tuple[ResultFamilyResult, ...] = ()
     empirical_reference: EmpiricalReference | None = None
+    comparison_reference: ComparisonReference | None = None
     type_comparison: tuple[TypeComparisonRow, ...] = ()
     inventory_owned_count: int = 0
     inventory_observed_at: str | None = None
@@ -701,6 +716,8 @@ class StrategyCandidateGenerator:
                 used.add(club_id)
             if assigned:
                 selected_orders = self._orders_for(bag.club_ids, runtime, order_mode)
+                if all(order != bag.club_ids for order, _reason in selected_orders):
+                    selected_orders = ((bag.club_ids, "observed_saved_order"), *selected_orders)
                 for order, reason in selected_orders:
                     self._add(target, order, definition, tuple(assigned), "reference_bag", reason, len(selected_orders))
         return tuple(target.values())
@@ -713,6 +730,7 @@ class StrategyCandidateGenerator:
         *,
         replacement_depth: int = 1,
         fixed_club_id: str | None = None,
+        replace_club_id: str | None = None,
         order_mode: str = "structural_exact",
         required_club_ids: tuple[str, ...] = (),
         excluded_club_ids: tuple[str, ...] = (),
@@ -726,6 +744,8 @@ class StrategyCandidateGenerator:
             raise StrategyOptimizationError("Le sac sélectionné n'est pas évaluable avec l'inventaire actuel")
         if fixed_club_id is not None and fixed_club_id not in runtime.clubs:
             raise StrategyOptimizationError("Le club fixé n'est pas disponible dans l'inventaire actuel")
+        if replace_club_id is not None and replace_club_id not in bag.club_ids:
+            raise StrategyOptimizationError("Le club à remplacer n'appartient pas au sac sélectionné")
         required = set(required_club_ids)
         excluded = set(excluded_club_ids)
         locks = dict(locked_positions or {})
@@ -774,6 +794,8 @@ class StrategyCandidateGenerator:
         )
         eligible = tuple(item for item in runtime.clubs if item not in excluded)
         for index, outgoing in enumerate(seed):
+            if replace_club_id is not None and outgoing != replace_club_id:
+                continue
             if outgoing == fixed_club_id:
                 continue
             for incoming in eligible:
@@ -787,6 +809,8 @@ class StrategyCandidateGenerator:
             outside = tuple(item for item in eligible if item not in seed)
             pair_limit_reached = False
             for removed in combinations(range(definition.bag_size), 2):
+                if replace_club_id is not None and seed.index(replace_club_id) not in removed:
+                    continue
                 if fixed_club_id is not None and any(seed[index] == fixed_club_id for index in removed):
                     continue
                 for incoming in combinations(outside, 2):
@@ -1117,30 +1141,33 @@ class StrategyCandidateGenerator:
         forced_step_id: str | None = None,
         preferred: tuple[str, ...] = (),
     ) -> tuple[str, ...]:
-        used: set[str] = set()
-        assigned: list[str] = []
-        for index, step in enumerate(definition.sequence):
-            forced_index = (
-                next((i for i, item in enumerate(definition.sequence) if item.identifier == forced_step_id), 0)
-                if forced_first is not None else None
+        forced_index = (
+            next((i for i, item in enumerate(definition.sequence) if item.identifier == forced_step_id), 0)
+            if forced_first is not None else None
+        )
+        pools = tuple(
+            tuple(
+                item for item in club_ids
+                if _matches_step(runtime.clubs[item], step)
+                and (forced_first is None or index != forced_index or item == forced_first)
             )
-            forced = forced_first if index == forced_index else None
-            old = preferred[index] if index < len(preferred) else None
-            club_id = next(
-                (
-                    item for item in (forced, old, *club_ids)
-                    if item is not None
-                    and item in club_ids
-                    and (definition.allow_active_club_reuse or item not in used)
-                    and _matches_step(runtime.clubs[item], step)
-                ),
-                None,
-            )
-            if club_id is None:
-                return ()
-            assigned.append(club_id)
-            used.add(club_id)
-        return tuple(assigned)
+            for index, step in enumerate(definition.sequence)
+        )
+        candidates = tuple(
+            values for values in product(*pools)
+            if definition.allow_active_club_reuse or len(set(values)) == len(values)
+        )
+        if not candidates:
+            return ()
+        positions = {club_id: index for index, club_id in enumerate(club_ids)}
+        return max(
+            candidates,
+            key=lambda values: (
+                sum(index < len(preferred) and value == preferred[index] for index, value in enumerate(values)),
+                -sum(positions[value] for value in values),
+                tuple(-positions[value] for value in values),
+            ),
+        )
 
     @staticmethod
     def _assignments_for(
@@ -1658,7 +1685,7 @@ class StrategyOptimizer:
             raise StrategyOptimizationError("Display limit must be at least 1")
         if request.max_evaluations < 1:
             raise StrategyOptimizationError("Evaluation safety limit must be at least 1")
-        if request.search_mode not in {"global", "improve_bag", "around_club", "test_new_club", "interactive_builder"}:
+        if request.search_mode not in {"global", "improve_bag", "replace_club", "around_club", "test_new_club", "interactive_builder"}:
             raise StrategyOptimizationError(f"Unsupported search mode: {request.search_mode}")
         if request.replacement_depth not in {1, 2}:
             raise StrategyOptimizationError("Replacement depth must be 1 or 2")
@@ -1683,6 +1710,8 @@ class StrategyOptimizer:
         constrained_ids = set(request.required_club_ids) | set(request.excluded_club_ids) | set(request.club_roles or {})
         if request.fixed_club_id:
             constrained_ids.add(request.fixed_club_id)
+        if request.replace_club_id:
+            constrained_ids.add(request.replace_club_id)
         unavailable = tuple(sorted(constrained_ids - set(runtime.clubs)))
         if unavailable:
             raise StrategyOptimizationError(
@@ -1690,7 +1719,11 @@ class StrategyOptimizer:
             )
         if set(request.required_club_ids) & set(request.excluded_club_ids):
             raise StrategyOptimizationError("Un club ne peut pas être à la fois obligatoire et exclu")
-        target_bag: SavedBag | None = None
+        target_bag: SavedBag | None = next(
+            (item for item in bundle.bags if item.identifier == request.target_bag_id), None,
+        ) if request.target_bag_id else None
+        if request.target_bag_id and target_bag is None:
+            raise StrategyOptimizationError(f"Sac enregistré inconnu : {request.target_bag_id}")
 
         generation_started = perf_counter()
         references = self.generator.reference_candidates(strategy, runtime, bundle.bags, request.order_mode)
@@ -1741,6 +1774,7 @@ class StrategyOptimizer:
                 if self._candidate_satisfies_builder_constraints(
                     item, builder_roles, request.excluded_club_ids, request.locked_positions,
                 )
+                or target_bag is not None and item.club_ids == target_bag.club_ids
             )
             known = self._compatible_known_candidates(known_context_key, builder_roles, request)
 
@@ -1811,9 +1845,7 @@ class StrategyOptimizer:
             theoretical = int(broad_stats.get("active_assignments_theoretical", 0))
             eliminated = int(generation_stats.get("permutations_equivalent", 0))
         else:
-            if request.target_bag_id:
-                target_bag = next((item for item in bundle.bags if item.identifier == request.target_bag_id), None)
-            else:
+            if target_bag is None:
                 target_bag = next(
                     (item for item in bundle.bags if request.fixed_club_id in item.club_ids),
                     bundle.bags[0] if bundle.bags else None,
@@ -1857,6 +1889,7 @@ class StrategyOptimizer:
                     target_bag,
                     replacement_depth=request.replacement_depth,
                     fixed_club_id=None,
+                    replace_club_id=request.replace_club_id,
                     order_mode=request.order_mode,
                     required_club_ids=tuple(local_required),
                     excluded_club_ids=request.excluded_club_ids,
@@ -1882,7 +1915,7 @@ class StrategyOptimizer:
         reference_specs = tuple(item for item in generated if item.provenance == "reference_bag")
         search_specs = tuple(item for item in generated if item.provenance != "reference_bag")
         if request.search_mode in {"around_club", "interactive_builder"} or (
-            request.search_mode in {"improve_bag", "test_new_club"} and request.replacement_depth == 1
+            request.search_mode in {"improve_bag", "replace_club", "test_new_club"} and request.replacement_depth == 1
         ):
             # The one-replacement neighborhood is deliberately exhaustive.
             selected_specs = (*reference_specs, *search_specs)
@@ -1907,6 +1940,24 @@ class StrategyOptimizer:
                 excluded_candidates += 1
             else:
                 evaluated.append(quick)
+        if target_bag is not None and not any(
+            item.spec.provenance == "reference_bag" and item.spec.club_ids == target_bag.club_ids
+            for item in evaluated
+        ):
+            assignment = self.generator._preferred_assignment(
+                strategy.definition, runtime, target_bag.club_ids,
+            )
+            if assignment:
+                observed_spec = CandidateSpec(
+                    f"reference-{target_bag.identifier}-observed-order",
+                    target_bag.club_ids,
+                    {step.identifier: club_id for step, club_id in zip(strategy.definition.sequence, assignment, strict=True)},
+                    "reference_bag",
+                    order_space_id=f"reference-{target_bag.identifier}",
+                )
+                observed_quick = self._evaluate_quick(observed_spec, strategy, runtime, request.mode)
+                if not observed_quick.strict_failed:
+                    evaluated.append(observed_quick)
         evaluation_seconds = perf_counter() - evaluation_started
         comparison_started = perf_counter()
         evaluated_before_minimums = len(evaluated)
@@ -1937,6 +1988,19 @@ class StrategyOptimizer:
             if request.search_mode != "global"
             else None
         )
+        if current_saved_quick is None and request.search_mode != "global" and target_bag is not None:
+            assignment = self.generator._preferred_assignment(strategy.definition, runtime, target_bag.club_ids)
+            if assignment:
+                current_saved_quick = self._evaluate_quick(
+                    CandidateSpec(
+                        f"reference-{target_bag.identifier}-control",
+                        target_bag.club_ids,
+                        {step.identifier: club_id for step, club_id in zip(strategy.definition.sequence, assignment, strict=True)},
+                        "reference_bag",
+                        order_space_id=f"reference-{target_bag.identifier}",
+                    ),
+                    strategy, runtime, request.mode,
+                )
         empirical_reference = None
         if request.reference_bag_id:
             reference_bag = next((item for item in bundle.bags if item.identifier == request.reference_bag_id), None)
@@ -1964,7 +2028,7 @@ class StrategyOptimizer:
                 if item.spec.provenance == "reference_bag"
                 or not any(_dominates_candidate(reference, item) for reference in reference_controls)
             )
-            if request.search_mode in {"global", "improve_bag"}
+            if request.search_mode in {"global", "improve_bag", "replace_club"}
             else unique_before_reference_guard
         )
         reference_dominated_removed = len(unique_before_reference_guard) - len(unique)
@@ -1972,6 +2036,7 @@ class StrategyOptimizer:
         projection_pool = (
             tuple(item for item in layered if item.spec.provenance != "reference_bag")
             if request.search_mode not in {"global", "interactive_builder"}
+            or request.search_mode == "interactive_builder" and target_bag is not None
             else layered
         )
         if request.search_mode == "interactive_builder":
@@ -2012,7 +2077,22 @@ class StrategyOptimizer:
                 None,
             )
             if baseline is not None:
-                detailed = tuple(self._with_reference_delta(item, baseline) for item in detailed)
+                observed = target_bag.reference.observed_metrics if target_bag.reference else None
+                detailed = tuple(self._with_reference_delta(item, baseline, observed) for item in detailed)
+        comparison_reference = None
+        if target_bag is not None:
+            profile = target_bag.reference
+            comparison_reference = ComparisonReference(
+                bag_id=target_bag.identifier,
+                bag_name=target_bag.name,
+                label=profile.label if profile else target_bag.name,
+                usage=profile.usage if profile else "",
+                role=profile.role if profile else "unclassified",
+                note=profile.note if profile else "",
+                club_notes=dict(profile.club_notes or {}) if profile else {},
+                observed_metrics=dict(profile.observed_metrics or {}) if profile else {},
+                composition=target_bag.club_ids,
+            )
         type_comparison = _build_type_comparison(layered, strategy, runtime, self.metric_semantics)
         comparison_seconds = perf_counter() - comparison_started
         total_seconds = perf_counter() - optimization_started
@@ -2023,7 +2103,7 @@ class StrategyOptimizer:
         )
         optimality_status = (
             "maximum_proven"
-            if request.search_mode in {"improve_bag", "test_new_club"}
+            if request.search_mode in {"improve_bag", "replace_club", "test_new_club"}
             and request.replacement_depth == 1 and not safety_reached
             else "best_found"
         )
@@ -2039,13 +2119,15 @@ class StrategyOptimizer:
             "Les candidats sont comparés uniquement sur les métriques calculables du moteur.",
             "La recherche applique une réduction déterministe et n'est pas exhaustive sur tout l'inventaire.",
         ]
-        if request.search_mode in {"improve_bag", "test_new_club"}:
+        if request.search_mode in {"improve_bag", "replace_club", "test_new_club"}:
             warnings.append(
                 "Recherche locale : tous les remplacements simples ont été parcourus ; "
                 + ("les doubles remplacements sont réduits par relations structurelles." if request.replacement_depth == 2 else "aucun double remplacement demandé.")
             )
         elif request.search_mode in {"around_club", "test_new_club"}:
             warnings.append(f"Recherche centrée sur le club {request.fixed_club_id}.")
+        if request.search_mode == "replace_club":
+            warnings.append(f"Remplacement ciblé : {request.replace_club_id}; les autres places restent comparées au sac actuel.")
         if request.search_mode == "interactive_builder" and not criteria_satisfied:
             warnings.append(
                 "Aucun sac ne satisfait actuellement tous les minimums demandés ; "
@@ -2072,6 +2154,20 @@ class StrategyOptimizer:
             )
         if empirical_reference:
             warnings.append(empirical_reference.statement)
+        forced_ids = set(request.required_club_ids) | set(request.club_roles or {})
+        if request.fixed_club_id:
+            forced_ids.add(request.fixed_club_id)
+        forced_unresolved = sorted({
+            club.club_name
+            for candidate in detailed for club in candidate.clubs
+            if club.club_id in forced_ids
+            and any(step.unresolved_abilities for step in club.steps)
+        })
+        if forced_unresolved:
+            warnings.append(
+                ", ".join(forced_unresolved)
+                + " possède une capacité non entièrement simulée. Les autres effets du sac sont optimisés normalement."
+            )
         return StrategyOptimizationResult(
             schema_version="1.0.0",
             catalog_version=runtime.catalog_version,
@@ -2136,11 +2232,11 @@ class StrategyOptimizer:
                     }),
                 },
                 origin_counts={origin: sum(item.provenance == origin for item in selected_specs) for origin in origin_names},
-                replacement_depth=request.replacement_depth if request.search_mode in {"improve_bag", "test_new_club"} else 0,
+                replacement_depth=request.replacement_depth if request.search_mode in {"improve_bag", "replace_club", "test_new_club"} else 0,
                 local_search_completeness=(
                     "bounded_around_fixed_club" if request.search_mode == "around_club"
-                    else "exhaustive_one_replacement" if request.search_mode in {"improve_bag", "test_new_club"} and request.replacement_depth == 1
-                    else "structurally_reduced_two_replacements" if request.search_mode in {"improve_bag", "test_new_club"}
+                    else "exhaustive_one_replacement" if request.search_mode in {"improve_bag", "replace_club", "test_new_club"} and request.replacement_depth == 1
+                    else "structurally_reduced_two_replacements" if request.search_mode in {"improve_bag", "replace_club", "test_new_club"}
                     else "not_applicable"
                 ),
                 theoretical_compositions=generation_stats.get("theoretical_compositions", theoretical),
@@ -2171,6 +2267,7 @@ class StrategyOptimizer:
             warnings=tuple(warnings),
             result_families=family_results,
             empirical_reference=empirical_reference,
+            comparison_reference=comparison_reference,
             type_comparison=type_comparison,
             inventory_owned_count=sum(item.unlocked for item in bundle.inventory.entries),
             inventory_observed_at=bundle.inventory.observed_at,
@@ -2216,6 +2313,7 @@ class StrategyOptimizer:
     def _with_reference_delta(
         candidate: StrategyCandidateResult,
         reference: StrategyCandidateResult,
+        observed_metrics: Mapping[str, Mapping[str, float]] | None = None,
     ) -> StrategyCandidateResult:
         def active_metrics(value: StrategyCandidateResult) -> tuple[dict[str, float | None], set[str]]:
             metrics: dict[str, float | None] = {}
@@ -2245,6 +2343,9 @@ class StrategyOptimizer:
 
         current, current_relevant = active_metrics(candidate)
         before, before_relevant = active_metrics(reference)
+        for step_id, metrics in (observed_metrics or {}).items():
+            for metric, amount in metrics.items():
+                before[f"{step_id}.{metric}"] = amount
         deltas = {
             key: None if current.get(key) is None or before.get(key) is None else current[key] - before[key]
             for key in sorted(set(current) | set(before))

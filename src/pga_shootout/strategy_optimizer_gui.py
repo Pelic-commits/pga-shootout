@@ -29,6 +29,8 @@ from .strategy_optimizer import (
     render_strategy_optimization,
     render_strategy_optimization_json,
 )
+from .storage import PgaDatabase
+from .user_data import BagReferenceProfile
 from .user_data import load_user_data
 
 
@@ -60,6 +62,10 @@ METRIC_LABELS = {
 }
 
 
+def _bag_label(bag) -> str:
+    return f"{bag.reference.label} — {bag.name}" if bag.reference else bag.name
+
+
 @dataclass(frozen=True)
 class StrategyChoice:
     identifier: str
@@ -84,6 +90,7 @@ class OptimizationGuiOptions:
     search_mode: str = "global"
     target_bag_id: str | None = None
     fixed_club_id: str | None = None
+    replace_club_id: str | None = None
     replacement_depth: int = 1
     required_club_ids: tuple[str, ...] = ()
     excluded_club_ids: tuple[str, ...] = ()
@@ -114,6 +121,7 @@ class OptimizationGuiOptions:
             search_mode=self.search_mode,
             target_bag_id=self.target_bag_id,
             fixed_club_id=self.fixed_club_id,
+            replace_club_id=self.replace_club_id,
             replacement_depth=self.replacement_depth,
             required_club_ids=self.required_club_ids,
             excluded_club_ids=self.excluded_club_ids,
@@ -158,6 +166,7 @@ class CandidateDetailPresentation:
 
 @dataclass(frozen=True)
 class OptimizationPresentation:
+    reference_text: str
     warning_text: str
     search_information: str
     candidates: tuple[CandidateListPresentation, ...]
@@ -193,11 +202,39 @@ class StrategyOptimizerPresenter:
         )
         details = tuple(self._candidate_detail(index, item, step_labels) for index, item in enumerate(result.retained_results, 1))
         return OptimizationPresentation(
+            reference_text=self._reference_summary(result, step_labels),
             warning_text=self._warnings(result),
             search_information=self._search_information(result),
             candidates=candidates,
             details=details,
         )
+
+    @staticmethod
+    def _reference_summary(result: StrategyOptimizationResult, step_labels: Mapping[str, str]) -> str:
+        reference = result.comparison_reference
+        if reference is None:
+            return "COMPARER À — Aucun sac réel sélectionné"
+        baseline = next((item for item in result.retained_results if "current_bag" in item.result_family_ids), None)
+        lines = [f"RÉFÉRENCE — {reference.label}"]
+        if reference.usage:
+            lines.append(reference.usage)
+        if baseline:
+            clubs = {item.club_id: item for item in baseline.clubs}
+            for step_id, club_id in baseline.active_assignments.items():
+                club = clubs[club_id]
+                step = next(item for item in club.steps if item.step_id == step_id)
+                displayed = {
+                    **step.final_stats,
+                    **reference.observed_metrics.get(step_id, {}),
+                }
+                values = " / ".join(
+                    f"{METRIC_LABELS[key]} {value:g}"
+                    for key, value in displayed.items() if value is not None and key in METRIC_LABELS
+                )
+                lines.append(f"{step_labels.get(step_id, step_id)} — {club.club_name} — {values}")
+        if reference.note:
+            lines.append("Note : " + reference.note)
+        return "\n".join(lines)
 
     def _candidate_list(
         self,
@@ -695,12 +732,13 @@ class StrategyOptimizerApp:
             "Optimiser autour de mes clubs": "interactive_builder",
             "Chercher de nouveaux sacs": "global",
             "Améliorer un de mes sacs": "improve_bag",
+            "Remplacer un club de mon sac": "replace_club",
             "Optimiser autour d’un club": "around_club",
             "Tester un nouveau club dans mes sacs": "test_new_club",
         }
         self.search_mode_name = tk.StringVar(value="Optimiser autour de mes clubs")
-        self.target_bag_by_label = {bag.name: bag.identifier for bag in bundle.bags}
-        self.target_bag_name = tk.StringVar(value=next(iter(self.target_bag_by_label), ""))
+        self.target_bag_by_label = {"Aucun": None, **{_bag_label(bag): bag.identifier for bag in bundle.bags}}
+        self.target_bag_name = tk.StringVar(value="Aucun")
         owned = tuple(item for item in bundle.inventory.entries if item.unlocked and item.current_level is not None)
         self.fixed_club_by_label = {item.display_name: item.club_id for item in owned}
         self.fixed_club_name = tk.StringVar(value=next(iter(self.fixed_club_by_label), ""))
@@ -764,7 +802,7 @@ class StrategyOptimizerApp:
         )
         self.search_mode_box.grid(row=3, column=1, columnspan=2, pady=(8, 0), sticky="w")
         self.search_mode_box.bind("<<ComboboxSelected>>", lambda _event: self._toggle_search_mode())
-        ttk.Label(parameters, text="Sac à améliorer :").grid(row=3, column=3, pady=(8, 0), sticky="e")
+        ttk.Label(parameters, text="Comparer à / sac de départ :").grid(row=3, column=3, pady=(8, 0), sticky="e")
         self.target_bag_box = ttk.Combobox(
             parameters, textvariable=self.target_bag_name,
             values=tuple(self.target_bag_by_label), state="disabled", width=28,
@@ -781,6 +819,9 @@ class StrategyOptimizerApp:
             parameters, textvariable=self.replacement_depth, values=("1", "2"), state="disabled", width=4,
         )
         self.depth_box.grid(row=3, column=10, pady=(8, 0), sticky="w")
+        ttk.Button(parameters, text="Définir comme référence", command=self._mark_reference).grid(
+            row=3, column=11, pady=(8, 0), padx=(6, 0), sticky="w",
+        )
 
         self.builder_frame = ttk.LabelFrame(parameters, text="Clubs choisis et objectifs", padding=6)
         self.builder_frame.grid(row=4, column=0, columnspan=12, sticky="ew", pady=(8, 0))
@@ -841,6 +882,11 @@ class StrategyOptimizerApp:
         self.warning = tk.Text(list_zone, height=7, wrap="word", background="#fff4ce", relief="flat")
         self.warning.pack(fill="x", pady=(0, 6))
         self.warning.configure(state="disabled")
+        self.reference_summary = tk.StringVar(value="COMPARER À — Aucun sac réel sélectionné")
+        ttk.Label(
+            list_zone, textvariable=self.reference_summary, background="#eaf3ff",
+            padding=6, justify="left", wraplength=760,
+        ).pack(fill="x", pady=(0, 6))
         table = ttk.Frame(list_zone)
         table.pack(fill="both", expand=True)
         table.rowconfigure(0, weight=1)
@@ -872,9 +918,15 @@ class StrategyOptimizerApp:
         self.export_json_button = ttk.Button(export_bar, text="Exporter en JSON", command=self._export_json, state="disabled")
         self.export_text_button = ttk.Button(export_bar, text="Exporter en texte", command=self._export_text, state="disabled")
         self.copy_button = ttk.Button(export_bar, text="Copier le résumé du sac", command=self._copy_summary, state="disabled")
+        self.save_bag_button = ttk.Button(export_bar, text="Enregistrer comme sac", command=self._save_selected_bag, state="disabled")
+        self.replace_reference_button = ttk.Button(
+            export_bar, text="Remplacer mon sac de référence", command=self._replace_reference, state="disabled",
+        )
         self.export_json_button.pack(side="left")
         self.export_text_button.pack(side="left", padx=6)
         self.copy_button.pack(side="left")
+        self.save_bag_button.pack(side="left", padx=6)
+        self.replace_reference_button.pack(side="left")
         self.search_info_button = ttk.Button(export_bar, text="Informations sur la recherche", command=self._show_search_info, state="disabled")
         self.search_info_button.pack(side="right")
 
@@ -994,9 +1046,9 @@ class StrategyOptimizerApp:
 
     def _toggle_search_mode(self) -> None:
         mode = self.search_mode_by_label[self.search_mode_name.get()]
-        local_mode = mode in {"improve_bag", "around_club", "test_new_club", "interactive_builder"}
+        local_mode = mode in {"improve_bag", "replace_club", "around_club", "test_new_club", "interactive_builder"}
         self.target_bag_box.configure(state="readonly" if local_mode else "disabled")
-        self.fixed_club_box.configure(state="readonly" if mode in {"around_club", "test_new_club"} else "disabled")
+        self.fixed_club_box.configure(state="readonly" if mode in {"replace_club", "around_club", "test_new_club"} else "disabled")
         self.fixed_step_box.configure(state="readonly" if mode == "around_club" else "disabled")
         self.depth_box.configure(state="readonly" if mode != "global" else "disabled")
         if mode == "interactive_builder":
@@ -1007,6 +1059,7 @@ class StrategyOptimizerApp:
             self.legacy_constraints.grid()
         self.analyze_button.configure(
             text="OPTIMISER MON SAC" if mode == "interactive_builder"
+            else "Remplacer ce club" if mode == "replace_club"
             else "Chercher des améliorations" if mode == "improve_bag"
             else "Tester ce club" if mode == "test_new_club" else "Lancer l’analyse"
         )
@@ -1016,7 +1069,7 @@ class StrategyOptimizerApp:
         previous_bag = self.target_bag_name.get()
         previous_club = self.fixed_club_name.get()
         previous_ids = set(self.fixed_club_by_label.values())
-        self.target_bag_by_label = {bag.name: bag.identifier for bag in bundle.bags}
+        self.target_bag_by_label = {"Aucun": None, **{_bag_label(bag): bag.identifier for bag in bundle.bags}}
         owned = tuple(item for item in bundle.inventory.entries if item.unlocked and item.current_level is not None)
         self.fixed_club_by_label = {item.display_name: item.club_id for item in owned}
         self.target_bag_box.configure(values=tuple(self.target_bag_by_label))
@@ -1030,7 +1083,7 @@ class StrategyOptimizerApp:
                 widget.insert("end", label)
                 if label in selected:
                     widget.selection_set(widget.size() - 1)
-        self.target_bag_name.set(previous_bag if previous_bag in self.target_bag_by_label else next(iter(self.target_bag_by_label), ""))
+        self.target_bag_name.set(previous_bag if previous_bag in self.target_bag_by_label else "Aucun")
         self.fixed_club_name.set(previous_club if previous_club in self.fixed_club_by_label else next(iter(self.fixed_club_by_label), ""))
         detected = tuple(sorted(set(self.fixed_club_by_label.values()) - previous_ids))
         if detected:
@@ -1085,6 +1138,8 @@ class StrategyOptimizerApp:
                 if club_id in required_ids
             }
         search_mode = self.search_mode_by_label[self.search_mode_name.get()]
+        if search_mode == "replace_club" and not target_bag_id:
+            raise ValueError("Choisissez le sac réel dans lequel remplacer un club.")
         club_roles: dict[str, str] = {}
         metric_minimums: dict[str, dict[str, float]] = {}
         primary_step_id = None
@@ -1128,6 +1183,10 @@ class StrategyOptimizerApp:
             search_mode=search_mode,
             target_bag_id=target_bag_id,
             fixed_club_id=self.fixed_club_by_label.get(self.fixed_club_name.get()),
+            replace_club_id=(
+                self.fixed_club_by_label.get(self.fixed_club_name.get())
+                if search_mode == "replace_club" else None
+            ),
             replacement_depth=int(self.replacement_depth.get()),
             required_club_ids=required_ids,
             excluded_club_ids=tuple(self.fixed_club_by_label[item] for item in excluded_labels),
@@ -1160,6 +1219,7 @@ class StrategyOptimizerApp:
         self.result = result
         self.presentation = self.presenter.present(result)
         self._set_text(self.warning, self.presentation.warning_text)
+        self.reference_summary.set(self.presentation.reference_text)
         self.candidate_tree.delete(*self.candidate_tree.get_children())
         for step_id, metrics in (result.attainable_ranges or {}).items():
             for metric, values in metrics.items():
@@ -1207,6 +1267,114 @@ class StrategyOptimizerApp:
         self._add_text_tab("Pourquoi ces clubs ?", detail.synergies)
         self._add_text_tab("Détails techniques", detail.technical_details)
         self.copy_button.configure(state="normal")
+        self.save_bag_button.configure(state="normal")
+        self.replace_reference_button.configure(
+            state="normal" if self.result and self.result.comparison_reference else "disabled"
+        )
+
+    def _selected_candidate(self) -> StrategyCandidateResult | None:
+        index = self._selected_index()
+        if index is None or self.result is None:
+            return None
+        return self.result.retained_results[index]
+
+    def _save_selected_bag(self) -> None:
+        candidate = self._selected_candidate()
+        if candidate is None:
+            return
+        from tkinter import messagebox, simpledialog
+
+        name = simpledialog.askstring("Enregistrer comme sac", "Nom du nouveau sac :", parent=self.root)
+        if not name:
+            return
+        try:
+            _, bag_id = PgaDatabase(self.user_data_path).save_bag(name, candidate.composition)
+        except Exception as error:
+            messagebox.showerror("Enregistrement impossible", str(error), parent=self.root)
+            return
+        self._refresh_inventory_choices()
+        self.status.set(f"Sac {name} enregistré sans modifier les sacs existants ({bag_id}).")
+
+    def _replace_reference(self) -> None:
+        candidate = self._selected_candidate()
+        reference = self.result.comparison_reference if self.result else None
+        if candidate is None or reference is None:
+            return
+        from tkinter import messagebox
+
+        if not messagebox.askyesno(
+            "Confirmer le remplacement",
+            f"Remplacer le contenu de « {reference.label} » par la proposition sélectionnée ?\n\nUne sauvegarde sera créée.",
+            parent=self.root,
+        ):
+            return
+        try:
+            PgaDatabase(self.user_data_path).replace_reference_bag(
+                reference.bag_id, candidate.composition, confirmed=True,
+            )
+        except Exception as error:
+            messagebox.showerror("Remplacement impossible", str(error), parent=self.root)
+            return
+        self._refresh_inventory_choices()
+        self.status.set(f"Le sac de référence {reference.label} a été remplacé après confirmation.")
+
+    def _mark_reference(self) -> None:
+        bag_id = self.target_bag_by_label.get(self.target_bag_name.get())
+        if not bag_id:
+            self.status.set("Choisissez d’abord un sac enregistré.")
+            return
+        from tkinter import messagebox, simpledialog
+
+        bundle = load_user_data(self.user_data_path)
+        bag = next(item for item in bundle.bags if item.identifier == bag_id)
+        current = bag.reference
+        label = simpledialog.askstring(
+            "Sac de référence", "Libellé fonctionnel :", initialvalue=current.label if current else bag.name,
+            parent=self.root,
+        )
+        if not label:
+            return
+        usage = simpledialog.askstring(
+            "Sac de référence", "Usage :", initialvalue=current.usage if current else "", parent=self.root,
+        )
+        note = simpledialog.askstring(
+            "Sac de référence", "Note libre (sans effet sur le moteur) :",
+            initialvalue=current.note if current else "", parent=self.root,
+        )
+        role = simpledialog.askstring(
+            "Sac de référence", "Rôle (stable ou experimental) :",
+            initialvalue=current.role if current else "stable", parent=self.root,
+        )
+        normalized_role = (role or "stable").casefold().replace("é", "e")
+        if normalized_role not in {"stable", "experimental"}:
+            messagebox.showerror("Référence impossible", "Le rôle doit être stable ou experimental.", parent=self.root)
+            return
+        selected_primary = self.fixed_club_by_label.get(self.fixed_club_name.get())
+        primary = (
+            current.primary_club_id if current and current.primary_club_id
+            else selected_primary if selected_primary in bag.club_ids else None
+        )
+        profile = BagReferenceProfile(
+            label=label, usage=usage or "",
+            strategy_id=self.strategy_by_label[self.strategy_name.get()],
+            primary_club_id=primary,
+            role=normalized_role, note=note or "",
+            club_notes=(
+                dict(current.club_notes or {}) if current
+                else {primary: note or ""} if primary and note else {}
+            ),
+            observed_metrics=dict(current.observed_metrics or {}) if current else {},
+        )
+        try:
+            PgaDatabase(self.user_data_path).mark_bag_reference(bag_id, profile)
+        except Exception as error:
+            messagebox.showerror("Référence impossible", str(error), parent=self.root)
+            return
+        self._refresh_inventory_choices()
+        self.target_bag_name.set(next(
+            name for name, value in self.target_bag_by_label.items() if value == bag_id
+        ))
+        self.status.set(f"{label} est maintenant un sac de référence utilisateur.")
 
     def _add_text_tab(self, label: str, content: str) -> None:
         frame = self.ttk.Frame(self.notebook)

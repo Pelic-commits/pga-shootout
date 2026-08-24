@@ -13,6 +13,7 @@ from typing import Any, Mapping, Sequence
 
 from .catalog_store import initialize_catalog_database
 from .user_data import (
+    BagReferenceProfile,
     Inventory,
     InventoryEntry,
     PreferenceItem,
@@ -21,6 +22,7 @@ from .user_data import (
     UserDataBundle,
     UserObservation,
     UserPreferences,
+    _reference_profile,
 )
 
 
@@ -385,7 +387,11 @@ class PgaDatabase:
                         "SELECT club_id FROM user_bag_clubs WHERE bag_id = ? ORDER BY position", (row["bag_id"],)
                     )
                 )
-                saved_bags.append(SavedBag(row["bag_id"], row["name"], row["status"], club_ids, tuple(json.loads(row["notes_json"]))))
+                payload = json.loads(row["payload_json"])
+                saved_bags.append(SavedBag(
+                    row["bag_id"], row["name"], row["status"], club_ids,
+                    tuple(json.loads(row["notes_json"])), _reference_profile(payload.get("reference")),
+                ))
             observations = tuple(
                 UserObservation(
                     identifier=str(item["id"]), status=str(item["status"]),
@@ -474,7 +480,11 @@ class PgaDatabase:
     def bag_documents(self) -> list[dict[str, Any]]:
         bundle = self.load_user_bundle()
         return [
-            {"id": bag.identifier, "name": bag.name, "status": bag.status, "club_ids": list(bag.club_ids), "notes": list(bag.notes)}
+            {
+                "id": bag.identifier, "name": bag.name, "status": bag.status,
+                "club_ids": list(bag.club_ids), "notes": list(bag.notes),
+                **({"reference": asdict(bag.reference)} if bag.reference else {}),
+            }
             for bag in bundle.bags
         ]
 
@@ -487,6 +497,9 @@ class PgaDatabase:
             owned = {row[0] for row in connection.execute("SELECT club_id FROM user_clubs WHERE unlocked = 1")}
             if any(item not in owned for item in club_ids):
                 raise ValueError("Tous les clubs du sac doivent être marqués comme possédés.")
+            reference = None
+            notes = ["Sac enregistré dans SQLite."]
+            status = "user_observed"
             if bag_id is None:
                 base = re_slug(name)
                 bag_id = base
@@ -496,19 +509,72 @@ class PgaDatabase:
                     suffix += 1
                 before = None
             else:
-                before_row = connection.execute("SELECT payload_json FROM user_bags WHERE bag_id = ?", (bag_id,)).fetchone()
+                before_row = connection.execute(
+                    "SELECT payload_json, status, notes_json FROM user_bags WHERE bag_id = ?", (bag_id,)
+                ).fetchone()
                 if before_row is None:
                     raise ValueError("Ce sac n'existe plus.")
                 before = json.loads(before_row[0])
+                reference = before.get("reference")
+                status = before_row["status"]
+                notes = list(json.loads(before_row["notes_json"]))
                 connection.execute("DELETE FROM user_bag_clubs WHERE bag_id = ?", (bag_id,))
                 connection.execute("DELETE FROM user_bags WHERE bag_id = ?", (bag_id,))
-            document = {"id": bag_id, "name": name.strip(), "status": "user_observed", "club_ids": list(club_ids), "notes": ["Sac enregistré dans SQLite."]}
-            connection.execute("INSERT INTO user_bags VALUES (?, ?, ?, ?, ?, ?, ?)", (bag_id, name.strip(), "user_observed", _json(document["notes"]), timestamp, "guided_user_entry", _json(document)))
+            document = {
+                "id": bag_id, "name": name.strip(), "status": status,
+                "club_ids": list(club_ids), "notes": notes,
+                **({"reference": reference} if reference else {}),
+            }
+            connection.execute(
+                "INSERT INTO user_bags VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (bag_id, name.strip(), status, _json(notes), timestamp, "guided_user_entry", _json(document)),
+            )
             for position, club_id in enumerate(club_ids, start=1):
                 connection.execute("INSERT INTO user_bag_clubs VALUES (?, ?, ?)", (bag_id, position, club_id))
             connection.execute("INSERT INTO user_change_log(changed_at, entity_type, entity_id, action, before_json, after_json) VALUES (?, ?, ?, ?, ?, ?)", (timestamp, "bag", bag_id, "update" if before else "create", _json(before) if before else None, _json(document)))
             connection.commit()
         return backup, bag_id
+
+    def mark_bag_reference(self, bag_id: str, profile: BagReferenceProfile) -> Path:
+        if profile.role not in {"stable", "experimental"}:
+            raise ValueError("Le rôle de référence doit être stable ou expérimental.")
+        backup = self.backup()
+        timestamp = _now()
+        with self.connect() as connection:
+            row = connection.execute("SELECT * FROM user_bags WHERE bag_id = ?", (bag_id,)).fetchone()
+            if row is None:
+                raise ValueError("Ce sac n'existe plus.")
+            clubs = {
+                item[0] for item in connection.execute(
+                    "SELECT club_id FROM user_bag_clubs WHERE bag_id = ?", (bag_id,)
+                )
+            }
+            if profile.primary_club_id and profile.primary_club_id not in clubs:
+                raise ValueError("Le club principal doit appartenir au sac.")
+            if profile.club_notes and not set(profile.club_notes).issubset(clubs):
+                raise ValueError("Une note de club ne peut viser qu'un club du sac.")
+            before = json.loads(row["payload_json"])
+            after = {**before, "status": "user_reference", "reference": asdict(profile)}
+            connection.execute(
+                "UPDATE user_bags SET status = ?, observed_at = ?, source = ?, payload_json = ? WHERE bag_id = ?",
+                ("user_reference", timestamp, "user_reference_metadata", _json(after), bag_id),
+            )
+            connection.execute(
+                "INSERT INTO user_change_log(changed_at, entity_type, entity_id, action, before_json, after_json) VALUES (?, ?, ?, ?, ?, ?)",
+                (timestamp, "bag", bag_id, "mark_reference", _json(before), _json(after)),
+            )
+            connection.commit()
+        return backup
+
+    def replace_reference_bag(
+        self, bag_id: str, club_ids: Sequence[str], *, confirmed: bool = False,
+    ) -> tuple[Path, str]:
+        if not confirmed:
+            raise ValueError("Le remplacement d'un sac de référence exige une confirmation explicite.")
+        bag = next((item for item in self.load_user_bundle().bags if item.identifier == bag_id), None)
+        if bag is None or bag.reference is None:
+            raise ValueError("Le sac sélectionné n'est pas une référence utilisateur.")
+        return self.save_bag(bag.name, club_ids, bag_id=bag_id)
 
     def delete_bag(self, bag_id: str) -> Path:
         backup = self.backup()

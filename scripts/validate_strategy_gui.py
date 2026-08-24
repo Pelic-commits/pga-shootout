@@ -235,6 +235,16 @@ def main() -> int:
     assert str(app.target_bag_box.cget("state")) == "readonly"
     assert str(app.fixed_club_box.cget("state")) == "readonly"
     assert str(app.fixed_step_box.cget("state")) == "disabled"
+    replace_label = next(label for label, identifier in app.search_mode_by_label.items() if identifier == "replace_club")
+    app.search_mode_name.set(replace_label)
+    app._toggle_search_mode()
+    assert str(app.target_bag_box.cget("state")) == "readonly"
+    assert str(app.fixed_club_box.cget("state")) == "readonly"
+    app.target_bag_name.set(next(
+        label for label, bag_id in app.target_bag_by_label.items() if bag_id == "par3_divebomb"
+    ))
+    assert app._options().replace_club_id in app.fixed_club_by_label.values()
+    app.target_bag_name.set("Aucun")
     global_label = next(label for label, identifier in app.search_mode_by_label.items() if identifier == "global")
     app.search_mode_name.set(global_label)
     app._toggle_search_mode()
@@ -299,10 +309,18 @@ def main() -> int:
         )
         for item in app.result.retained_results
     )
+    par3_reference_label = next(
+        label for label, bag_id in app.target_bag_by_label.items() if bag_id == "par3_divebomb"
+    )
+    app.target_bag_name.set(par3_reference_label)
     evidence["interactive_builder"]["divebomb"] = _run_builder(app, (("divebomb", "attack"),))
+    assert app.result.comparison_reference is not None
+    assert app.result.comparison_reference.bag_id == "par3_divebomb"
+    assert "RÉFÉRENCE" in app.reference_summary.get()
     evidence["interactive_builder"]["divebomb_ember"] = _run_builder(
         app, (("divebomb", "attack"), ("ember", "putt")),
     )
+    app.target_bag_name.set("Aucun")
     assert (
         evidence["interactive_builder"]["high_flight_ember_maelstrom"]["active_values"]["attack"]["power"]
         <= evidence["interactive_builder"]["high_flight_ember"]["active_values"]["attack"]["power"]

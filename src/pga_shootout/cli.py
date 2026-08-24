@@ -283,10 +283,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--reference-bag", help="saved bag used as an empirical minimum-Power reference",
     )
     optimize_strategy_parser.add_argument(
-        "--search-mode", choices=("global", "improve_bag", "around_club", "test_new_club", "interactive_builder"), default="global",
+        "--search-mode", choices=("global", "improve_bag", "replace_club", "around_club", "test_new_club", "interactive_builder"), default="global",
     )
     optimize_strategy_parser.add_argument("--target-bag", help="saved bag used for local improvement search")
     optimize_strategy_parser.add_argument("--fixed-club", help="owned club fixed as the first active club")
+    optimize_strategy_parser.add_argument("--replace-club", help="club in the target bag that must be replaced")
     optimize_strategy_parser.add_argument("--fixed-step", help="strategy step where the fixed club must be active")
     optimize_strategy_parser.add_argument("--require-club", action="append", default=[], help="owned club required in every candidate")
     optimize_strategy_parser.add_argument("--exclude-club", action="append", default=[], help="owned club excluded from every candidate")
@@ -413,6 +414,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 search_mode=args.search_mode,
                 target_bag_id=args.target_bag,
                 fixed_club_id=args.fixed_club,
+                replace_club_id=args.replace_club,
                 replacement_depth=args.replacement_depth,
                 required_club_ids=tuple(args.require_club),
                 excluded_club_ids=tuple(args.exclude_club),
