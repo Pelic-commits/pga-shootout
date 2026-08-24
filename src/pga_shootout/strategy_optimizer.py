@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, replace
 from hashlib import sha256
-from itertools import combinations, permutations, product
+from itertools import combinations, islice, permutations, product
 import json
 import math
 from pathlib import Path
@@ -64,6 +64,54 @@ class StrategyOptimizationRequest:
     @property
     def level_mode(self) -> str:
         return "scenario" if self.scenario_level is not None else "actual"
+
+
+@dataclass(frozen=True)
+class BuildFromScratchRequest:
+    """Public contract for an optimization that starts with five empty slots.
+
+    Saved bags, comparison references and previous results are intentionally not
+    representable here.  They belong to the historical local-search workflows.
+    """
+
+    strategy_id: str
+    primary_club_id: str
+    required_club_ids: tuple[str, ...] = ()
+    variant_ids: tuple[str, ...] = ()
+    limit: int = 20
+    mode: EvaluationMode = EvaluationMode.PARTIAL
+    scenario_level: int | str | None = None
+    max_evaluations: int = 2000
+    order_mode: str = "structural_exact"
+    excluded_club_ids: tuple[str, ...] = ()
+    locked_positions: Mapping[int, str] | None = None
+    club_roles: Mapping[str, str] | None = None
+    metric_minimums: Mapping[str, Mapping[str, float]] | None = None
+    primary_step_id: str | None = None
+    allowed_brands: tuple[str, ...] = ()
+
+    def to_optimization_request(self) -> StrategyOptimizationRequest:
+        required = tuple(dict.fromkeys((self.primary_club_id, *self.required_club_ids)))
+        roles = {club_id: "auto" for club_id in required}
+        roles.update(self.club_roles or {})
+        return StrategyOptimizationRequest(
+            strategy_id=self.strategy_id,
+            variant_ids=self.variant_ids,
+            limit=self.limit,
+            mode=self.mode,
+            scenario_level=self.scenario_level,
+            max_evaluations=self.max_evaluations,
+            order_mode=self.order_mode,
+            search_mode="build_from_scratch",
+            required_club_ids=required,
+            excluded_club_ids=self.excluded_club_ids,
+            locked_positions=self.locked_positions,
+            club_roles=roles,
+            metric_minimums=self.metric_minimums,
+            primary_step_id=self.primary_step_id,
+            allowed_brands=self.allowed_brands,
+            admissibility_provenance="build_from_scratch_request",
+        )
 
 
 @dataclass(frozen=True)
@@ -179,6 +227,7 @@ class OptimizedClubResult:
     active_steps: tuple[str, ...]
     support_steps: tuple[str, ...]
     steps: tuple[ClubStepResult, ...]
+    selection_reasons: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -1032,6 +1081,8 @@ class StrategyCandidateGenerator:
         locked_positions: Mapping[int, str] | None = None,
         order_mode: str = "structural_exact",
         max_generated: int = 4000,
+        provenance: str = "interactive_builder",
+        support_pool_limit: int | None = 24,
     ) -> tuple[CandidateSpec, ...]:
         """Build bags around any number of required clubs and optional active roles."""
         definition = strategy.definition
@@ -1107,7 +1158,19 @@ class StrategyCandidateGenerator:
                 continue
             fill_count = support_count - len(forced_supports)
             base_sets = self._support_sets(runtime, eligible, assigned, support_count, active_pool)
-            structural = tuple(self.support_potential(runtime, assigned))
+            potential = self.support_potential(runtime, assigned)
+            relation_order = {
+                "direct": 0, "whole_bag": 1, "adjacency": 2, "chain": 3,
+                "brand": 4, "type": 5, "rarity": 6,
+                "unresolved_structural": 7,
+            }
+            structural = tuple(sorted(
+                potential,
+                key=lambda club_id: (
+                    min((relation_order.get(item, 99) for item in potential[club_id]), default=99),
+                    club_id,
+                ),
+            ))
             support_candidates = tuple(dict.fromkeys(
                 item
                 for values in base_sets
@@ -1118,10 +1181,14 @@ class StrategyCandidateGenerator:
                 item for item in eligible
                 if item not in assigned and item not in forced_supports
             )
-            full_pool = tuple(dict.fromkeys((*support_candidates, *structural, *fallback)))
-            if len(full_pool) > 24:
+            full_pool = tuple(dict.fromkeys(
+                (*structural, *support_candidates, *fallback)
+                if support_pool_limit is None
+                else (*support_candidates, *structural, *fallback)
+            ))
+            if support_pool_limit is not None and len(full_pool) > support_pool_limit:
                 support_pool_truncated_assignments += 1
-            pool = full_pool[:24]
+            pool = full_pool if support_pool_limit is None else full_pool[:support_pool_limit]
             if fill_count == 0:
                 fills = ((),)
             else:
@@ -1140,7 +1207,20 @@ class StrategyCandidateGenerator:
                     )))[:fill_count]
                     if len(fill) == fill_count:
                         seeded.append(fill)
-                fills = tuple(dict.fromkeys((*seeded, *combinations(pool, fill_count))))
+                if support_pool_limit is None:
+                    # Give every admissible club at least one path into the
+                    # search before consuming the remaining finite budget.
+                    for index, anchor in enumerate(pool):
+                        fill = tuple(dict.fromkeys((
+                            anchor,
+                            *(pool[(index + offset) % len(pool)] for offset in range(1, len(pool))),
+                        )))[:fill_count]
+                        if len(fill) == fill_count:
+                            seeded.append(fill)
+                    combinations_to_consider = islice(combinations(pool, fill_count), max_generated)
+                else:
+                    combinations_to_consider = combinations(pool, fill_count)
+                fills = tuple(dict.fromkeys((*seeded, *combinations_to_consider)))
             compositions = []
             for fill in fills:
                 composition = tuple(dict.fromkeys((*assigned, *forced_supports, *fill)))
@@ -1156,10 +1236,14 @@ class StrategyCandidateGenerator:
             ),
             # Cover every active assignment once before spending the budget on
             # a second support set for any assignment.
-            key=lambda item: (item[1], item[0]),
+            key=lambda item: (
+                -sum(club_id in auto_required for club_id in assignments[item[0]]),
+                item[1], item[0],
+            ),
         )
         position_lock_removed = 0
         budget_removed = 0
+        pending_order_spaces: list[tuple[tuple[str, ...], tuple[tuple[tuple[str, ...], str], ...]]] = []
         for assignment_index, composition_index in schedule:
             assigned = assignments[assignment_index]
             composition = compositions_by_assignment[assigned][composition_index]
@@ -1171,15 +1255,41 @@ class StrategyCandidateGenerator:
             if not matching:
                 position_lock_removed += 1
                 continue
+            if support_pool_limit is None:
+                spaces.add(tuple(sorted(composition)))
+                pending_order_spaces.append((assigned, matching))
+                composition_breadth = min(max_generated, max(20, max_generated // 10))
+                if len(pending_order_spaces) >= composition_breadth:
+                    budget_reached = len(schedule) > len(pending_order_spaces)
+                    budget_removed = max(0, len(schedule) - len(pending_order_spaces))
+                    break
+                continue
             if generated and len(generated) + len(matching) > max_generated:
                 budget_reached = True
                 budget_removed += 1
                 continue
             spaces.add(tuple(sorted(composition)))
             for order, reason in matching:
-                self._add(generated, order, definition, assigned, "interactive_builder", reason, len(matching))
+                self._add(generated, order, definition, assigned, provenance, reason, len(matching))
             if len(generated) >= max_generated:
                 break
+        if support_pool_limit is None and pending_order_spaces:
+            # Breadth before depth: evaluate one physical order for every
+            # composition before a second order for any composition.
+            maximum_orders = max(len(items) for _, items in pending_order_spaces)
+            for order_index in range(maximum_orders):
+                for assigned, matching in pending_order_spaces:
+                    if order_index >= len(matching):
+                        continue
+                    order, reason = matching[order_index]
+                    self._add(
+                        generated, order, definition, assigned, provenance,
+                        reason, len(matching),
+                    )
+                    if len(generated) >= max_generated:
+                        break
+                if len(generated) >= max_generated:
+                    break
         self.last_generation_stats = {
             "inventory": len(eligible),
             "active_assignments": len(assignments),
@@ -1196,6 +1306,31 @@ class StrategyCandidateGenerator:
             "support_pool_truncated_assignments": support_pool_truncated_assignments,
         }
         return tuple(generated.values())
+
+    def generate_from_scratch(
+        self,
+        strategy: ResolvedStrategy,
+        runtime: _RuntimeEvaluator,
+        *,
+        club_roles: Mapping[str, str],
+        excluded_club_ids: tuple[str, ...] = (),
+        locked_positions: Mapping[int, str] | None = None,
+        order_mode: str = "structural_exact",
+        max_generated: int = 4000,
+    ) -> tuple[CandidateSpec, ...]:
+        """Generate only from inventory facts and explicit request constraints."""
+        return self.generate_builder(
+            strategy,
+            runtime,
+            club_roles=club_roles,
+            excluded_club_ids=excluded_club_ids,
+            locked_positions=locked_positions,
+            order_mode=order_mode,
+            max_generated=max_generated,
+            provenance="build_from_scratch",
+            # The old 24-club cap was a heuristic, not a safe pruning proof.
+            support_pool_limit=None,
+        )
 
     @staticmethod
     def _preferred_assignment(
@@ -1529,6 +1664,10 @@ class StrategyOptimizer:
         # inventory, catalog, strategy and evaluation context before reuse.
         self._known_candidates: dict[tuple[Any, ...], dict[tuple[Any, ...], CandidateSpec]] = {}
 
+    def build_from_scratch(self, request: BuildFromScratchRequest) -> StrategyOptimizationResult:
+        """Run the independent empty-bag workflow."""
+        return self.optimize(request.to_optimization_request())
+
     @staticmethod
     def _inventory_signature(
         entries: tuple[InventoryEntry, ...],
@@ -1760,8 +1899,15 @@ class StrategyOptimizer:
             raise StrategyOptimizationError("Display limit must be at least 1")
         if request.max_evaluations < 1:
             raise StrategyOptimizationError("Evaluation safety limit must be at least 1")
-        if request.search_mode not in {"global", "improve_bag", "replace_club", "around_club", "test_new_club", "interactive_builder"}:
+        if request.search_mode not in {"global", "improve_bag", "replace_club", "around_club", "test_new_club", "interactive_builder", "build_from_scratch"}:
             raise StrategyOptimizationError(f"Unsupported search mode: {request.search_mode}")
+        if request.search_mode == "build_from_scratch" and (
+            request.reference_bag_id or request.target_bag_id or request.fixed_club_id
+            or request.replace_club_id or request.keep_current_putter
+        ):
+            raise StrategyOptimizationError(
+                "Build From Scratch n'accepte ni sac de référence, ni sac cible, ni graine locale"
+            )
         if request.replacement_depth not in {1, 2}:
             raise StrategyOptimizationError("Replacement depth must be 1 or 2")
         if request.replacement_type_policy not in {"same_type", "all_types"}:
@@ -1862,17 +2008,35 @@ class StrategyOptimizer:
                     )
 
         generation_started = perf_counter()
-        references = self.generator.reference_candidates(strategy, runtime, bundle.bags, request.order_mode)
+        references: tuple[CandidateSpec, ...] = ()
         injected_saved = 0
         injected_known = 0
         if request.search_mode == "global":
+            references = self.generator.reference_candidates(strategy, runtime, bundle.bags, request.order_mode)
             generated, theoretical, eliminated = self.generator.generate(
                 strategy, runtime, bundle.bags, request.order_mode,
                 max_generated=max(request.max_evaluations, math.factorial(strategy.definition.bag_size)),
                 excluded_club_ids=effective_excluded,
             )
             generation_stats = dict(self.generator.last_generation_stats)
+        elif request.search_mode == "build_from_scratch":
+            builder_roles = dict(request.club_roles or {
+                club_id: "auto" for club_id in request.required_club_ids
+            })
+            generated = self.generator.generate_from_scratch(
+                strategy,
+                runtime,
+                club_roles=builder_roles,
+                excluded_club_ids=effective_excluded,
+                locked_positions=request.locked_positions,
+                order_mode=request.order_mode,
+                max_generated=request.max_evaluations,
+            )
+            generation_stats = dict(self.generator.last_generation_stats)
+            theoretical = int(generation_stats.get("theoretical_compositions", 0))
+            eliminated = int(generation_stats.get("permutations_equivalent", 0))
         elif request.search_mode == "interactive_builder":
+            references = self.generator.reference_candidates(strategy, runtime, bundle.bags, request.order_mode)
             builder_roles = dict(request.club_roles or {
                 club_id: "auto" for club_id in request.required_club_ids
             })
@@ -1991,6 +2155,7 @@ class StrategyOptimizer:
             theoretical = int(broad_stats.get("active_assignments_theoretical", 0))
             eliminated = int(generation_stats.get("permutations_equivalent", 0))
         else:
+            references = self.generator.reference_candidates(strategy, runtime, bundle.bags, request.order_mode)
             if target_bag is None:
                 target_bag = next(
                     (item for item in bundle.bags if request.fixed_club_id in item.club_ids),
@@ -2074,7 +2239,7 @@ class StrategyOptimizer:
         excluded_candidates = 0
         reference_specs = tuple(item for item in generated if item.provenance == "reference_bag")
         search_specs = tuple(item for item in generated if item.provenance != "reference_bag")
-        if request.search_mode in {"around_club", "interactive_builder"} or (
+        if request.search_mode in {"around_club", "interactive_builder", "build_from_scratch"} or (
             request.search_mode in {"improve_bag", "replace_club", "test_new_club"} and request.replacement_depth == 1
         ):
             # The one-replacement neighborhood is deliberately exhaustive.
@@ -2153,7 +2318,7 @@ class StrategyOptimizer:
         attainable_ranges = _attainable_ranges(tuple(evaluated), strategy)
         criteria_satisfied = True
         closest_candidate_ids: tuple[str, ...] = ()
-        if request.search_mode == "interactive_builder" and request.metric_minimums:
+        if request.search_mode in {"interactive_builder", "build_from_scratch"} and request.metric_minimums:
             satisfying = tuple(
                 item for item in evaluated if _meets_minimums(item, request.metric_minimums)
             )
@@ -2223,6 +2388,22 @@ class StrategyOptimizer:
             else unique_before_reference_guard
         )
         reference_dominated_removed = len(unique_before_reference_guard) - len(unique)
+        locally_dominated_removed = 0
+        dead_slot_removed = 0
+        if request.search_mode == "build_from_scratch":
+            refined = tuple(
+                candidate for candidate in unique
+                if not any(
+                    other is not candidate
+                    and other.spec.active_assignments == candidate.spec.active_assignments
+                    and len(set(other.spec.club_ids) ^ set(candidate.spec.club_ids)) == 2
+                    and other.unresolved == candidate.unresolved
+                    and _dominates_candidate(other, candidate)
+                    for other in unique
+                )
+            )
+            locally_dominated_removed = len(unique) - len(refined)
+            unique = refined
         layered = self._assign_layers(unique)
         projection_pool = (
             tuple(item for item in layered if item.spec.provenance != "reference_bag")
@@ -2230,15 +2411,65 @@ class StrategyOptimizer:
             or request.search_mode == "interactive_builder" and target_bag is not None
             else layered
         )
-        if request.search_mode == "interactive_builder":
+        if request.search_mode in {"interactive_builder", "build_from_scratch"}:
             family_results, selected_quick, memberships = self._project_builder_families(
-                projection_pool, strategy, runtime, request, request.limit,
+                projection_pool, strategy, runtime, request,
+                request.limit if request.search_mode == "interactive_builder"
+                else max(100, request.limit * 20),
             )
         else:
             family_results, selected_quick, memberships = self._project_families(
                 projection_pool, strategy, runtime, request.limit, empirical_reference is not None,
                 force_generic=request.search_mode == "around_club",
             )
+        if request.search_mode == "build_from_scratch" and selected_quick:
+            refinement_pool = tuple(selected_quick)
+            allowed_replacements = tuple(
+                club_id for club_id, club in runtime.clubs.items()
+                if club_id not in effective_excluded
+                and (not allowed_brands or club.brand in allowed_brands)
+            )
+            for _pass in range(3):
+                improvements: list[_QuickCandidate] = []
+                for candidate in refinement_pool[: max(5, request.limit)]:
+                    diagnostic = self._detail(candidate, strategy, runtime, request.mode)
+                    dead = tuple(
+                        club for club in diagnostic.clubs
+                        if club.club_id not in (set(request.required_club_ids) | set(request.club_roles or {}))
+                        and club.role == "neutral"
+                        and not any(step.unresolved_abilities for step in club.steps)
+                    )
+                    for dead_club in dead:
+                        remaining = tuple(
+                            club_id for club_id in candidate.spec.club_ids if club_id != dead_club.club_id
+                        )
+                        for replacement in allowed_replacements:
+                            if replacement in remaining:
+                                continue
+                            for position in range(strategy.definition.bag_size):
+                                order = (*remaining[:position], replacement, *remaining[position:])
+                                digest = sha256(repr((order, candidate.spec.active_assignments)).encode("utf-8")).hexdigest()[:12]
+                                spec = CandidateSpec(
+                                    f"strategy-{digest}", order, candidate.spec.active_assignments,
+                                    "build_from_scratch", order_space_id=digest,
+                                    theoretical_permutations=math.factorial(strategy.definition.bag_size),
+                                    structurally_distinct_permutations=math.factorial(strategy.definition.bag_size),
+                                    order_equivalence_reason="local_dead_slot_refinement",
+                                )
+                                quick = self._evaluate_quick(spec, strategy, runtime, request.mode)
+                                if (
+                                    not quick.strict_failed
+                                    and quick.unresolved == candidate.unresolved
+                                    and _dominates_candidate(quick, candidate)
+                                ):
+                                    improvements.append(quick)
+                if not improvements:
+                    break
+                combined = self._assign_layers(self._deduplicate((*refinement_pool, *improvements)))
+                family_results, refinement_pool, memberships = self._project_builder_families(
+                    combined, strategy, runtime, request, max(100, request.limit * 20),
+                )
+            selected_quick = refinement_pool
         if request.search_mode == "interactive_builder":
             self._remember_candidates(known_context_key, selected_quick)
         if request.search_mode != "global" and target_bag is not None:
@@ -2257,8 +2488,34 @@ class StrategyOptimizer:
             self._detail(item, strategy, runtime, request.mode, memberships.get(item.spec.identifier, ()))
             for item in selected_quick
         )
-        if request.search_mode == "interactive_builder" and detailed:
+        if request.search_mode in {"interactive_builder", "build_from_scratch"} and detailed:
             detailed = _attach_power_tier_deltas(detailed, strategy, request.primary_step_id)
+        if request.search_mode == "build_from_scratch":
+            required = set(request.required_club_ids) | set(request.club_roles or {})
+            before_dead_slot_filter = len(detailed)
+            detailed = tuple(
+                replace(
+                    item,
+                    clubs=tuple(
+                        replace(
+                            club,
+                            selection_reasons=tuple(dict.fromkeys((
+                                *club.selection_reasons,
+                                *(("club obligatoire",) if club.club_id in required else ()),
+                            ))),
+                        )
+                        for club in item.clubs
+                    ),
+                )
+                for item in detailed
+                if all(
+                    club.club_id in required
+                    or club.role != "neutral"
+                    or any(step.unresolved_abilities for step in club.steps)
+                    for club in item.clubs
+                )
+            )[: request.limit]
+            dead_slot_removed += before_dead_slot_filter - len(detailed)
         if request.search_mode != "global" and target_bag is not None:
             baseline = next(
                 (
@@ -2339,6 +2596,7 @@ class StrategyOptimizer:
             "reference_bag", "reference_neighborhood", "global_search",
             *(("around_club",) if request.search_mode == "around_club" else ()),
             *(("interactive_builder",) if request.search_mode == "interactive_builder" else ()),
+            *(("build_from_scratch",) if request.search_mode == "build_from_scratch" else ()),
             *(("known_candidate",) if request.search_mode == "interactive_builder" else ()),
         )
         warnings = [
@@ -2356,7 +2614,7 @@ class StrategyOptimizer:
             warnings.append(f"Recherche centrée sur le club {request.fixed_club_id}.")
         if request.search_mode == "replace_club":
             warnings.append(f"Remplacement ciblé : {request.replace_club_id}; les autres places restent comparées au sac actuel.")
-        if request.search_mode == "interactive_builder" and not criteria_satisfied:
+        if request.search_mode in {"interactive_builder", "build_from_scratch"} and not criteria_satisfied:
             warnings.append(
                 "Aucun sac ne satisfait actuellement tous les minimums demandés ; "
                 "les solutions non dominées les plus proches sont affichées sans modifier les critères."
@@ -2432,6 +2690,8 @@ class StrategyOptimizer:
                     if request.search_mode == "around_club"
                     else "bounded_composition_search_around_required_clubs"
                     if request.search_mode == "interactive_builder"
+                    else "independent_empty_bag_search"
+                    if request.search_mode == "build_from_scratch"
                     else "exhaustive_one_replacement"
                     if request.replacement_depth == 1
                     else "structurally_reduced_two_replacements"
@@ -2487,12 +2747,18 @@ class StrategyOptimizer:
                 compositions_removed=sum((
                     generation_stats.get("position_lock_removed", 0),
                     generation_stats.get("budget_removed", 0),
+                    locally_dominated_removed,
+                    dead_slot_removed,
                 )),
                 removal_reasons={
                     "safe_order_equivalence": generation_stats.get("permutations_equivalent", 0),
                     "position_constraint": generation_stats.get("position_lock_removed", 0),
                     "heuristic_support_pool_cap": generation_stats.get("support_pool_truncated_assignments", 0),
                     "budget_limit": generation_stats.get("budget_removed", 0),
+                    **({"locally_dominated_one_slot_replacement": locally_dominated_removed}
+                       if request.search_mode == "build_from_scratch" else {}),
+                    **({"dead_slot": dead_slot_removed}
+                       if request.search_mode == "build_from_scratch" else {}),
                 },
                 saved_bag_candidates_injected=injected_saved,
                 known_candidates_injected=injected_known,
@@ -3135,6 +3401,27 @@ class StrategyOptimizer:
                 role = "support"
             else:
                 role = "neutral"
+            reasons: list[str] = []
+            for step_id in active_steps:
+                step = next(item for item in strategy.definition.sequence if item.identifier == step_id)
+                reasons.append("putter" if step.function.identifier == "finish" else f"actif : {step.name}")
+            for step_id in support_steps:
+                changes = next(
+                    (item for item in counterfactuals if item.club_id == club_id), None,
+                )
+                step_changes = tuple(
+                    change for change in (changes.changes if changes else ()) if change.step_id == step_id
+                )
+                for change in step_changes:
+                    for metric, value in change.lost_metrics_if_removed.items():
+                        reasons.append(f"support : +{value:g} {metric} à {change.target_club_id}")
+            unresolved_for_club = tuple(dict.fromkeys(
+                ability
+                for step_id in step_rows
+                for ability in step_rows[step_id][club_id].unresolved_abilities
+            ))
+            if unresolved_for_club:
+                reasons.append("capacité non résolue pertinente : " + ", ".join(unresolved_for_club))
             clubs.append(
                 OptimizedClubResult(
                     position,
@@ -3146,6 +3433,7 @@ class StrategyOptimizer:
                     active_steps,
                     support_steps,
                     tuple(step_rows[step.identifier][club_id] for step in strategy.definition.sequence),
+                    tuple(dict.fromkeys(reasons)),
                 )
             )
         indeterminate = any(item.status == "indeterminate" for item in quick.requirements)

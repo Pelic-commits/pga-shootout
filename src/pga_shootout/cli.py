@@ -283,7 +283,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--reference-bag", help="saved bag used as an empirical minimum-Power reference",
     )
     optimize_strategy_parser.add_argument(
-        "--search-mode", choices=("global", "improve_bag", "replace_club", "around_club", "test_new_club", "interactive_builder"), default="global",
+        "--search-mode", choices=("global", "improve_bag", "replace_club", "around_club", "test_new_club", "interactive_builder", "build_from_scratch"), default="global",
     )
     optimize_strategy_parser.add_argument("--target-bag", help="saved bag used for local improvement search")
     optimize_strategy_parser.add_argument("--fixed-club", help="owned club fixed as the first active club")
