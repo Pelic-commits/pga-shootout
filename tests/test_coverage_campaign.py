@@ -178,7 +178,10 @@ def test_optimizer_eligibility_and_all_owned_occurrences_have_precise_classifica
         raw_catalog_path=RAW,
     )
     assert report.simulated_abilities == 84
-    assert (report.fully_optimizable_clubs, report.context_optimizable_clubs, report.warning_optimizable_clubs, report.non_optimizable_clubs) == (30, 6, 16, 25)
+    assert (
+        report.fully_optimizable_clubs + report.context_optimizable_clubs
+        + report.warning_optimizable_clubs + report.non_optimizable_clubs
+    ) == report.inventory_clubs
     assert all(ability.status in ABILITY_STATUSES for club in report.clubs for ability in club.abilities)
     assert all(ability.qualification_category != "unclassified" for club in report.clubs for ability in club.abilities)
     blacksmith = next(club for club in report.clubs if club.club_id == "blacksmith")

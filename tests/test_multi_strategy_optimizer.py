@@ -35,8 +35,16 @@ def optimizer(database=DATABASE):
 
 
 @pytest.fixture(scope="module")
-def results():
-    service = optimizer()
+def results(tmp_path_factory):
+    database = tmp_path_factory.mktemp("strategy-history") / "inventory.sqlite"
+    shutil.copyfile(DATABASE, database)
+    with sqlite3.connect(database) as connection:
+        for club_id, level in {
+            "high_flight": 8, "cyclotron": 8, "ember": 7, "maelstrom": 6,
+            "sunstorm": 6, "divebomb": 8, "jumpstart": 8, "steadfast": 7,
+        }.items():
+            connection.execute("UPDATE user_clubs SET current_level = ? WHERE club_id = ?", (level, club_id))
+    service = optimizer(database)
     return {
         strategy_id: service.optimize(StrategyOptimizationRequest(
             strategy_id, limit=3, max_evaluations=600,
@@ -247,4 +255,3 @@ def test_empirical_reference_works_without_explicit_reference_step_id():
     ))
     assert result.empirical_reference is not None
     assert result.retained_results
-

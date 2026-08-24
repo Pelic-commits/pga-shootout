@@ -6,62 +6,62 @@
 
 | Measure | Value |
 |---|---:|
-| Known inventory clubs | 77 |
+| Known inventory clubs | 80 |
 | Baseline inventory clubs | 21 |
-| Clubs added since baseline | 56 |
+| Clubs added since baseline | 59 |
 | Inventory declared complete | no |
-| Known user levels | 74/77 |
-| Official owned-club abilities | 142 |
+| Known user levels | 79/80 |
+| Official owned-club abilities | 146 |
 | Engine-supported owned-club abilities | 84 |
-| Unresolved owned-club abilities | 58 |
-| Owned-ability coverage | 59.15% |
-| Fully simulated owned clubs | 36/77 |
-| Fully comparable owned clubs | 30/77 |
-| Comparable with warning | 22/77 |
-| Not currently comparable | 25/77 |
-| Fully optimizable | 30/77 |
-| Optimizable with context | 6/77 |
-| Optimizable with warning | 16/77 |
-| Not optimizable | 25/77 |
+| Unresolved owned-club abilities | 62 |
+| Owned-ability coverage | 57.53% |
+| Fully simulated owned clubs | 36/80 |
+| Fully comparable owned clubs | 30/80 |
+| Comparable with warning | 23/80 |
+| Not currently comparable | 27/80 |
+| Fully optimizable | 30/80 |
+| Optimizable with context | 6/80 |
+| Optimizable with warning | 17/80 |
+| Not optimizable | 27/80 |
 
 ## Inventory changes since the retained JSON baseline
 
-- Newly added clubs (56): Eagle's Landing, Earthquake, Conspiracy, Crusader, Divebomb, Dunecrawler, Edgewalker, Ember, Homecoming, Huntsman, Hydroforce, Into the Blue, Ironbark, Jetstream, Oakheart, Obelisk, Overgrowth, Pantheon, Ranger, Rebound, Sparky, Stormbringer, Sunstorm, Trailblazer, Triumph, Catalyst, Crystallize, Flamethrower, Fusion, Galvanizer, Leviathan, Lowball, Maelstrom, Navigator, Rising Flame, Sandblast, Sidewinder, Supercollider, Tierra Hueca, Windstrike, XLR8R, Boomstick, Bushwhacker, Endeavor, Fanfare, Hero, Meanderer, New Frontier, Outlaw, People's Champion, Rampart, Rolling Stone, Saber, Steward, Gearshift, Wave.
+- Newly added clubs (59): Eagle's Landing, Earthquake, Conspiracy, Crusader, Divebomb, Dunecrawler, Edgewalker, Ember, Homecoming, Huntsman, Hydroforce, Into the Blue, Ironbark, Jetstream, Oakheart, Obelisk, Overgrowth, Pantheon, Ranger, Rebound, Sparky, Stormbringer, Sunstorm, Trailblazer, Triumph, Catalyst, Crystallize, Flamethrower, Fusion, Galvanizer, Leviathan, Lowball, Maelstrom, Navigator, Rising Flame, Sandblast, Sidewinder, Supercollider, Tierra Hueca, Windstrike, XLR8R, Boomstick, Bushwhacker, Endeavor, Fanfare, Hero, Meanderer, New Frontier, Outlaw, People's Champion, Rampart, Rolling Stone, Saber, Steward, Gearshift, Wave, The Seeker, Explorer, Mimic.
 
 ## Clubs
 
 | Club | Brand | Type | Rarity | User level | Abilities | Fully simulated | Comparison | Reasons | Optimizer | Optimizer reasons |
 |---|---|---|---|---:|---:|---|---|---|---|---|
 | Homestead (`homestead`) | Willoughsby | Putter | Common | 9 | 1/1 | yes | `fully_comparable` | none | `fully_optimizable` | none |
-| Commonlaw (`commonlaw`) | Willoughsby | Iron | Epic | 7 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
+| Commonlaw (`commonlaw`) | Willoughsby | Iron | Epic | 8 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 | Kinship (`kinship`) | Willoughsby | Iron | Rare | 8 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 | Groundskeep (`groundskeep`) | Willoughsby | Wood | Rare | 7 | 2/2 | yes | `comparable_with_warning` | groundskeep__fairway_affinity:context:terrain | `optimizable_with_context` | groundskeep__fairway_affinity:context:terrain |
 | Sandsend (`sandsend`) | Willoughsby | Wedge | Common | 7 | 1/1 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 | Steadfast (`steadfast`) | Willoughsby | Wedge | Epic | 7 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
-| Jumpstart (`jumpstart`) | Ryusei | Wood | Rare | 7 | 1/1 | yes | `fully_comparable` | none | `fully_optimizable` | none |
+| Jumpstart (`jumpstart`) | Ryusei | Wood | Rare | 8 | 1/1 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 | Cyclotron (`cyclotron`) | Ryusei | Driver | Rare | 8 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 | Neon Impulse (`neon_impulse`) | Ryusei | Wood | Common | 7 | 0/1 | no | `not_comparable` | neon_impulse__power_shot:physics_required | `not_optimizable` | neon_impulse__power_shot:physics_required |
 | Color Theory (`color_theory`) | Ryusei | Iron | Epic | 7 | 0/2 | no | `not_comparable` | color_theory__perfect_shot_terrain_bonus_boost:history_required, color_theory__terrain_bonus:ambiguous | `not_optimizable` | color_theory__perfect_shot_terrain_bonus_boost:history_required, color_theory__terrain_bonus:ambiguous |
-| High Flight (`high_flight`) | Corvid | Hybrid | Common | 8 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
-| Cloudcatcher (`cloudcatcher`) | Corvid | Iron | Epic | 6 | 3/3 | yes | `fully_comparable` | none | `fully_optimizable` | none |
-| Skyfury (`skyfury`) | Corvid | Driver | Epic | 6 | 0/1 | no | `not_comparable` | skyfury__boundary_rush_75:physics_required | `not_optimizable` | skyfury__boundary_rush_75:physics_required |
-| Rook (`rook`) | Corvid | Putter | Common | 7 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
+| High Flight (`high_flight`) | Corvid | Hybrid | Common | 10 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
+| Cloudcatcher (`cloudcatcher`) | Corvid | Iron | Epic | 7 | 3/3 | yes | `fully_comparable` | none | `fully_optimizable` | none |
+| Skyfury (`skyfury`) | Corvid | Driver | Epic | 7 | 0/1 | no | `not_comparable` | skyfury__boundary_rush_75:physics_required | `not_optimizable` | skyfury__boundary_rush_75:physics_required |
+| Rook (`rook`) | Corvid | Putter | Common | 9 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 | Mirage (`mirage`) | PALO | Hybrid | Common | 7 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
-| Lodestar (`lodestar`) | PALO | Iron | Epic | 6 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
+| Lodestar (`lodestar`) | PALO | Iron | Epic | 7 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 | Green Demon (`green_demon`) | PALO | Driver | Legendary | 8 | 0/1 | no | `not_comparable` | green_demon__emerald_rush_75:physics_required | `not_optimizable` | green_demon__emerald_rush_75:physics_required |
-| Outset (`outset`) | Forester | Driver | Rare | 7 | 1/2 | no | `comparable_with_warning` | outset__tree_bonus:physics_required | `optimizable_with_warning` | outset__tree_bonus:physics_required |
-| Into the Breach (`into_the_breach`) | Stanchion | Iron | Epic | 6 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
-| Conqueror (`conqueror`) | Stanchion | Driver | Rare | 7 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
+| Outset (`outset`) | Forester | Driver | Rare | 8 | 1/2 | no | `comparable_with_warning` | outset__tree_bonus:physics_required | `optimizable_with_warning` | outset__tree_bonus:physics_required |
+| Into the Breach (`into_the_breach`) | Stanchion | Iron | Epic | 7 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
+| Conqueror (`conqueror`) | Stanchion | Driver | Rare | 8 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 | Blacksmith (`blacksmith`) | Mythical | Iron | Mythical | 9 | 1/1 | yes | `comparable_with_warning` | blacksmith__texas_tee:context:terrain | `optimizable_with_context` | blacksmith__texas_tee:context:terrain |
 | Eagle's Landing (`eagle_s_landing`) | Corvid | Putter | Rare | 3 | 0/1 | no | `not_comparable` | eagle_s_landing__flight_training:physics_required | `not_optimizable` | eagle_s_landing__flight_training:physics_required |
 | Earthquake (`earthquake`) | Stanchion | Putter | Rare | 7 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 | Conspiracy (`conspiracy`) | Corvid | Wood | Epic | 6 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 | Crusader (`crusader`) | Willoughsby | Iron | Rare | 5 | 1/2 | no | `comparable_with_warning` | crusader__brand_fairway_rush:partial | `optimizable_with_warning` | crusader__brand_fairway_rush:partial |
-| Divebomb (`divebomb`) | Corvid | Iron | Common | 9 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
+| Divebomb (`divebomb`) | Corvid | Iron | Common | 10 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 | Dunecrawler (`dunecrawler`) | Nautilus | Hybrid | Epic | 6 | 1/3 | no | `comparable_with_warning` | dunecrawler__power_shot:physics_required, dunecrawler__terrain_resist_50:ambiguous | `optimizable_with_warning` | dunecrawler__power_shot:physics_required, dunecrawler__terrain_resist_50:ambiguous |
 | Edgewalker (`edgewalker`) | Forester | Wood | Rare | 7 | 0/2 | no | `not_comparable` | edgewalker__boundary_bonus:physics_required, edgewalker__tree_bonus:physics_required | `not_optimizable` | edgewalker__boundary_bonus:physics_required, edgewalker__tree_bonus:physics_required |
-| Ember (`ember`) | Phoenix | Putter | Rare | 7 | 1/2 | no | `comparable_with_warning` | ember__power_shot:physics_required | `optimizable_with_warning` | ember__power_shot:physics_required |
-| Homecoming (`homecoming`) | Forester | Putter | Rare | 7 | 1/3 | no | `comparable_with_warning` | homecoming__terrain_resist_50:ambiguous, homecoming__adventure:history_required | `optimizable_with_warning` | homecoming__terrain_resist_50:ambiguous, homecoming__adventure:history_required |
+| Ember (`ember`) | Phoenix | Putter | Rare | 8 | 1/2 | no | `comparable_with_warning` | ember__power_shot:physics_required | `optimizable_with_warning` | ember__power_shot:physics_required |
+| Homecoming (`homecoming`) | Forester | Putter | Rare | 8 | 1/3 | no | `comparable_with_warning` | homecoming__terrain_resist_50:ambiguous, homecoming__adventure:history_required | `optimizable_with_warning` | homecoming__terrain_resist_50:ambiguous, homecoming__adventure:history_required |
 | Huntsman (`huntsman`) | Forester | Wood | Common | 7 | 0/1 | no | `not_comparable` | huntsman__tree_bonus_x:physics_required | `not_optimizable` | huntsman__tree_bonus_x:physics_required |
 | Hydroforce (`hydroforce`) | PALO | Iron | Rare | 6 | 0/2 | no | `not_comparable` | hydroforce__water_bonus_x:physics_required, hydroforce__terrain_resist_50:ambiguous | `not_optimizable` | hydroforce__water_bonus_x:physics_required, hydroforce__terrain_resist_50:ambiguous |
 | Into the Blue (`into_the_blue`) | Corvid | Wedge | Rare | 7 | 3/3 | yes | `fully_comparable` | none | `fully_optimizable` | none |
@@ -73,15 +73,15 @@
 | Pantheon (`pantheon`) | Mythical | Hybrid | Mythical | unknown | 2/3 | no | `not_comparable` | missing_user_level | `not_optimizable` | missing_user_level |
 | Ranger (`ranger`) | Forester | Putter | Rare | 7 | 1/3 | no | `comparable_with_warning` | ranger__forester_power_elite:partial, ranger__home_turf_southwind:ambiguous | `optimizable_with_warning` | ranger__forester_power_elite:partial, ranger__home_turf_southwind:ambiguous |
 | Rebound (`rebound`) | Ryusei | Driver | Rare | 7 | 1/2 | no | `comparable_with_warning` | rebound__volt_bounce:history_required | `optimizable_with_warning` | rebound__volt_bounce:history_required |
-| Sparky (`sparky`) | Mythical | Putter | Mythical | unknown | 0/2 | no | `not_comparable` | missing_user_level | `not_optimizable` | missing_user_level |
-| Stormbringer (`stormbringer`) | Corvid | Wedge | Legendary | 7 | 1/2 | no | `comparable_with_warning` | stormbringer__wind_resistance_100:ambiguous | `optimizable_with_warning` | stormbringer__wind_resistance_100:ambiguous |
+| Sparky (`sparky`) | Mythical | Putter | Mythical | 9 | 0/2 | no | `not_comparable` | sparky__electrodynamics_0_2ft:ambiguous, sparky__chains_into_itself:ambiguous | `not_optimizable` | sparky__electrodynamics_0_2ft:ambiguous, sparky__chains_into_itself:ambiguous |
+| Stormbringer (`stormbringer`) | Corvid | Wedge | Legendary | 8 | 1/2 | no | `comparable_with_warning` | stormbringer__wind_resistance_100:ambiguous | `optimizable_with_warning` | stormbringer__wind_resistance_100:ambiguous |
 | Sunstorm (`sunstorm`) | Phoenix | Hybrid | Epic | 6 | 1/1 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 | Trailblazer (`trailblazer`) | Forester | Iron | Epic | 7 | 1/2 | no | `comparable_with_warning` | trailblazer__tree_passing:physics_required | `optimizable_with_warning` | trailblazer__tree_passing:physics_required |
 | Triumph (`triumph`) | Stanchion | Putter | Epic | 5 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 | Catalyst (`catalyst`) | Phoenix | Wedge | Rare | 7 | 0/3 | no | `not_comparable` | catalyst__smoke_x:ambiguous, catalyst__steam_x:ambiguous, catalyst__sparks_x:ambiguous | `not_optimizable` | catalyst__smoke_x:ambiguous, catalyst__steam_x:ambiguous, catalyst__sparks_x:ambiguous |
 | Crystallize (`crystallize`) | Nautilus | Wood | Epic | 6 | 0/2 | no | `not_comparable` | crystallize__random_boost_x:unsupported, crystallize__gem_ball_bonus:ambiguous | `not_optimizable` | crystallize__random_boost_x:unsupported, crystallize__gem_ball_bonus:ambiguous |
-| Flamethrower (`flamethrower`) | Phoenix | Driver | Epic | 6 | 0/2 | no | `not_comparable` | flamethrower__power_shot:physics_required, flamethrower__perfect_shot_bag_power:history_required | `not_optimizable` | flamethrower__power_shot:physics_required, flamethrower__perfect_shot_bag_power:history_required |
-| Fusion (`fusion`) | Phoenix | Iron | Rare | 4 | 0/1 | no | `not_comparable` | fusion__stat_fusion:ambiguous | `not_optimizable` | fusion__stat_fusion:ambiguous |
+| Flamethrower (`flamethrower`) | Phoenix | Driver | Epic | 7 | 0/2 | no | `not_comparable` | flamethrower__power_shot:physics_required, flamethrower__perfect_shot_bag_power:history_required | `not_optimizable` | flamethrower__power_shot:physics_required, flamethrower__perfect_shot_bag_power:history_required |
+| Fusion (`fusion`) | Phoenix | Iron | Rare | 7 | 0/1 | no | `not_comparable` | fusion__stat_fusion:ambiguous | `not_optimizable` | fusion__stat_fusion:ambiguous |
 | Galvanizer (`galvanizer`) | Ryusei | Putter | Rare | 7 | 1/1 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 | Leviathan (`leviathan`) | Nautilus | Wood | Epic | 5 | 0/3 | no | `not_comparable` | leviathan__boundary_bonus:physics_required, leviathan__water_rush:physics_required, leviathan__water_bonus:physics_required | `not_optimizable` | leviathan__boundary_bonus:physics_required, leviathan__water_rush:physics_required, leviathan__water_bonus:physics_required |
 | Lowball (`lowball`) | PALO | Putter | Common | 8 | 1/1 | yes | `fully_comparable` | none | `fully_optimizable` | none |
@@ -92,8 +92,8 @@
 | Sidewinder (`sidewinder`) | PALO | Wood | Epic | 6 | 2/2 | yes | `comparable_with_warning` | sidewinder__tee_off_power:context:terrain | `optimizable_with_context` | sidewinder__tee_off_power:context:terrain |
 | Supercollider (`supercollider`) | Ryusei | Hybrid | Common | 7 | 0/1 | no | `not_comparable` | supercollider__fission:history_required | `not_optimizable` | supercollider__fission:history_required |
 | Tierra Hueca (`tierra_hueca`) | PALO | Driver | Legendary | 7 | 0/3 | no | `not_comparable` | tierra_hueca__gravity_reduction_x:history_required, tierra_hueca__palo_control_on_hit_x:history_required, tierra_hueca__hollow_earth:history_required | `not_optimizable` | tierra_hueca__gravity_reduction_x:history_required, tierra_hueca__palo_control_on_hit_x:history_required, tierra_hueca__hollow_earth:history_required |
-| Windstrike (`windstrike`) | PALO | Wood | Rare | 7 | 0/2 | no | `not_comparable` | windstrike__boundary_bonus:physics_required, windstrike__terrain_resist_50:ambiguous | `not_optimizable` | windstrike__boundary_bonus:physics_required, windstrike__terrain_resist_50:ambiguous |
-| XLR8R (`xlr8r`) | Ryusei | Driver | Legendary | unknown | 1/2 | no | `not_comparable` | missing_user_level | `not_optimizable` | missing_user_level |
+| Windstrike (`windstrike`) | PALO | Wood | Rare | 8 | 0/2 | no | `not_comparable` | windstrike__boundary_bonus:physics_required, windstrike__terrain_resist_50:ambiguous | `not_optimizable` | windstrike__boundary_bonus:physics_required, windstrike__terrain_resist_50:ambiguous |
+| XLR8R (`xlr8r`) | Ryusei | Driver | Legendary | 7 | 1/2 | no | `comparable_with_warning` | xlr8r__wind_up_toy:history_required | `optimizable_with_warning` | xlr8r__wind_up_toy:history_required |
 | Boomstick (`boomstick`) | Stanchion | Driver | Rare | 7 | 0/1 | no | `not_comparable` | boomstick__super_fireball:ambiguous | `not_optimizable` | boomstick__super_fireball:ambiguous |
 | Bushwhacker (`bushwhacker`) | Stanchion | Iron | Rare | 7 | 1/1 | yes | `comparable_with_warning` | bushwhacker__rough_bonus:context:terrain | `optimizable_with_context` | bushwhacker__rough_bonus:context:terrain |
 | Endeavor (`endeavor`) | Willoughsby | Driver | Common | 7 | 1/1 | yes | `fully_comparable` | none | `fully_optimizable` | none |
@@ -109,6 +109,9 @@
 | Steward (`steward`) | Willoughsby | Driver | Epic | 6 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 | Gearshift (`gearshift`) | PALO | Putter | Legendary | 8 | 2/2 | yes | `fully_comparable` | none | `fully_optimizable` | none |
 | Wave (`wave`) | Nautilus | Iron | Epic | 7 | 1/2 | no | `comparable_with_warning` | wave__shoreline_rush:physics_required | `optimizable_with_warning` | wave__shoreline_rush:physics_required |
+| The Seeker (`the_seeker`) | Forester | Wedge | Legendary | 7 | 0/2 | no | `not_comparable` | the_seeker__bag_tree_passing:physics_required, the_seeker__bag_tree_bonus:physics_required | `not_optimizable` | the_seeker__bag_tree_passing:physics_required, the_seeker__bag_tree_bonus:physics_required |
+| Explorer (`explorer`) | Forester | Driver | Legendary | 7 | 0/1 | no | `not_comparable` | explorer__wild_rush_speed:physics_required | `not_optimizable` | explorer__wild_rush_speed:physics_required |
+| Mimic (`mimic`) | Nautilus | Wedge | Epic | 7 | 0/1 | no | `not_comparable` | mimic__ability_mirror:history_required | `not_optimizable` | mimic__ability_mirror:history_required |
 
 ### Homestead
 
@@ -189,7 +192,7 @@
 |---|---|---:|---|---|---|---|---|---|---|---|---|---|---|
 | Bag Loft Angle +10° (`cloudcatcher__bag_loft_angle_10`) | Your clubs launch the ball with a 10° higher angle. | 5 | `simulated_no_effect_in_current_bag` | `implemented` | `loft_angle_degrees` | `medium` | The ability is supported, but its source club is absent from every saved bag. | none | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `FOR_EACH`, `ADD_MODIFIER` | none | `cloudcatcher__bag_loft_angle_10`, `cloudcatcher__bounce_reduction`, `conspiracy__bag_wind_resist`, `high_flight__loft_angle_5`, `high_flight__wind_resist_75`, `rook__bag_wind_resist`, `lodestar__fade_draw_x2`, `mirage__sand_bounce`, `mirage__water_bounce`, `cyclotron__bounce_reduction_boost` | `static_modifier_targets` | none |
 | Bounce Reduction (`cloudcatcher__bounce_reduction`) | Your ball bounces X% less against all terrain | 6 | `simulated_no_effect_in_current_bag` | `implemented` | `bounce_reduction_percent` | `medium` | The ability is supported, but its source club is absent from every saved bag. | none | `SELECT_SELF`, `READ_LEVEL_VALUE`, `FOR_EACH`, `ADD_MODIFIER` | none | `cloudcatcher__bag_loft_angle_10`, `cloudcatcher__bounce_reduction`, `conspiracy__bag_wind_resist`, `high_flight__loft_angle_5`, `high_flight__wind_resist_75`, `rook__bag_wind_resist`, `lodestar__fade_draw_x2`, `mirage__sand_bounce`, `mirage__water_bounce`, `cyclotron__bounce_reduction_boost` | `static_modifier_targets` | none |
-| Brand Loyalty +X (`cloudcatcher__brand_loyalty_x`) | Has +X power per Corvid club next to Cloudcatcher. | 7 | `simulated_no_effect_in_current_bag` | `implemented` | `power` | `high` | The ability is supported but inactive at the user's current level. | none | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ADJACENT`, `MATCH_BRAND`, `COUNT`, `SCALE`, `ADD_STAT` | none | `cloudcatcher__brand_loyalty_x`, `rook__brand_loyalty_x`, `ranger__forester_power`, `trailblazer__brand_loyalty_x`, `maelstrom__bag_spin_bonus`, `lodestar__brand_loyalty_x`, `lowball__brand_loyalty_x`, `rising_flame__phoenix_power`, `cyclotron__spin_boost`, `galvanizer__control_boost`, `jumpstart__power_boost`, `conqueror__brand_loyalty_x`, `into_the_breach__brand_loyalty_x`, `outlaw__adjacent_power`, `people_s_champion__driver_loyalty`, `people_s_champion__brand_loyalty_x`, `rampart__adjacent_power`, `rampart__brand_loyalty_x`, `saber__brand_loyalty_x`, `saber__stanchion_power`, `commonlaw__bag_control`, `commonlaw__brand_loyalty_x`, `crusader__brand_loyalty_x`, `endeavor__brand_loyalty_x`, `groundskeep__brand_loyalty_x`, `homestead__brand_loyalty_x`, `kinship__brand_loyalty_x`, `meanderer__brand_loyalty_x`, `rolling_stone__brand_loyalty_x`, `sandsend__brand_loyalty_x`, `steadfast__brand_loyalty_x`, `steward__brand_loyalty` | `dsl_pipeline` | none |
+| Brand Loyalty +X (`cloudcatcher__brand_loyalty_x`) | Has +X power per Corvid club next to Cloudcatcher. | 7 | `simulated_no_effect_in_current_bag` | `implemented` | `power` | `high` | The ability is supported, but its source club is absent from every saved bag. | none | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ADJACENT`, `MATCH_BRAND`, `COUNT`, `SCALE`, `ADD_STAT` | none | `cloudcatcher__brand_loyalty_x`, `rook__brand_loyalty_x`, `ranger__forester_power`, `trailblazer__brand_loyalty_x`, `maelstrom__bag_spin_bonus`, `lodestar__brand_loyalty_x`, `lowball__brand_loyalty_x`, `rising_flame__phoenix_power`, `cyclotron__spin_boost`, `galvanizer__control_boost`, `jumpstart__power_boost`, `conqueror__brand_loyalty_x`, `into_the_breach__brand_loyalty_x`, `outlaw__adjacent_power`, `people_s_champion__driver_loyalty`, `people_s_champion__brand_loyalty_x`, `rampart__adjacent_power`, `rampart__brand_loyalty_x`, `saber__brand_loyalty_x`, `saber__stanchion_power`, `commonlaw__bag_control`, `commonlaw__brand_loyalty_x`, `crusader__brand_loyalty_x`, `endeavor__brand_loyalty_x`, `groundskeep__brand_loyalty_x`, `homestead__brand_loyalty_x`, `kinship__brand_loyalty_x`, `meanderer__brand_loyalty_x`, `rolling_stone__brand_loyalty_x`, `sandsend__brand_loyalty_x`, `steadfast__brand_loyalty_x`, `steward__brand_loyalty` | `dsl_pipeline` | none |
 
 ### Skyfury
 
@@ -216,7 +219,7 @@
 | Official ability | Official text | Activates | Status | Classification | Potential metrics/behavior | Importance | Reason | Needed data | Existing primitives | New primitive | Same behavior in catalog | Technical family | Validation experiment |
 |---|---|---:|---|---|---|---|---|---|---|---|---|---|---|
 | Fade/Draw x2 (`lodestar__fade_draw_x2`) | Your clubs have double fade and draw. | 5 | `simulated_no_effect_in_current_bag` | `implemented` | `fade_draw_multiplier` | `medium` | The ability is supported, but its source club is absent from every saved bag. | none | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `FOR_EACH`, `ADD_MODIFIER` | none | `cloudcatcher__bag_loft_angle_10`, `cloudcatcher__bounce_reduction`, `conspiracy__bag_wind_resist`, `high_flight__loft_angle_5`, `high_flight__wind_resist_75`, `rook__bag_wind_resist`, `lodestar__fade_draw_x2`, `mirage__sand_bounce`, `mirage__water_bounce`, `cyclotron__bounce_reduction_boost` | `static_modifier_targets` | none |
-| Brand Loyalty +X (`lodestar__brand_loyalty_x`) | Has +X power per PALO club next to Lodestar. | 7 | `simulated_no_effect_in_current_bag` | `implemented` | `power` | `high` | The ability is supported but inactive at the user's current level. | none | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ADJACENT`, `MATCH_BRAND`, `COUNT`, `SCALE`, `ADD_STAT` | none | `cloudcatcher__brand_loyalty_x`, `rook__brand_loyalty_x`, `ranger__forester_power`, `trailblazer__brand_loyalty_x`, `maelstrom__bag_spin_bonus`, `lodestar__brand_loyalty_x`, `lowball__brand_loyalty_x`, `rising_flame__phoenix_power`, `cyclotron__spin_boost`, `galvanizer__control_boost`, `jumpstart__power_boost`, `conqueror__brand_loyalty_x`, `into_the_breach__brand_loyalty_x`, `outlaw__adjacent_power`, `people_s_champion__driver_loyalty`, `people_s_champion__brand_loyalty_x`, `rampart__adjacent_power`, `rampart__brand_loyalty_x`, `saber__brand_loyalty_x`, `saber__stanchion_power`, `commonlaw__bag_control`, `commonlaw__brand_loyalty_x`, `crusader__brand_loyalty_x`, `endeavor__brand_loyalty_x`, `groundskeep__brand_loyalty_x`, `homestead__brand_loyalty_x`, `kinship__brand_loyalty_x`, `meanderer__brand_loyalty_x`, `rolling_stone__brand_loyalty_x`, `sandsend__brand_loyalty_x`, `steadfast__brand_loyalty_x`, `steward__brand_loyalty` | `dsl_pipeline` | none |
+| Brand Loyalty +X (`lodestar__brand_loyalty_x`) | Has +X power per PALO club next to Lodestar. | 7 | `simulated_no_effect_in_current_bag` | `implemented` | `power` | `high` | The ability is supported, but its source club is absent from every saved bag. | none | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ADJACENT`, `MATCH_BRAND`, `COUNT`, `SCALE`, `ADD_STAT` | none | `cloudcatcher__brand_loyalty_x`, `rook__brand_loyalty_x`, `ranger__forester_power`, `trailblazer__brand_loyalty_x`, `maelstrom__bag_spin_bonus`, `lodestar__brand_loyalty_x`, `lowball__brand_loyalty_x`, `rising_flame__phoenix_power`, `cyclotron__spin_boost`, `galvanizer__control_boost`, `jumpstart__power_boost`, `conqueror__brand_loyalty_x`, `into_the_breach__brand_loyalty_x`, `outlaw__adjacent_power`, `people_s_champion__driver_loyalty`, `people_s_champion__brand_loyalty_x`, `rampart__adjacent_power`, `rampart__brand_loyalty_x`, `saber__brand_loyalty_x`, `saber__stanchion_power`, `commonlaw__bag_control`, `commonlaw__brand_loyalty_x`, `crusader__brand_loyalty_x`, `endeavor__brand_loyalty_x`, `groundskeep__brand_loyalty_x`, `homestead__brand_loyalty_x`, `kinship__brand_loyalty_x`, `meanderer__brand_loyalty_x`, `rolling_stone__brand_loyalty_x`, `sandsend__brand_loyalty_x`, `steadfast__brand_loyalty_x`, `steward__brand_loyalty` | `dsl_pipeline` | none |
 
 ### Green Demon
 
@@ -236,7 +239,7 @@
 | Official ability | Official text | Activates | Status | Classification | Potential metrics/behavior | Importance | Reason | Needed data | Existing primitives | New primitive | Same behavior in catalog | Technical family | Validation experiment |
 |---|---|---:|---|---|---|---|---|---|---|---|---|---|---|
 | Bag Recklessness (`into_the_breach__bag_recklessness`) | Your other clubs gain +X power and spin, but lose X control. | 5 | `simulated_no_effect_in_current_bag` | `implemented` | `control`, `power`, `spin` | `high` | The ability is supported, but its source club is absent from every saved bag. | none | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `FOR_EACH`, `ADD_STAT` | none | `into_the_breach__bag_recklessness` | `bag_multi_stat_tradeoff` | none |
-| Brand Loyalty +X (`into_the_breach__brand_loyalty_x`) | Has +X power per Stanchion club next to Into the Breach. | 7 | `simulated_no_effect_in_current_bag` | `implemented` | `power` | `high` | The ability is supported but inactive at the user's current level. | none | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ADJACENT`, `MATCH_BRAND`, `COUNT`, `SCALE`, `ADD_STAT` | none | `cloudcatcher__brand_loyalty_x`, `rook__brand_loyalty_x`, `ranger__forester_power`, `trailblazer__brand_loyalty_x`, `maelstrom__bag_spin_bonus`, `lodestar__brand_loyalty_x`, `lowball__brand_loyalty_x`, `rising_flame__phoenix_power`, `cyclotron__spin_boost`, `galvanizer__control_boost`, `jumpstart__power_boost`, `conqueror__brand_loyalty_x`, `into_the_breach__brand_loyalty_x`, `outlaw__adjacent_power`, `people_s_champion__driver_loyalty`, `people_s_champion__brand_loyalty_x`, `rampart__adjacent_power`, `rampart__brand_loyalty_x`, `saber__brand_loyalty_x`, `saber__stanchion_power`, `commonlaw__bag_control`, `commonlaw__brand_loyalty_x`, `crusader__brand_loyalty_x`, `endeavor__brand_loyalty_x`, `groundskeep__brand_loyalty_x`, `homestead__brand_loyalty_x`, `kinship__brand_loyalty_x`, `meanderer__brand_loyalty_x`, `rolling_stone__brand_loyalty_x`, `sandsend__brand_loyalty_x`, `steadfast__brand_loyalty_x`, `steward__brand_loyalty` | `dsl_pipeline` | none |
+| Brand Loyalty +X (`into_the_breach__brand_loyalty_x`) | Has +X power per Stanchion club next to Into the Breach. | 7 | `simulated_no_effect_in_current_bag` | `implemented` | `power` | `high` | The ability is supported, but its source club is absent from every saved bag. | none | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ADJACENT`, `MATCH_BRAND`, `COUNT`, `SCALE`, `ADD_STAT` | none | `cloudcatcher__brand_loyalty_x`, `rook__brand_loyalty_x`, `ranger__forester_power`, `trailblazer__brand_loyalty_x`, `maelstrom__bag_spin_bonus`, `lodestar__brand_loyalty_x`, `lowball__brand_loyalty_x`, `rising_flame__phoenix_power`, `cyclotron__spin_boost`, `galvanizer__control_boost`, `jumpstart__power_boost`, `conqueror__brand_loyalty_x`, `into_the_breach__brand_loyalty_x`, `outlaw__adjacent_power`, `people_s_champion__driver_loyalty`, `people_s_champion__brand_loyalty_x`, `rampart__adjacent_power`, `rampart__brand_loyalty_x`, `saber__brand_loyalty_x`, `saber__stanchion_power`, `commonlaw__bag_control`, `commonlaw__brand_loyalty_x`, `crusader__brand_loyalty_x`, `endeavor__brand_loyalty_x`, `groundskeep__brand_loyalty_x`, `homestead__brand_loyalty_x`, `kinship__brand_loyalty_x`, `meanderer__brand_loyalty_x`, `rolling_stone__brand_loyalty_x`, `sandsend__brand_loyalty_x`, `steadfast__brand_loyalty_x`, `steward__brand_loyalty` | `dsl_pipeline` | none |
 
 ### Conqueror
 
@@ -535,7 +538,7 @@
 | Official ability | Official text | Activates | Status | Classification | Potential metrics/behavior | Importance | Reason | Needed data | Existing primitives | New primitive | Same behavior in catalog | Technical family | Validation experiment |
 |---|---|---:|---|---|---|---|---|---|---|---|---|---|---|
 | Wind-Up Toy (`xlr8r__wind_up_toy`) | When you hit with XLR8R, the wind starts blowing Xmph faster in the direction of the hole. | 7 | `history_required` | `state_duration_or_trigger_unknown` | none | `medium` | The trigger is identifiable, but duration, reset, consumption, or stacking semantics are not fully specified by the official text. | `validated_trigger_lifetime` | `SELECT_SELF`, `READ_LEVEL_VALUE`, `ADD_MODIFIER` | `READ_CONTEXT` | `jetstream__bag_wind_power`, `stormbringer__wind_resistance_100`, `xlr8r__wind_up_toy` | `wind_resistance` | Trigger the effect once, change club, repeat it, and observe persistence, reset, and stacking separately. |
-| Ludicrous Mode (`xlr8r__ludicrous_mode`) | At the start of each hole, add Xmph wind toward the hole. | 7 | `missing_user_level` | `implemented` | `wind_speed_toward_hole_mph` | `high` | The engine supports this ability, but the user's current club level is unknown. | `current_level` | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `FOR_EACH`, `ADD_MODIFIER` | none | `stormbringer__zephyr_x_mph`, `xlr8r__ludicrous_mode` | `bag_environment_modifier` | none |
+| Ludicrous Mode (`xlr8r__ludicrous_mode`) | At the start of each hole, add Xmph wind toward the hole. | 7 | `simulated_no_effect_in_current_bag` | `implemented` | `wind_speed_toward_hole_mph` | `high` | The ability is supported, but its source club is absent from every saved bag. | none | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ALL`, `FOR_EACH`, `ADD_MODIFIER` | none | `stormbringer__zephyr_x_mph`, `xlr8r__ludicrous_mode` | `bag_environment_modifier` | none |
 
 ### Boomstick
 
@@ -637,6 +640,25 @@
 | Shoreline Rush (`wave__shoreline_rush`) | When you hit with Wave as long as the ball is over Water or Sand it travels X% faster and farther. | 7 | `physics_required` | `geometry_or_trajectory_required` | none | `low` | The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain. | `validated_geometry_or_physics` | none | `validated_physics_effect` | `skyfury__boundary_rush_75`, `explorer__wild_rush_speed`, `leviathan__water_rush`, `wave__shoreline_rush`, `green_demon__emerald_rush_75`, `ember__power_shot`, `neon_impulse__power_shot` | `trajectory_physics` | Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases. |
 | Nautilus Boost (`wave__nautilus_boost`) | For each Nautilus club next to Wave, that club and Wave each gain +X Power. | 7 | `simulated_no_effect_in_current_bag` | `implemented` | `power` | `high` | The ability is supported, but its source club is absent from every saved bag. | none | `SELECT_SELF`, `READ_LEVEL_VALUE`, `SELECT_ADJACENT`, `MATCH_BRAND`, `FOR_EACH`, `ADD_STAT` | none | `wave__nautilus_boost`, `ember__alloy` | `matching_targets_and_source_per_match` | none |
 
+### The Seeker
+
+| Official ability | Official text | Activates | Status | Classification | Potential metrics/behavior | Importance | Reason | Needed data | Existing primitives | New primitive | Same behavior in catalog | Technical family | Validation experiment |
+|---|---|---:|---|---|---|---|---|---|---|---|---|---|---|
+| Bag Tree Passing (`the_seeker__bag_tree_passing`) | Balls hit by all of your clubs move through trees without slowing down. | 7 | `physics_required` | `geometry_or_trajectory_required` | none | `medium` | The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain. | `validated_geometry_or_physics` | `SELECT_SELF`, `READ_LEVEL_VALUE`, `ADD_STAT` | `READ_CONTEXT` | `overgrowth__rough_boosters`, `the_seeker__bag_tree_passing`, `trailblazer__tree_passing`, `atlantis__bag_water_bounce`, `atlantis__bag_water_bonus`, `dunecrawler__terrain_resist_50`, `leviathan__water_bonus`, `obelisk__terrain_resist_50`, `hydroforce__water_bonus_x`, `flashpoint__boundary_rush`, `color_theory__terrain_bonus`, `rebound__volt_bounce`, `meteor__alien_world` | `terrain_condition` | Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases. |
+| Bag Tree Bonus (`the_seeker__bag_tree_bonus`) | All clubs gain up to +4 to all stats depending on how many trees are within 82 feet. | 12 | `physics_required` | `geometry_or_trajectory_required` | none | `low` | The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain. | `validated_geometry_or_physics` | `SELECT_SELF`, `READ_LEVEL_VALUE`, `ADD_STAT` | `READ_CONTEXT` | `edgewalker__tree_bonus`, `huntsman__tree_bonus_x`, `ironbark__tree_bonus_x`, `oakheart__tree_bonus_x`, `outset__tree_bonus`, `the_seeker__bag_tree_bonus` | `terrain_proximity_bonus` | Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases. |
+
+### Explorer
+
+| Official ability | Official text | Activates | Status | Classification | Potential metrics/behavior | Importance | Reason | Needed data | Existing primitives | New primitive | Same behavior in catalog | Technical family | Validation experiment |
+|---|---|---:|---|---|---|---|---|---|---|---|---|---|---|
+| Wild Rush Speed (`explorer__wild_rush_speed`) | When you hit with Explorer as long as the ball is over Rough, Deep Rough, Water or Cart Path it travels X% faster and farther. | 7 | `physics_required` | `geometry_or_trajectory_required` | none | `medium` | The official effect depends on proximity, trajectory phase, collision, timing, or physical speed/distance behavior that the static context does not contain. | `validated_geometry_or_physics` | none | `validated_physics_effect` | `skyfury__boundary_rush_75`, `explorer__wild_rush_speed`, `leviathan__water_rush`, `wave__shoreline_rush`, `green_demon__emerald_rush_75`, `ember__power_shot`, `neon_impulse__power_shot` | `trajectory_physics` | Record the relevant distance/time/terrain phase and the before/after in-game result across boundary cases. |
+
+### Mimic
+
+| Official ability | Official text | Activates | Status | Classification | Potential metrics/behavior | Importance | Reason | Needed data | Existing primitives | New primitive | Same behavior in catalog | Technical family | Validation experiment |
+|---|---|---:|---|---|---|---|---|---|---|---|---|---|---|
+| Ability Mirror (`mimic__ability_mirror`) | Mimic has the abilities of the last club you hit with this hole. | 5 | `history_required` | `state_duration_or_trigger_unknown` | none | `low` | The trigger is identifiable, but duration, reset, consumption, or stacking semantics are not fully specified by the official text. | `validated_trigger_lifetime` | none | `semantic_qualification` | `mimic__ability_mirror` | `unqualified:ability_mirror` | Trigger the effect once, change club, repeat it, and observe persistence, reset, and stacking separately. |
+
 ## Reference bags (regression only)
 
 | Bag | Supported abilities | Coverage |
@@ -646,7 +668,7 @@
 
 ## Missing user data
 
-- Current levels: Pantheon, Sparky, XLR8R.
+- Current levels: Pantheon.
 - Inventory completeness: the inventory is explicitly partial.
 
 ## Recommended next lots
@@ -673,10 +695,10 @@
 
 ### 3. Measure geometry and trajectory effects
 
-- Abilities: Power Shot, Boundary Rush 75%, Emerald Rush 75%, Tree Bonus, Flight Training, Boundary Bonus, Tree Bonus +X, Water Bonus +X, Tree Passing, Water Rush, Water Bonus, Green Grip, Momentum, Shoreline Rush.
-- Owned clubs: Neon Impulse, Skyfury, Green Demon, Outset, Eagle's Landing, Dunecrawler, Edgewalker, Ember, Huntsman, Hydroforce, Ironbark, Oakheart, Trailblazer, Flamethrower, Leviathan, Windstrike, Meanderer, Rolling Stone, Wave.
-- Expected ability coverage gain: +22.
-- Clubs becoming fully simulated: Neon Impulse, Skyfury, Green Demon, Outset, Eagle's Landing, Edgewalker, Ember, Huntsman, Ironbark, Trailblazer, Leviathan, Meanderer, Rolling Stone, Wave.
+- Abilities: Power Shot, Boundary Rush 75%, Emerald Rush 75%, Tree Bonus, Flight Training, Boundary Bonus, Tree Bonus +X, Water Bonus +X, Tree Passing, Water Rush, Water Bonus, Green Grip, Momentum, Shoreline Rush, Bag Tree Passing, Bag Tree Bonus, Wild Rush Speed.
+- Owned clubs: Neon Impulse, Skyfury, Green Demon, Outset, Eagle's Landing, Dunecrawler, Edgewalker, Ember, Huntsman, Hydroforce, Ironbark, Oakheart, Trailblazer, Flamethrower, Leviathan, Windstrike, Meanderer, Rolling Stone, Wave, The Seeker, Explorer.
+- Expected ability coverage gain: +25.
+- Clubs becoming fully simulated: Neon Impulse, Skyfury, Green Demon, Outset, Eagle's Landing, Edgewalker, Ember, Huntsman, Ironbark, Trailblazer, Leviathan, Meanderer, Rolling Stone, Wave, The Seeker, Explorer.
 - Difficulty: experimental-high.
 - Required: validated physics contract, in-game measurements.
 - Priority: Covers proximity, collision, timing and speed/distance effects only after measurable contracts exist.

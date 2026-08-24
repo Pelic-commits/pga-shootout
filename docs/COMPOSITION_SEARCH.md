@@ -2,9 +2,10 @@
 
 ## Constat High Flight
 
-Le sac SQLite enregistré `par3_high_flight` contient, dans cet ordre : High
-Flight niveau 8, Cyclotron niveau 8, Ember niveau 7, Maelstrom niveau 6 et
-Sunstorm niveau 6.
+Le scénario historique validé contient, dans cet ordre : High Flight niveau 8,
+Cyclotron niveau 8, Ember niveau 7, Maelstrom niveau 6 et Sunstorm niveau 6.
+Ces niveaux sont désormais figés dans une base temporaire de test : ils ne sont
+plus présentés comme l'état courant de SQLite.
 
 Avec le catalogue normalisé, les règles validées et le contexte Par 3 actuels,
 High Flight part de **12 Power / 8 Control / 5 Spin** et reçoit :
@@ -21,6 +22,12 @@ Aucun ne produit 14 Spin. La valeur **19/10/14 est désormais visuellement
 confirmée dans le jeu** pour ce sac exact. Le Rule Engine reste néanmoins à
 19/10/13 : le point de Spin supplémentaire n'existe dans aucune contribution
 officielle actuellement qualifiée et n'est pas ajouté artificiellement.
+
+Au 24 août 2026, SQLite contient High Flight niveau 10, Cyclotron niveau 8,
+Ember niveau 8, Maelstrom niveau 6 et Sunstorm niveau 6. Le même ordre produit
+**21/11/14** avec ces niveaux actuels. Ce résultat ne résout pas l'ancien écart
+13/14 : le scénario historique niveau 8 reste calculé à 13 Spin, tandis que le
+niveau 10 possède une statistique de base différente.
 
 ## Références et garde-fou
 
@@ -86,6 +93,10 @@ enregistré Divebomb / Jumpstart / Steadfast / Ember / Sunstorm était construit
 par `reference_candidates`, mais n'était jamais fusionné dans la branche
 `interactive_builder`. Il est désormais injecté avant toute réduction et ne
 peut pas être supprimé par le budget.
+
+Le contrôle 16/9/9 utilise désormais explicitement Divebomb niveau 8. Dans
+l'inventaire SQLite actuel, Divebomb est niveau 10 et le même sac enregistré
+produit **17/10/9**. Les deux résultats décrivent donc deux contextes distincts.
 
 Une recherche interactive bornée annonce **MEILLEURE PUISSANCE TROUVÉE**. Le
 statut **MAXIMUM PROUVÉ** est réservé aux espaces réellement exhaustifs.

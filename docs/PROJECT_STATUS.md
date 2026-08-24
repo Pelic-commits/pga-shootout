@@ -7,7 +7,7 @@
 - Loads official club statistics, user inventory and saved bags.
 - Evaluates supported deterministic bag abilities in strict or partial mode.
 - Compares bags metric by metric with attributed contributions and a factual completeness diagnostic.
-- Supports 84/142 owned-club abilities (59.15%).
+- Supports 84/146 owned-club abilities (57.53%).
 
 ## What it does not do
 
@@ -17,12 +17,12 @@
 
 ## Inventory
 
-- Known clubs: 77; inventory complete: no.
-- Fully simulated clubs: 36/77.
-- Fully comparable clubs: 30/77: Homestead, Commonlaw, Kinship, Sandsend, Steadfast, Jumpstart, Cyclotron, High Flight, Cloudcatcher, Rook, Mirage, Lodestar, Into the Breach, Conqueror, Earthquake, Conspiracy, Divebomb, Into the Blue, Sunstorm, Triumph, Galvanizer, Lowball, Maelstrom, Navigator, Endeavor, People's Champion, Rampart, Saber, Steward, Gearshift.
-- Comparable with warning: 22/77.
-- Not currently comparable: 25/77.
-- Known current levels: 74/77.
+- Known clubs: 80; inventory complete: no.
+- Fully simulated clubs: 36/80.
+- Fully comparable clubs: 30/80: Homestead, Commonlaw, Kinship, Sandsend, Steadfast, Jumpstart, Cyclotron, High Flight, Cloudcatcher, Rook, Mirage, Lodestar, Into the Breach, Conqueror, Earthquake, Conspiracy, Divebomb, Into the Blue, Sunstorm, Triumph, Galvanizer, Lowball, Maelstrom, Navigator, Endeavor, People's Champion, Rampart, Saber, Steward, Gearshift.
+- Comparable with warning: 23/80.
+- Not currently comparable: 27/80.
+- Known current levels: 79/80.
 
 ## compare-bags
 
@@ -40,7 +40,7 @@ Meteor remains a future, experimentally blocked subject. Alien Relic and Alien W
 
 1. **Resolve official text/table conflicts** — Dunecrawler, Homecoming, Hydroforce, Obelisk, Sparky, Stormbringer, Sandblast, Windstrike; +9 owned abilities; difficulty validation; requires in-game value capture, official source reconciliation.
 2. **Validate dependency and stacking semantics** — Color Theory, Jetstream, Oakheart, Overgrowth, Pantheon, Ranger, Catalyst, Crystallize, Fusion, Rising Flame, Boomstick; +13 owned abilities; difficulty validation; requires minimal in-game comparison, stacking or provenance decision.
-3. **Measure geometry and trajectory effects** — Neon Impulse, Skyfury, Green Demon, Outset, Eagle's Landing, Dunecrawler, Edgewalker, Ember, Huntsman, Hydroforce, Ironbark, Oakheart, Trailblazer, Flamethrower, Leviathan, Windstrike, Meanderer, Rolling Stone, Wave; +22 owned abilities; difficulty experimental-high; requires validated physics contract, in-game measurements.
+3. **Measure geometry and trajectory effects** — Neon Impulse, Skyfury, Green Demon, Outset, Eagle's Landing, Dunecrawler, Edgewalker, Ember, Huntsman, Hydroforce, Ironbark, Oakheart, Trailblazer, Flamethrower, Leviathan, Windstrike, Meanderer, Rolling Stone, Wave, The Seeker, Explorer; +25 owned abilities; difficulty experimental-high; requires validated physics contract, in-game measurements.
 
 ## Secondary global coverage
 

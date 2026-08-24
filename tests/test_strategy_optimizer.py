@@ -241,12 +241,17 @@ def test_result_families_and_landing_profile_are_score_free(components):
 
 def test_base_dominated_iron_is_not_preselected_away_before_bag_synergy(components):
     bundle, runtime, strategy, optimizer = components
-    divebomb = runtime.clubs["divebomb"].stats_at(runtime.levels["divebomb"]).as_dict()
-    ironbark = runtime.clubs["ironbark"].stats_at(runtime.levels["ironbark"]).as_dict()
+    historical_entries = tuple(
+        replace(item, current_level=8) if item.club_id == "divebomb" else item
+        for item in bundle.inventory.entries
+    )
+    historical_runtime = _RuntimeEvaluator(CATALOG, historical_entries, None)
+    divebomb = historical_runtime.clubs["divebomb"].stats_at(historical_runtime.levels["divebomb"]).as_dict()
+    ironbark = historical_runtime.clubs["ironbark"].stats_at(historical_runtime.levels["ironbark"]).as_dict()
     assert all(ironbark[key] > divebomb[key] for key in ("power", "control", "spin"))
-    attack_pool = tuple(runtime.clubs)
+    attack_pool = tuple(historical_runtime.clubs)
     selected = optimizer.generator._pareto_active_pool(
-        runtime, attack_pool, strategy.definition.sequence[0],
+        historical_runtime, attack_pool, strategy.definition.sequence[0],
         tuple(club_id for bag in bundle.bags for club_id in bag.club_ids),
     )
     assert "divebomb" in selected

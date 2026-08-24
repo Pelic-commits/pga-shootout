@@ -38,6 +38,23 @@ def local_database(tmp_path):
     return destination
 
 
+@pytest.fixture()
+def historical_reference_database(tmp_path):
+    destination = tmp_path / "historical.sqlite"
+    shutil.copyfile(DATABASE, destination)
+    levels = {
+        "high_flight": 8, "cyclotron": 8, "ember": 7, "maelstrom": 6, "sunstorm": 6,
+        "divebomb": 8, "jumpstart": 8, "steadfast": 7,
+    }
+    with sqlite3.connect(destination) as connection:
+        for club_id, level in levels.items():
+            connection.execute(
+                "UPDATE user_clubs SET unlocked = 1, current_level = ? WHERE club_id = ?",
+                (level, club_id),
+            )
+    return destination
+
+
 def optimizer(database=DATABASE):
     return StrategyOptimizer(
         user_data_path=database,
@@ -61,8 +78,10 @@ def test_every_compatible_saved_bag_bypasses_global_preselection_and_gets_all_st
     assert {item.provenance for item in references} == {"reference_bag"}
 
 
-def test_real_high_flight_reference_is_evaluated_but_current_validated_data_produces_13_spin():
-    result = optimizer().optimize(StrategyOptimizationRequest("par3", limit=20, max_evaluations=2000))
+def test_historical_high_flight_reference_keeps_the_validated_19_10_13_scenario(historical_reference_database):
+    result = optimizer(historical_reference_database).optimize(
+        StrategyOptimizationRequest("par3", limit=20, max_evaluations=2000)
+    )
     reference = next(
         item for item in result.retained_results
         if item.origin == "reference_bag" and item.active_assignments["attack"] == "high_flight"
@@ -80,6 +99,19 @@ def test_real_high_flight_reference_is_evaluated_but_current_validated_data_prod
         "maelstrom__bag_spin_bonus": 2.0,
         "sunstorm__plasma_arc_x": 2.0,
     }
+
+
+def test_historical_divebomb_reference_keeps_the_validated_16_9_9_scenario(historical_reference_database):
+    result = optimizer(historical_reference_database).optimize(
+        StrategyOptimizationRequest("par3", limit=20, max_evaluations=2000)
+    )
+    reference = next(
+        item for item in result.retained_results
+        if item.origin == "reference_bag" and item.active_assignments["attack"] == "divebomb"
+    )
+    divebomb = next(item for item in reference.clubs if item.club_id == "divebomb")
+    attack = next(item for item in divebomb.steps if item.step_id == "attack")
+    assert attack.final_stats == {"power": 16.0, "control": 9.0, "spin": 9.0}
 
 
 def test_reference_dominance_rejects_19_10_13_but_keeps_a_real_putter_tradeoff():

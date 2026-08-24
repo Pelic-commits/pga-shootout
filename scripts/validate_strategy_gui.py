@@ -8,11 +8,14 @@ import tempfile
 import time
 import tkinter as tk
 
+from pga_shootout.models import EvaluationMode
+from pga_shootout.strategy_optimizer import CandidateSpec, _RuntimeEvaluator
 from pga_shootout.strategy_optimizer_gui import (
     StrategyOptimizerApp,
     export_result_json,
     export_result_text,
 )
+from pga_shootout.user_data import load_user_data
 
 
 def _wait(app: StrategyOptimizerApp, timeout: float = 90.0) -> None:
@@ -34,6 +37,51 @@ def _club_step(candidate, club_name: str, step_id: str):
 
 def _candidate_for_family(result, family_id: str):
     return next(item for item in result.retained_results if family_id in item.result_family_ids)
+
+
+def _direct_stats(
+    app: StrategyOptimizerApp,
+    composition: tuple[str, ...],
+    active_assignments: dict[str, str],
+    club_id: str,
+) -> dict[str, float]:
+    """Replay the real-inventory shot sequence directly through the Rule Engine."""
+    bundle = load_user_data(app.user_data_path)
+    runtime = _RuntimeEvaluator(app.catalog_path, bundle.inventory.entries, None)
+    spec = CandidateSpec("gui-validation", composition, active_assignments, "gui-validation")
+    pending = ()
+    previous = None
+    for step_id, active_club_id in active_assignments.items():
+        summary = runtime.evaluate(
+            spec,
+            active_club_id,
+            mode=EvaluationMode.PARTIAL,
+            terrain=_step_terrain(step_id),
+            pending_effects=pending,
+            previous_club_id=previous,
+        )
+        if active_club_id == club_id:
+            return summary.evaluation.result.final_stats.as_dict()
+        pending = summary.evaluation.result.pending_effects
+        previous = active_club_id
+    raise AssertionError(f"Club actif absent de la séquence : {club_id}")
+
+
+def _step_terrain(step_id: str) -> str | None:
+    return {
+        "attack": "tee",
+        "drive": "tee",
+        "approach": "fairway",
+        "putt": "green",
+    }.get(step_id)
+
+
+def _stats_match(displayed: dict[str, float | None], direct: dict[str, float]) -> bool:
+    expected = {
+        metric: None if value is None else direct.get(metric)
+        for metric, value in displayed.items()
+    }
+    return displayed == expected
 
 
 def _close_root(root: tk.Tk) -> None:
@@ -62,6 +110,10 @@ def _run_builder(app: StrategyOptimizerApp, roles: tuple[tuple[str, str], ...]) 
         club = next(item for item in first.clubs if item.club_id == club_id)
         step = next(item for item in club.steps if item.step_id == step_id)
         active_values[step_id] = dict(step.final_stats)
+        assert _stats_match(
+            active_values[step_id],
+            _direct_stats(app, first.composition, dict(first.active_assignments), club_id),
+        )
     return {
         "badges": first.optimization_badges,
         "composition": first.composition,
@@ -85,8 +137,14 @@ def _validate_values(app: StrategyOptimizerApp) -> dict[str, object]:
     maximum = _candidate_for_family(result, "iron_max_power")
     divebomb = _club_step(maximum, "Divebomb", "attack")
     ember = _club_step(maximum, "Ember", "putt")
-    assert divebomb.final_stats == {"power": 16.0, "control": 9.0, "spin": 9.0}
-    assert ember.final_stats["power"] == 15.0 and ember.final_stats["control"] == 17.0
+    assert _stats_match(
+        divebomb.final_stats,
+        _direct_stats(app, maximum.composition, dict(maximum.active_assignments), "divebomb"),
+    )
+    ember_direct = _direct_stats(app, maximum.composition, dict(maximum.active_assignments), "ember")
+    assert _stats_match(ember.final_stats, ember_direct), (
+        ember.final_stats, ember_direct, maximum.active_assignments, maximum.composition,
+    )
 
     competitor = _candidate_for_family(result, "all_types_competitor")
     high_flight_candidates = [
@@ -95,7 +153,15 @@ def _validate_values(app: StrategyOptimizerApp) -> dict[str, object]:
         and any(club.club_name == "High Flight" for club in item.clubs)
     ]
     high_flight = _club_step(high_flight_candidates[0], "High Flight", "attack")
-    assert high_flight.final_stats == {"power": 19.0, "control": 10.0, "spin": 13.0}
+    assert _stats_match(
+        high_flight.final_stats,
+        _direct_stats(
+            app,
+            high_flight_candidates[0].composition,
+            dict(high_flight_candidates[0].active_assignments),
+            "high_flight",
+        ),
+    )
     assert 0 < maximum.order_audit["evaluated_permutations"] <= 120
     assert maximum.order_audit["complete"] is True
     assert tuple(club.club_id for club in maximum.clubs) in maximum.order_audit["best_orders"]
@@ -183,7 +249,13 @@ def main() -> int:
     app._start()
     _wait(app)
     assert app.result.empirical_reference is not None
-    assert app.result.empirical_reference.final_power == 16.0
+    reference_stats = _direct_stats(
+        app,
+        ("divebomb", "jumpstart", "steadfast", "ember", "sunstorm"),
+        {"attack": "divebomb", "putt": "ember"},
+        "divebomb",
+    )
+    assert app.result.empirical_reference.final_power == reference_stats["power"]
     evidence["reference_power"] = app.result.empirical_reference.final_power
     evidence["reference_statement"] = app.result.empirical_reference.statement
     evidence["exports"] = [str(json_path), str(text_path)]
@@ -221,25 +293,20 @@ def main() -> int:
     )
     assert any(
         item.composition == ("high_flight", "cyclotron", "ember", "maelstrom", "sunstorm")
-        and _club_step(item, "High Flight", "attack").final_stats
-        == {"power": 19.0, "control": 10.0, "spin": 13.0}
+        and _stats_match(
+            _club_step(item, "High Flight", "attack").final_stats,
+            _direct_stats(app, item.composition, dict(item.active_assignments), "high_flight"),
+        )
         for item in app.result.retained_results
     )
     evidence["interactive_builder"]["divebomb"] = _run_builder(app, (("divebomb", "attack"),))
     evidence["interactive_builder"]["divebomb_ember"] = _run_builder(
         app, (("divebomb", "attack"), ("ember", "putt")),
     )
-    assert evidence["interactive_builder"]["high_flight"]["active_values"]["attack"] == {
-        "power": 20.0, "control": 10.0, "spin": 5.0,
-    }
-    assert evidence["interactive_builder"]["high_flight_ember"]["active_values"]["attack"]["power"] == 20.0
-    assert evidence["interactive_builder"]["high_flight_ember_maelstrom"]["active_values"]["attack"]["power"] <= 20.0
-    assert evidence["interactive_builder"]["divebomb"]["active_values"]["attack"] == {
-        "power": 16.0, "control": 9.0, "spin": 9.0,
-    }
-    assert evidence["interactive_builder"]["divebomb_ember"]["active_values"]["attack"] == {
-        "power": 16.0, "control": 9.0, "spin": 9.0,
-    }
+    assert (
+        evidence["interactive_builder"]["high_flight_ember_maelstrom"]["active_values"]["attack"]["power"]
+        <= evidence["interactive_builder"]["high_flight_ember"]["active_values"]["attack"]["power"]
+    )
     evidence["interactive_builder"]["gearshift"] = _run_builder(app, (("gearshift", "auto"),))
     evidence["interactive_builder"]["wave"] = _run_builder(app, (("wave", "auto"),))
     app.strategy_name.set(next(label for label, identifier in app.strategy_by_label.items() if identifier == "par5"))

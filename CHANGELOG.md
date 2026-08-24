@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-08-24 — Audit exhaustif des capacités restantes
+
+- Recalcule la couverture depuis l'inventaire SQLite actuel (80 clubs possédés) au lieu de reprendre les anciens totaux documentaires.
+- Classe sans perte les 76 occurrences catalogue restantes dans les catégories A à H avec textes, niveaux, valeurs, primitives et provenance.
+- Confirme qu'aucune capacité restante n'est actuellement qualifiée A ou B ; aucun handler hypothétique n'est ajouté.
+- Rend les tests de suivi d'inventaire indépendants des futures modifications légitimes des niveaux et clubs possédés.
+- Conserve High Flight 19/10/13 et Divebomb 16/9/9 sous forme de scénarios historiques à niveaux explicitement figés.
+
 ## 2026-08-24 — Fiabilité de la recherche contrainte
 
 - Injecte les sacs enregistrés compatibles avant les réductions du constructeur interactif.

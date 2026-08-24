@@ -12,6 +12,7 @@ from pga_shootout.inventory_status import (
     render_project_status_markdown,
     write_inventory_reports,
 )
+from pga_shootout.user_data import load_user_data
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,25 +28,30 @@ class InventoryStatusTests(unittest.TestCase):
 
     def test_totals_are_derived_and_inventory_is_distinct_from_catalog(self):
         report = self.report()
-        self.assertEqual(report.inventory_clubs, 77)
+        bundle = load_user_data(ROOT / "data" / "pga_shootout.sqlite")
+        self.assertEqual(report.inventory_clubs, len(bundle.inventory.entries))
         self.assertEqual(report.baseline_inventory_clubs, 21)
-        self.assertEqual(len(report.newly_added_club_names), 56)
-        self.assertFalse(report.inventory_complete)
-        self.assertEqual(report.official_abilities, 142)
-        self.assertEqual(report.simulated_abilities, 84)
-        self.assertEqual(report.unresolved_abilities, 58)
-        self.assertEqual(report.fully_simulated_clubs, 36)
-        self.assertEqual(report.known_user_levels, 74)
         self.assertEqual(
-            (report.fully_comparable_clubs, report.warning_comparable_clubs, report.non_comparable_clubs),
-            (30, 22, 25),
+            len(report.newly_added_club_names),
+            report.inventory_clubs - report.baseline_inventory_clubs,
+        )
+        self.assertFalse(report.inventory_complete)
+        self.assertEqual(report.official_abilities, sum(club.official_abilities for club in report.clubs))
+        self.assertEqual(report.simulated_abilities, sum(club.simulated_abilities for club in report.clubs))
+        self.assertEqual(report.unresolved_abilities, report.official_abilities - report.simulated_abilities)
+        self.assertEqual(report.fully_simulated_clubs, sum(club.fully_simulated for club in report.clubs))
+        self.assertEqual(report.known_user_levels, sum(club.current_level is not None for club in report.clubs))
+        self.assertEqual(
+            report.fully_comparable_clubs + report.warning_comparable_clubs + report.non_comparable_clubs,
+            report.inventory_clubs,
         )
         self.assertEqual((report.global_clubs, report.global_abilities), (88, 162))
         self.assertEqual((report.global_simulated_groups, report.global_simulated_abilities), (63, 86))
         self.assertEqual(report.global_simulated_clubs, 56)
         self.assertEqual(
-            (report.fully_optimizable_clubs, report.context_optimizable_clubs, report.warning_optimizable_clubs, report.non_optimizable_clubs),
-            (30, 6, 16, 25),
+            report.fully_optimizable_clubs + report.context_optimizable_clubs
+            + report.warning_optimizable_clubs + report.non_optimizable_clubs,
+            report.inventory_clubs,
         )
 
     def test_every_owned_ability_occurs_exactly_once(self):
@@ -128,7 +134,17 @@ class InventoryStatusTests(unittest.TestCase):
             ("official_data_conflicts", "semantic_dependencies", "geometry_physics"),
         )
         self.assertNotIn("meteor", {club_id for lot in report.next_lots for club_id in lot.club_ids})
-        self.assertEqual(tuple(item.expected_ability_gain for item in report.next_lots), (9, 13, 22))
+        expected_categories = (
+            {"official_text_table_conflict"},
+            {"true_semantic_ambiguity"},
+            {"geometry_or_trajectory_required"},
+        )
+        for lot, categories in zip(report.next_lots, expected_categories, strict=True):
+            expected = sum(
+                not ability.engine_supported and ability.qualification_category in categories
+                for club in report.clubs for ability in club.abilities
+            )
+            self.assertEqual(lot.expected_ability_gain, expected)
 
     def test_real_inventory_eligibility_and_texas_tee_are_explainable(self):
         report = self.report()
@@ -157,8 +173,8 @@ class InventoryStatusTests(unittest.TestCase):
         self.assertEqual(render_inventory_markdown(first), render_inventory_markdown(second))
         self.assertEqual(render_project_status_markdown(first), render_project_status_markdown(second))
         payload = json.loads(render_inventory_json(first))
-        self.assertEqual(payload["inventory_clubs"], 77)
-        self.assertEqual(len(payload["clubs"]), 77)
+        self.assertEqual(payload["inventory_clubs"], first.inventory_clubs)
+        self.assertEqual(len(payload["clubs"]), first.inventory_clubs)
 
     def test_written_reports_share_the_same_audit(self):
         report = self.report()

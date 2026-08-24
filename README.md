@@ -50,6 +50,7 @@ pga-shootout coverage
 pga-shootout inventory-status
 pga-shootout inventory-status --json
 pga-shootout inventory-status --write-reports
+python scripts/audit_remaining_capabilities.py
 pga-shootout strategy-list
 pga-shootout strategy-show par4_long
 pga-shootout strategy-show par4_long --variant head_crosswind
@@ -75,6 +76,8 @@ pga-shootout data-dashboard
 `coverage` compare ces artefacts au registre courant et régénère `docs/MECHANIC_COVERAGE.md`.
 
 `inventory-status` recalcule l'état opérationnel des clubs possédés depuis le catalogue, le registre moteur et `data/user/`. La sortie humaine, la sortie JSON et les rapports `docs/INVENTORY_STATUS.md` / `docs/PROJECT_STATUS.md` partagent exactement le même audit.
+
+`audit_remaining_capabilities.py` régénère `docs/CAPABILITY_AUDIT.md` depuis SQLite, le catalogue officiel, la carte sémantique et le registre. Il classe toutes les capacités qui ne sont pas entièrement prises en charge sans promouvoir une hypothèse en règle de jeu.
 
 `strategy-list` et `strategy-show` consultent la bibliothèque déclarative de plans de jeu. Ces préréglages décrivent des séquences, des rôles et des exigences génériques ; ils ne déclenchent aucune règle particulière dans le moteur. Voir [docs/STRATEGY_MODEL.md](docs/STRATEGY_MODEL.md).
 
