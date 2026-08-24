@@ -44,9 +44,9 @@ Une composition est évaluée dans son ordre physique. Pour chaque étape, le mo
 
 ### 6. Recherche et optimisation
 
-L'optimiseur génère des compositions admissibles depuis l'inventaire, respecte clubs obligatoires, positions, rôles, putter, minimums, marques et politique de remplacement, puis compare des objectifs ordonnés sans score global.
+`BuildFromScratchRequest` est le contrat principal. Il représente un sac vide plus les clubs explicitement imposés et ne possède aucun champ de sac cible, référence ou graine. Le générateur construit des affectations actives et des pools de supports depuis les données du catalogue, puis compare des objectifs ordonnés sans score global.
 
-La recherche globale et la profondeur 2 peuvent être bornées. La profondeur 1 locale est exhaustive lorsqu'elle est annoncée comme telle. Les références et résultats connus compatibles sont injectés afin qu'une recherche élargie ne perde pas une solution déjà établie.
+Build From Scratch ne lit ni référence ni résultat connu. Il applique des réductions structurelles, un contrôle de domination locale à une place et rejette les places sans raison observable, sauf club obligatoire ou inconnue pertinente. Les références et résultats connus restent réservés aux anciens workflows locaux. Les recherches bornées restent annoncées comme telles.
 
 ### 7. Références utilisateur
 

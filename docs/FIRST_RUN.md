@@ -46,12 +46,13 @@ Le diagnostic du préflight est écrit dans `logs/gui_preflight.txt`. La recréa
 ## 5. Première recherche
 
 1. Choisissez une stratégie.
-2. Ouvrez **Optimiser autour de mes clubs**.
-3. Sélectionnez de un à cinq clubs possédés.
-4. Laissez leur rôle sur **Automatique**, ou choisissez une étape, **Support** ou **Variable**.
-5. Choisissez éventuellement un sac de référence.
-6. Conservez Power comme objectif principal et ajoutez si besoin des minimums Control/Spin ou une contrainte de putt.
-7. Cliquez sur **Lancer l'analyse**.
+2. Choisissez le **Club principal**.
+3. Ajoutez éventuellement un ou plusieurs clubs obligatoires.
+4. Conservez Power comme objectif principal et ajoutez si besoin des minimums Control/Spin.
+5. Conservez **Toutes les marques**, ou sélectionnez les marques autorisées.
+6. Cliquez sur **OPTIMISER MON SAC**.
+
+Le calcul part d'un sac vide. Aucun sac enregistré n'est demandé ou utilisé. Pour une première recherche Par 3 autour de Blacksmith, trois actions suffisent : choisir Par 3, choisir Blacksmith, optimiser.
 
 La fenêtre reste réactive pendant le calcul. L'inventaire est relu avant chaque lancement : après une modification enregistrée, il n'est pas nécessaire de redémarrer l'optimiseur.
 
@@ -76,7 +77,8 @@ Les marques autorisées peuvent être combinées à ces contraintes.
 
 ## 8. Lire les résultats
 
-- **SAC ACTUEL** : votre référence réelle ;
+- chaque fiche commence par les étapes actives puis présente les cinq clubs, leurs niveaux, types, rôles et statistiques finales ;
+- la ligne `→` explique pourquoi chaque place est présente ;
 - **Amélioration sans contrepartie observée** : gain pertinent sans perte calculable ;
 - **COMPROMIS** : gains et pertes ;
 - **COMPROMIS PARTIELLEMENT ÉVALUÉ** : une capacité ou métrique pertinente reste inconnue ;

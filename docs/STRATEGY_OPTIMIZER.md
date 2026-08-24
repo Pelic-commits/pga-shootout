@@ -15,17 +15,15 @@ L'optimiseur recherche des sacs de cinq clubs dans l'inventaire enregistré, év
 
 Par 4 long et Par 5 possèdent des exigences conceptuelles distinctes, mais l'absence de modèle Power→distance peut produire des fronts calculables similaires. La variante **Vent contraire / latéral** existe pour Par 4 long et Par 5 et expose Wind Resistance séparément ; elle ne simule pas la physique du vent.
 
-## Optimiser autour de mes clubs
+## Build From Scratch
 
-Le constructeur interactif est le workflow central.
+Le workflow central construit un sac depuis cinq places vides. Son contrat accepte uniquement stratégie, inventaire et niveaux actuels, clubs obligatoires, objectifs, contraintes, marques et contexte explicitement demandé. Il ne peut pas recevoir de sac cible, sac de référence, composition voisine ou résultat précédent.
 
-- choisissez de un à cinq clubs obligatoires ;
-- attribuez **Automatique**, une étape active, **Support** ou **Variable** ;
-- verrouillez une position si l'ordre est imposé ;
-- choisissez le club/étape principal dont Power structure les paliers ;
+- choisissez un club principal puis, facultativement, d'autres clubs obligatoires ;
+- laissez l'affectation aux étapes sur **Automatique** ;
 - définissez éventuellement Control et Spin minimums ;
-- définissez Power/Control minimums du putt ou conservez le putter actuel ;
-- choisissez une référence et des marques autorisées.
+- choisissez éventuellement des marques autorisées ;
+- utilisez **Options avancées** seulement pour un rôle ou une position imposés.
 
 **Automatique** laisse le moteur chercher une affectation. **Support** interdit au club d'occuper une étape active. **Variable** conserve plusieurs interprétations possibles. Une position verrouillée fixe l'ordre physique et peut modifier les synergies gauche/droite.
 
@@ -40,9 +38,9 @@ La configuration versionnée emploie actuellement :
 
 Cette politique traduit les besoins du joueur ; elle ne prouve aucune relation physique non validée.
 
-## Sacs de référence
+## Sacs de référence — outils secondaires
 
-Une référence peut stocker libellé, usage, stratégie, club principal, stable/expérimental, notes, métriques observées et rôles par club. Elle est évaluée et comparée aux propositions si elle respecte les contraintes. Sinon elle reste témoin non admissible.
+Une référence peut toujours servir aux anciens workflows d'amélioration ou de remplacement. Elle n'est ni lue par la génération Build From Scratch, ni injectée dans ses pools, son pruning ou son classement.
 
 Les rôles sont dérivés des étapes de la stratégie, plus **Automatique**, **Support** et **Variable**. Ils appartiennent au sac de référence et ne changent pas le club ni le Rule Engine. **Utiliser les rôles de la référence** préremplit les sélections ; le joueur peut les modifier avant de lancer.
 
@@ -67,7 +65,7 @@ Toutes les marques sont autorisées par défaut. Une ou plusieurs marques peuven
 
 ## Recherche et preuve
 
-La recherche applique successivement admissibilité de l'inventaire, rôles, positions, types, marques, contraintes, ordre physique et évaluation du Rule Engine. Des caches de session évitent de recalculer les mêmes états sans masquer les changements d'inventaire.
+La recherche principale applique successivement admissibilité de l'inventaire, clubs imposés, fonctions actives possibles, supports potentiels issus des capacités, marques, contraintes, symétries d'ordre et évaluation du Rule Engine. Un contrôle local retire toute proposition dominée par un remplacement d'une place. Une place non obligatoire sans rôle actif, contribution calculable ou inconnue pertinente est rejetée. Aucun score de support n'est calculé.
 
 - **MAXIMUM PROUVÉ** : espace pertinent exhaustif ou éliminations sûres ;
 - **MEILLEUR TROUVÉ** : budget, réduction structurelle ou exploration incomplète.
@@ -86,7 +84,7 @@ La zone principale sépare :
 
 Les propositions strictement inférieures sans avantage pertinent sont masquées. Une capacité inconnue pertinente empêche ce masquage automatique et reste signalée.
 
-Les onglets détaillent actifs, supports, statistiques finales, contributions reçues/envoyées, effets différés et Explain. Les exports texte/JSON conservent référence, rôles, profondeur, complétude, statuts, gains, pertes, inconnues, marques et raison d'affichage.
+La fiche lisible affiche d'abord les étapes, puis les cinq clubs avec position, type, niveau, rôle, statistiques finales et contribution concise. Les onglets techniques détaillent capacités, cibles, contributions reçues/envoyées, effets différés et Explain.
 
 ## Clubs partiellement évalués
 

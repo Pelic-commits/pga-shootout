@@ -18,28 +18,26 @@ Le premier lancement peut installer le projet localement. Il n'y a rien à compi
 
 Guide détaillé : [Premier lancement](docs/FIRST_RUN.md).
 
-## Workflow principal : optimiser autour de mes clubs
+## Workflow principal : construire un sac depuis zéro
 
 Dans l'optimiseur graphique :
 
 1. choisissez une stratégie : Par 3, Par 4 court, Par 4 long ou Par 5 ;
-2. sélectionnez de un à cinq clubs obligatoires ;
-3. laissez leur rôle sur **Automatique**, ou choisissez une étape active, **Support** ou **Variable** ;
-4. verrouillez une position seulement si l'ordre doit être conservé ;
-5. choisissez éventuellement un sac de référence ;
-6. conservez Power comme objectif principal, puis indiquez si nécessaire des minimums de Control et Spin et des contraintes de putt ;
-7. limitez éventuellement les marques autorisées ;
-8. lancez l'analyse et comparez les gains, pertes et inconnues.
+2. choisissez le **club principal** ;
+3. ajoutez éventuellement d'autres clubs obligatoires ;
+4. conservez Power comme objectif principal, puis indiquez si nécessaire des minimums de Control et Spin ;
+5. limitez éventuellement les marques autorisées ;
+6. cliquez sur **OPTIMISER MON SAC**.
 
-Les clubs support peuvent être retenus pour leurs synergies même s'ils ne jouent pas un coup actif. L'inventaire SQLite est relu avant chaque analyse : un changement enregistré dans l'éditeur est disponible sans redémarrer l'optimiseur.
+Le moteur part de cinq places vides, conserve uniquement les clubs explicitement imposés puis cherche les autres dans l'inventaire. Il n'utilise aucun sac enregistré, aucune référence et aucun résultat antérieur comme graine. Chaque place proposée est active, putter, support calculable, obligatoire ou porte une inconnue pertinente explicitement signalée. Les rôles et positions manuels restent dans **Options avancées**.
 
 La politique de métriques est une configuration produit, pas une loi physique du jeu. Power est l'objectif principal par défaut. Control et Spin servent de contraintes ou d'objectifs ordonnés. Pour une attaque du green avec Driver, Wood ou Hybrid, Bounce Reduction peut constituer un compromis important. Le profil d'atterrissage affiche séparément Loft, Bounce Reduction, Groundspin, Spin, Control et Wind Resistance lorsque le contexte le rend pertinent.
 
-## Sacs de référence et résultats
+## Sacs enregistrés et résultats
 
-Un sac enregistré peut porter des métadonnées utilisateur : libellé, usage, stratégie, club principal, statut stable/expérimental, notes, métriques observées et rôles par club. Ces informations aident à interpréter et comparer le sac réellement joué ; elles ne modifient ni le catalogue ni le Rule Engine.
+Les sacs enregistrés restent disponibles pour les anciens outils de comparaison et de remplacement, mais ils sont volontairement absents du workflow principal. Ils ne participent jamais à Build From Scratch.
 
-Les rôles disponibles sont **Automatique**, les étapes définies par la stratégie, **Support** et **Variable**. Un rôle appartient au sac : le même club peut avoir un autre rôle dans une autre référence. L'action **Utiliser les rôles de la référence** préremplit le constructeur sans lancer automatiquement l'analyse.
+Chaque fiche affiche les cinq clubs ensemble avec position, type, niveau, rôle, statistiques finales et raison concise de présence. Les capacités, cibles, contributions et traces complètes restent accessibles dans **Détails techniques**.
 
 Terminologie des résultats :
 

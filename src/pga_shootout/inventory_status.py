@@ -865,7 +865,7 @@ def render_project_status_markdown(report: InventoryStatusReport) -> str:
         "- Loads official club statistics, user inventory and saved bags.",
         "- Evaluates supported deterministic bag abilities in strict or partial mode.",
         "- Compares bags metric by metric with attributed contributions and a factual completeness diagnostic.",
-        "- Searches ordered five-club bags from the live inventory with required clubs, roles, positions, references, metric constraints, allowed brands and targeted replacement policies.",
+        "- Builds ordered five-club bags from an empty bag and the live inventory, independently of saved bags, with required clubs, metric constraints and allowed brands.",
         f"- Supports {report.simulated_abilities}/{report.official_abilities} owned-club abilities ({report.inventory_coverage_percent:.2f}%).",
         "",
         "## What it does not do",
@@ -889,7 +889,7 @@ def render_project_status_markdown(report: InventoryStatusReport) -> str:
         "",
         "## Optimizer",
         "",
-        "Operational through the Windows GUI and CLI. It generates admissible candidates, evaluates strategy steps, compares references, preserves meaningful tradeoffs and labels bounded searches as MEILLEUR TROUVÉ rather than MAXIMUM PROUVÉ.",
+        "Operational through the Windows GUI and CLI. Build From Scratch is the primary workflow; saved-bag improvement and replacement remain secondary. Final proposals expose a reason for every slot, preserve meaningful tradeoffs and label bounded searches as MEILLEUR TROUVÉ rather than MAXIMUM PROUVÉ.",
         "",
         "## Meteor",
         "",
@@ -897,7 +897,7 @@ def render_project_status_markdown(report: InventoryStatusReport) -> str:
         "",
         "## Current phase",
         "",
-        "Functional development is temporarily frozen for real-world use. Future changes must come from observed player problems, not a speculative roadmap.",
+        "Current work focuses on real-world validation of the independent Build From Scratch workflow and its readable five-club result cards.",
         "",
     ]
     lines.extend(

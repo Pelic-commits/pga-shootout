@@ -40,6 +40,7 @@ pga-shootout strategy-list
 pga-shootout strategy-show par4_long
 pga-shootout strategy-show par4_long --variant head_crosswind
 pga-shootout optimize-strategy par3 --partial --limit 20
+pga-shootout optimize-strategy par3 --partial --search-mode build_from_scratch --require-club blacksmith --club-role blacksmith=auto
 pga-shootout trace-composition par3 high_flight cyclotron ember maelstrom sunstorm
 ```
 
