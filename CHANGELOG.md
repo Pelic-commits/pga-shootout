@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-08-24 — Documentation de la version stable
+
+- Refonte du README comme porte d'entrée utilisateur de l'application actuelle.
+- Consolidation des guides Windows, optimiseur, architecture, Rule Engine, CLI, données, limites et cas de régression.
+- Archivage explicite des anciens audits et roadmaps sans perte de contenu.
+
 ## 2026-08-24 — Sacs réels comme références utilisateur
 
 - Ajoute les métadonnées et notes de référence au profil utilisateur sans les injecter dans les règles du jeu.

@@ -1,3 +1,5 @@
+> **HISTORIQUE — NE DÉCRIT PAS L'ÉTAT ACTUEL DU PROJET.** Consultez le [README principal](../../README.md) et l'[audit documentaire](../DOCUMENTATION_AUDIT.md).
+
 # Engine Primitives
 
 > Proposition architecturale issue uniquement de l'analyse du groupe structurel `brand_loyalty_x`. Ce document ne valide aucune règle de jeu et n'autorise l'implémentation d'aucun handler.

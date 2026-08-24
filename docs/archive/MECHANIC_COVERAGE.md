@@ -1,6 +1,8 @@
+> **HISTORIQUE — NE DÉCRIT PAS L'ÉTAT ACTUEL DU PROJET.** Consultez le [README principal](../../README.md) et l'[audit documentaire](../DOCUMENTATION_AUDIT.md).
+
 # Mechanic Coverage
 
-> Generated automatically by `pga-shootout coverage`. Legacy structural diagnostic: it is not the current capability audit and not an active roadmap. Do not edit manually.
+> Generated automatically by `pga-shootout coverage`. Do not edit manually.
 
 ## Summary
 
@@ -42,11 +44,11 @@ Registered handlers: `add_stat, add_all_stats, dsl_pipeline`.
 | 19 | `boundary_rush` | uninterpreted | 1 | 1 | special | validated_geometry_or_physics | no |
 | 20 | `boundary_rush_75` | uninterpreted | 1 | 1 | special | validated_geometry_or_physics | no |
 
-## No active roadmap
+## Roadmap
 
 ### Remaining semantic qualification
 
-Historical qualification queue: 62 structural groups remain uninterpreted in this legacy report. Functional development is currently frozen.
+Validate mechanic ID, complexity and dependencies for the 62 remaining uninterpreted groups in ranking order.
 
 ### Qualified coverage
 

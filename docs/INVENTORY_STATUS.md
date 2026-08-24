@@ -1,6 +1,6 @@
 # User Inventory Status
 
-> Generated from official, normalized, engine-registry and user data by `pga-shootout inventory-status --write-reports`.
+> Generated from official, normalized, engine-registry and user data by `pga-shootout inventory-status --write-reports`. This is a factual snapshot, not an active development roadmap.
 
 ## Summary
 
@@ -671,34 +671,6 @@
 - Current levels: Pantheon.
 - Inventory completeness: the inventory is explicitly partial.
 
-## Recommended next lots
+## Development status
 
-### 1. Resolve official text/table conflicts
-
-- Abilities: Terrain Resist +50%, Electrodynamics 0.2ft, Chains into Itself, Wind Resistance 100%.
-- Owned clubs: Dunecrawler, Homecoming, Hydroforce, Obelisk, Sparky, Stormbringer, Sandblast, Windstrike.
-- Expected ability coverage gain: +9.
-- Clubs becoming fully simulated: Obelisk, Sparky, Stormbringer, Sandblast.
-- Difficulty: validation.
-- Required: in-game value capture, official source reconciliation.
-- Priority: Removes blockers where the engine deliberately refuses to choose between contradictory official values.
-
-### 2. Validate dependency and stacking semantics
-
-- Abilities: Terrain Bonus, Bag Wind Power, Shared Growth, Rough Boosters, Solidarity, Home Turf: Southwind, Smoke +X, Steam +X, Sparks +X, Gem Ball Bonus, Stat Fusion, Scottsdale Boosters, Super Fireball.
-- Owned clubs: Color Theory, Jetstream, Oakheart, Overgrowth, Pantheon, Ranger, Catalyst, Crystallize, Fusion, Rising Flame, Boomstick.
-- Expected ability coverage gain: +13.
-- Clubs becoming fully simulated: Jetstream, Overgrowth, Pantheon, Catalyst, Fusion, Rising Flame, Boomstick.
-- Difficulty: validation.
-- Required: minimal in-game comparison, stacking or provenance decision.
-- Priority: Qualifies base-versus-final copying, cross-ability dependencies and stacking without guessing.
-
-### 3. Measure geometry and trajectory effects
-
-- Abilities: Power Shot, Boundary Rush 75%, Emerald Rush 75%, Tree Bonus, Flight Training, Boundary Bonus, Tree Bonus +X, Water Bonus +X, Tree Passing, Water Rush, Water Bonus, Green Grip, Momentum, Shoreline Rush, Bag Tree Passing, Bag Tree Bonus, Wild Rush Speed.
-- Owned clubs: Neon Impulse, Skyfury, Green Demon, Outset, Eagle's Landing, Dunecrawler, Edgewalker, Ember, Huntsman, Hydroforce, Ironbark, Oakheart, Trailblazer, Flamethrower, Leviathan, Windstrike, Meanderer, Rolling Stone, Wave, The Seeker, Explorer.
-- Expected ability coverage gain: +25.
-- Clubs becoming fully simulated: Neon Impulse, Skyfury, Green Demon, Outset, Eagle's Landing, Edgewalker, Ember, Huntsman, Ironbark, Trailblazer, Leviathan, Meanderer, Rolling Stone, Wave, The Seeker, Explorer.
-- Difficulty: experimental-high.
-- Required: validated physics contract, in-game measurements.
-- Priority: Covers proximity, collision, timing and speed/distance effects only after measurable contracts exist.
+Functional development is temporarily frozen for real-world use. The audit still computes candidate lots internally, but this report does not publish them as a roadmap.

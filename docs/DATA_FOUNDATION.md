@@ -1,70 +1,54 @@
-# Fondation de données
+# Données, catalogue et SQLite
 
-## Catalogue officiel
+## Sources de vérité
 
-La source vérifiée est la page officielle Concrete Software :
-`https://concretesoftware.com/pga-tour-golf-shootout-club-stats/`.
-Elle annonçait le 4 août 2026 une dernière mise à jour au 14 juin 2026 et
-présentait 88 clubs. Les neuf marques et leurs nombres de clubs correspondent
-exactement à la capture locale du 21 juillet 2026. La vérification du 4 août est
-donc une nouvelle **version de vérification**, pas une fausse nouvelle extraction :
-son contenu est volontairement identique et le diff est nul.
+1. `data/normalized/clubs_official.json` : catalogue versionné utilisé par le moteur ;
+2. `data/pga_shootout.sqlite` : état utilisateur courant ;
+3. `data/raw/pga_club_stats_extract_v2_2026-07-21.json` : capture brute conservée ;
+4. `data/user/*.json` : format historique d'import/export et diagnostic.
 
-La base conserve les deux versions, leur source, leurs empreintes SHA-256, la
-date de capture/vérification, le niveau de confiance et les limites de preuve.
-Une recommandation peut ainsi citer son `catalog_version`.
+Le catalogue contient 88 clubs, 9 marques et 162 occurrences de capacités. Sa provenance est la page [Concrete Software — PGA TOUR Golf Shootout Club Stats](https://concretesoftware.com/pga-tour-golf-shootout-club-stats/). Aucune requête réseau n'est nécessaire au fonctionnement courant.
 
-Blacksmith est présent dans la source officielle : Mythical, Iron, rareté
-Mythical, Elite, déblocage 6. Les niveaux disponibles sont 9, 10, 11, 12 et
-Elite. Power vaut 10/11/12/13/13, Control 7/8/9/10/10 et Spin 5/6/7/8/8.
-La capacité Texas Tee vaut +5/+6/+7/+8/+10 et son texte officiel est :
-“Gains additional Power when hitting from the tee.”
+## Catalogue versionné
 
-Limite : cette vérification ne prouve pas qu'aucun contenu masqué ou non publié
-n'existe au-delà des 88 clubs exposés par la page officielle.
+La normalisation conserve niveaux, statistiques, labels, valeurs par niveau et provenance. Les artefacts `ability_occurrences.json`, `ability_labels.json`, `mechanics_catalog.json`, `semantic_map.json` et `normalization_report.json` permettent l'audit reproductible.
 
-## Stockage
+`normalize` ne déduit aucune mécanique. Les interprétations validées sont séparées dans la carte sémantique et exécutées par les registres du moteur.
 
-`data/pga_shootout.sqlite` est la base locale normale (non versionnée par Git).
-Elle sépare :
+## SQLite utilisateur
 
-- les tables de catalogue immuables et versionnées ;
-- le profil, les clubs examinés, les sacs et leur ordre ;
-- un journal minimal des changements ;
-- les traces de migration et les sauvegardes.
+La base contient principalement :
 
-Le moteur ne lit pas SQLite : l'adaptateur de stockage reconstruit les mêmes
-objets `UserDataBundle`, `InventoryEntry` et `SavedBag` qu'auparavant. Les JSON
-restent importables et exportables pour transfert ou diagnostic.
+- `user_profile` : profil ;
+- `inventory_state` : complétude et provenance de l'inventaire ;
+- `user_clubs` : possession, niveau, cartes et métadonnées ;
+- `user_bags` / `user_bag_clubs` : sacs et positions ;
+- `user_preferences` : préférences ;
+- `user_observations` : observations factuelles ;
+- `user_change_log` : journal des changements ;
+- `migration_runs` : migrations JSON→SQLite.
 
-## Migration et récupération
+Les références sont stockées dans les métadonnées extensibles des sacs : libellé, usage, stratégie, club principal, statut, notes, métriques observées et rôles utilisateur.
 
-`pga-shootout data-init --preview` affiche les nombres et empreintes avant toute
-écriture. `pga-shootout data-init` :
+## Éditeur d'inventaire
 
-1. sauvegarde les cinq JSON historiques ;
-2. importe le tout dans une transaction ;
-3. compare les nombres d'entrées, sacs, positions et observations ;
-4. annule la transaction si un contrôle échoue.
+`GERER_MON_INVENTAIRE.bat` ouvre l'éditeur Tkinter. Les seules entrées de progression sont Possédé, Niveau et Cartes possédées. Progression, cartes restantes, seuil suivant et amélioration disponible sont calculés depuis le catalogue.
 
-Une synchronisation guidée crée également une copie SQLite avant d'appliquer en
-une transaction toutes les modifications confirmées. L'annulation ne touche pas
-la base. `pga-shootout data-export --output-dir <dossier>` produit les cinq JSON
-de diagnostic.
+La sauvegarde est transactionnelle : toutes les lignes réussissent ou aucune n'est conservée. Une copie SQLite est créée dans `data/backups/` avant l'écriture. Recherche, filtres, tri et navigation clavier sont disponibles.
 
-## Gérer mon inventaire
+## Fraîcheur
 
-Double-cliquer sur `GERER_MON_INVENTAIRE.bat`, ou choisir « Gérer mon inventaire »
-dans le menu principal. L'éditeur visuel affiche les 88 clubs et permet recherche,
-filtres marque/type/rareté/possession, données incomplètes, valeurs inconnues et
-édition directe de plusieurs lignes. Une confirmation unique présente le résumé,
-crée une sauvegarde complète puis applique toutes les lignes dans une transaction.
-L'ancien parcours textuel est réservé au dépannage avancé.
+L'optimiseur relit SQLite avant chaque analyse. Un club, niveau ou sac enregistré par l'éditeur devient donc visible sans redémarrage de la GUI.
 
-## Maintenance
+## Import, export et maintenance
 
-- Ajouter toute extraction à `data/raw/` sans remplacer l'ancienne.
-- Ajouter une entrée à `data/catalog/versions.json` avec empreintes et limites.
-- Initialiser la base puis exécuter `catalog-diff`.
-- Examiner le rapport JSON et Markdown avant de déclarer une version courante.
-- Ne jamais combler une donnée absente ou qualifier une mécanique par déduction.
+```powershell
+pga-shootout data-init --preview
+pga-shootout data-export --output-dir export-diagnostic
+pga-shootout inventory-status --write-reports
+python scripts/audit_remaining_capabilities.py
+```
+
+`data-init --preview` n'écrit rien. Une migration réelle sauvegarde les JSON sources et consigne son résultat. Les tests destructifs utilisent des bases temporaires, jamais la base réelle.
+
+Voir [../DATA_MANIFEST.md](../DATA_MANIFEST.md) et [CAPABILITY_AUDIT.md](CAPABILITY_AUDIT.md).

@@ -1,3 +1,5 @@
+> **HISTORIQUE — NE DÉCRIT PAS L'ÉTAT ACTUEL DU PROJET.** Consultez le [README principal](../../README.md) et l'[audit documentaire](../DOCUMENTATION_AUDIT.md).
+
 # Primitive Roadmap
 
 ## Scope

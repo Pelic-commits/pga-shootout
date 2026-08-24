@@ -1,344 +1,124 @@
-# Premier lancement de PGA Shootout
-
-## Démarrage en quatre étapes
-
-1. Installez **Python 3.11 ou une version plus récente** depuis [python.org](https://www.python.org/downloads/). Conservez l'option **Tcl/Tk et IDLE** ; l'ajout au `PATH` est utile mais n'est plus obligatoire pour l'optimiseur graphique.
-2. Téléchargez le projet, décompressez-le si nécessaire, puis ouvrez son dossier.
-3. Double-cliquez sur **`DEMARRER_PGA_SHOOTOUT.bat`**.
-4. Suivez les menus en français.
-
-C'est tout. Il n'est pas nécessaire de connaître Python, Git, PowerShell ou JSON. Le premier démarrage peut prendre quelques minutes et nécessite une connexion Internet. Les démarrages suivants sont plus rapides.
-
-Pour ouvrir directement l'optimiseur graphique, utilisez ensuite
-**`OPTIMISER_MES_SACS.bat`**.
-
-L'optimiseur propose aussi « Améliorer un de mes sacs » et « Optimiser autour
-d'un club ». Le premier teste tous les remplacements simples du sac choisi ; le
-second conserve le club actif choisi et recherche de meilleurs supports. Le
-calcul exhaustif peut prendre une à deux minutes sur un inventaire important,
-mais la fenêtre reste utilisable et affiche la progression.
-
-Le menu « Stratégie » permet de choisir Par 3, Par 4 court, Par 4 long ou Par 5.
-Pour les stratégies à trois coups, l’onglet « Résumé » affiche immédiatement le
-club de départ, le club d’approche et le putter avec leurs statistiques
-objectives, puis les supports et l’ordre du sac.
-
-## Ce que prépare le lanceur
-
-Le lanceur travaille uniquement dans le dossier du projet. Il :
-
-- détecte les installations Python locales, de la plus récente à la plus ancienne ;
-- retient la première qui réussit réellement la création et la destruction d'une fenêtre Tk et qui fournit `pip`/`venv` ;
-- crée l'environnement isolé `.venv` s'il n'existe pas ;
-- recrée uniquement `.venv` lorsque son Python d'origine n'est plus le Python validé ;
-- installe localement le projet si nécessaire ;
-- active l'affichage UTF-8 pour les accents et les flèches ;
-- ouvre le menu principal ;
-- garde la fenêtre ouverte si une erreur survient et affiche une explication simple.
-
-Avant chaque ouverture, une pré-vérification en lecture seule contrôle Python,
-Tkinter/Tcl/Tk, SQLite, le registre de stratégies et l'inventaire. Une erreur
-normale reste en français ; les détails sont enregistrés dans
-`logs/gui_preflight.txt`. Les données SQLite, les sauvegardes et les exports ne
-sont jamais supprimés lors de la recréation de `.venv`.
-
-L'application est écrite en Python. Il n'y a rien à compiler ni aucun serveur de base de données à installer : Python fournit SQLite et l'application crée sa base locale automatiquement.
-
-## Catalogue, inventaire et version des données
-
-Le **catalogue** décrit les 88 clubs publiés par le jeu (statistiques, capacités,
-marques, types et niveaux). Il est en lecture seule dans les menus. Votre
-**inventaire** indique seulement les clubs que vous avez examinés, ceux que vous
-possédez et les niveaux/cartes que vous connaissez. L'absence d'un club de votre
-inventaire ne signifie donc jamais qu'il est verrouillé.
-
-Au premier démarrage de cette version, les anciens JSON sont sauvegardés puis
-migrés automatiquement vers `data/pga_shootout.sqlite`. Pour actualiser vos
-clubs, utilisez directement l'éditeur visuel décrit ci-dessous.
-
-## Mettre à jour mon inventaire — parcours normal
-
-1. Double-cliquez sur **`GERER_MON_INVENTAIRE.bat`**.
-2. Recherchez un club par son nom ou filtrez par marque, type, rareté, possession
-   ou données incomplètes.
-3. Cliquez sur la case **Possédé**, puis double-cliquez sur **Niveau** ou
-   **Cartes possédées**. Ce sont les deux seules valeurs de progression à saisir ;
-   une cellule vide signifie « inconnu ».
-4. Modifiez autant de clubs que nécessaire, puis cliquez sur **Enregistrer toutes
-   les modifications**.
-5. Vérifiez le résumé global et confirmez une seule fois.
-
-Le seuil suivant est calculé automatiquement à partir de la rareté et du niveau.
-Les colonnes **Progression**, **Cartes restantes** et **Amélioration disponible**
-se mettent à jour dès qu'un niveau ou un nombre de cartes est validé. À
-l'ouverture d'une cellule, sa valeur est sélectionnée afin que la première frappe
-la remplace. `Tab` passe à la cellule modifiable suivante ; `Entrée` valide puis
-rend le focus au tableau sur la même ligne. Les filtres et la position de la liste
-sont conservés. Si le niveau est inconnu,
-l'éditeur conserve l'ancien seuil observé lorsqu'il existe ; sinon il affiche
-« Inconnu ». Le coût d'un passage de niveau 12 vers Elite reste inconnu tant qu'il
-n'est pas présent dans les données validées.
-
-Les clubs suivent l'ordre du jeu : Corvid, Forester, Nautilus, Palo, Phoenix,
-Ryusei, Stanchion, Willoughsby, Mythical ; puis Putter, Driver, Wood, Hybrid,
-Iron et Wedge dans chaque marque. Les catégories futures inconnues apparaîtront
-ensuite par ordre alphabétique.
-
-L'éditeur affiche les 88 clubs officiels sur un écran unique. Une ligne jaune a
-été modifiée sans être enregistrée ; une ligne rouge contient une erreur avec une
-explication française dans la dernière colonne. Le bouton d'annulation restaure
-instantanément toutes les valeurs chargées, sans toucher à la base.
-
-### Exemple — Blacksmith
-
-Recherchez `Blacksmith`, cochez **Possédé**, saisissez son niveau s'il est connu
-et laissez Cartes possédées vide si vous ne les connaissez pas. La valeur
-`0` saisie dans Cartes signifie réellement zéro et reste différente d'une cellule
-vide. Vous pouvez ensuite rechercher d'autres clubs avant d'enregistrer.
-
-La version et la provenance du catalogue apparaissent dans
-`docs/DATA_DASHBOARD.md`. Le catalogue actuel est une vérification du 4 août 2026
-de la source officielle annoncée au 14 juin 2026. Certaines futures demandes
-d'optimisation restent impossibles lorsqu'elles exigent une portée réelle, la
-géométrie d'un parcours ou une physique non validée. L'application doit alors le
-dire, jamais inventer une conversion. Les exemples Power/Control/portée ne sont
-pas des modes fermés : ils illustrent un contrat générique extensible.
+# Premier lancement sous Windows
 
-## Le menu principal
+Ce guide permet d'utiliser l'application sans connaître Python, Git ou la structure du projet.
 
-Après le double-clic, ce menu apparaît :
+## 1. Installer le seul prérequis
 
-```text
-PGA Shootout Assistant
+Installez **Python 3.11 ou plus récent** depuis [python.org](https://www.python.org/downloads/). Conservez l'option **Tcl/Tk et IDLE**. L'ajout au `PATH` est utile pour l'assistant textuel et l'éditeur d'inventaire.
 
-Que souhaitez-vous faire ?
+Il n'y a rien à compiler et aucun serveur de base de données à installer. Python fournit Tkinter et SQLite.
 
-1 - Gérer mon inventaire
-2 - Gérer mes sacs
-3 - Optimiser mes sacs
-4 - Tester un club dans un sac
-5 - Quitter
-```
+## 2. Récupérer le projet
 
-Répondez toujours avec le numéro affiché. Une mauvaise saisie ne ferme pas l'application : le menu redemande simplement un choix valide.
+Téléchargez ou clonez le dépôt, puis placez-le dans un dossier où vous avez le droit d'écrire. Ne déplacez pas séparément les fichiers `.bat` : ils utilisent les scripts et données du même dossier.
 
-## Optimiser mes sacs — parcours normal
+## 3. Ouvrir l'inventaire
 
-1. Double-cliquez sur **`OPTIMISER_MES_SACS.bat`**, ou choisissez
-   **3 - Optimiser mes sacs** dans le menu principal.
-2. Choisissez une stratégie par son nom, par exemple **Sac Par 3**.
-3. Conservez le mode **Réel** pour utiliser vos niveaux enregistrés.
-4. Choisissez 5, 10 ou 20 propositions, puis cliquez sur
-   **Lancer l'analyse**.
-5. Sélectionnez une proposition dans la liste de gauche.
-6. Consultez à droite les onglets des étapes, les statistiques finales et
-   **Pourquoi ces clubs ?**.
-7. Utilisez **Exporter en JSON**, **Exporter en texte** ou
-   **Copier le résumé du sac** si nécessaire.
+Double-cliquez sur **`GERER_MON_INVENTAIRE.bat`**.
 
-Pendant le calcul, la barre animée et le message « Analyse en cours… » indiquent
-que l'application travaille. La fenêtre reste utilisable et interdit un second
-lancement simultané.
+L'éditeur affiche les 88 clubs du catalogue. Les champs de progression éditables sont :
 
-Les propositions ne sont pas présentées comme un meilleur sac absolu. La portée
-réelle et la réussite du putt ne sont pas encore modélisées, et la recherche est
-intelligemment réduite plutôt qu'exhaustive. L'encart jaune rappelle toujours
-ces limites. Les statistiques `Power`, `Control` et `Spin` affichent la valeur de
-base, la valeur finale et leur différence. Une statistique absente apparaît
-`—`, jamais zéro. Les onglets utilisent les noms lisibles des étapes définis par
-la stratégie ; un club peut donc avoir des valeurs différentes entre le départ,
-l'approche et le putt.
+- **Possédé** ;
+- **Niveau** ;
+- **Cartes possédées**.
 
-Le mode **Scénario** applique uniquement le niveau hypothétique saisi. Il ne
-modifie pas votre inventaire. Les options avancées permettent de réduire ou
-d'augmenter la limite de sécurité du calcul ; elles peuvent normalement rester
-fermées.
+Le seuil du niveau suivant, la progression, les cartes restantes et **Amélioration disponible** sont calculés. Une cellule vide signifie « inconnu » ; `0` signifie réellement zéro.
 
-Le bouton **Gérer mon inventaire** ouvre l'éditeur visuel existant sans fermer
-l'optimiseur.
+Vous pouvez rechercher, filtrer et trier. `Tab` passe à la cellule modifiable suivante ; `Entrée` valide la cellule. Les filtres et la position de la liste sont conservés pendant la saisie.
 
-## Tout premier lancement
+Cliquez sur **Enregistrer toutes les modifications**. L'écriture est transactionnelle et une sauvegarde SQLite est créée avant la modification.
 
-Si des fichiers personnels historiques existent, l'application les sauvegarde et les migre dans SQLite sans les remplacer. Sur une installation neuve, l'assistant initialise des données personnelles valides. Il ne remplace jamais silencieusement une donnée existante.
+## 4. Ouvrir l'optimiseur
 
-Pour une première configuration, ouvrez d'abord l'éditeur visuel, indiquez au
-moins cinq clubs possédés, enregistrez-les, puis utilisez **2 - Gérer mes sacs**.
+Double-cliquez sur **`OPTIMISER_MES_SACS.bat`**.
 
-## Créer ou modifier un sac
+Ce lanceur :
 
-Choisissez **2 - Gérer mes sacs**.
+1. cherche les installations Python locales ;
+2. retient la première version 3.11+ qui sait réellement ouvrir et fermer une fenêtre Tk et fournit `pip`/`venv` ;
+3. crée ou recrée uniquement `.venv` si nécessaire ;
+4. installe le projet localement ;
+5. vérifie en lecture seule Tkinter, SQLite, le registre de stratégies et l'inventaire ;
+6. ouvre la GUI dans un processus Windows séparé.
 
-Pour créer un sac :
+Le diagnostic du préflight est écrit dans `logs/gui_preflight.txt`. La recréation de `.venv` ne supprime ni SQLite, ni sauvegarde, ni export.
 
-1. donnez-lui un nom lisible ;
-2. choisissez un club possédé pour la position 1 ;
-3. recommencez pour les positions 2 à 5 ;
-4. vérifiez l'ordre récapitulé.
+## 5. Première recherche
 
-Un club déjà choisi disparaît des choix suivants : les doublons sont donc impossibles. Il faut avoir enregistré au moins cinq clubs possédés.
+1. Choisissez une stratégie.
+2. Ouvrez **Optimiser autour de mes clubs**.
+3. Sélectionnez de un à cinq clubs possédés.
+4. Laissez leur rôle sur **Automatique**, ou choisissez une étape, **Support** ou **Variable**.
+5. Choisissez éventuellement un sac de référence.
+6. Conservez Power comme objectif principal et ajoutez si besoin des minimums Control/Spin ou une contrainte de putt.
+7. Cliquez sur **Lancer l'analyse**.
 
-### Exemple complet
+La fenêtre reste réactive pendant le calcul. L'inventaire est relu avant chaque lancement : après une modification enregistrée, il n'est pas nécessaire de redémarrer l'optimiseur.
 
-```text
-Nom du nouveau sac :
-> Mon sac par 3
+## 6. Créer et utiliser un sac
 
-Position 1 — choisissez un club :
-> High Flight
+L'assistant textuel historique reste disponible via **`DEMARRER_PGA_SHOOTOUT.bat`**. Choisissez **Gérer mes sacs**, donnez un nom, puis sélectionnez cinq clubs possédés dans leur ordre. Les doublons sont interdits.
 
-Position 2 — choisissez un club :
-> Cyclotron
+Dans la GUI, un résultat peut également être sauvegardé comme sac. Un sac peut ensuite être marqué comme référence et recevoir : libellé, usage, stratégie, club principal, stabilité, notes, métriques observées et rôles par club.
 
-Position 3 — choisissez un club :
-> Ember
+Les rôles ne modifient pas les règles du jeu. Ils indiquent seulement comment ce sac précis est réellement joué.
 
-Position 4 — choisissez un club :
-> Maelstrom
+## 7. Tester un remplacement
 
-Position 5 — choisissez un club :
-> Sunstorm
+Dans la GUI, choisissez **Remplacer un club de mon sac**, sélectionnez le sac puis le club sortant.
 
-Le sac « Mon sac par 3 » a été enregistré et validé.
-```
+- **Même type que le club actuel** est le réglage par défaut.
+- **Tous les types admissibles** autorise explicitement un changement de type.
+- **Jusqu'à 1 remplacement** examine la référence et les changements simples.
+- **Jusqu'à 2 remplacements** inclut 0, 1 et 2 changements.
 
-Les menus permettent également de remplacer toute la composition d'un sac existant ou de supprimer un sac après confirmation.
+Les marques autorisées peuvent être combinées à ces contraintes.
 
-## Tester un nouveau club
+## 8. Lire les résultats
 
-Choisissez **1 - Tester un nouveau club dans un sac**.
+- **SAC ACTUEL** : votre référence réelle ;
+- **Amélioration sans contrepartie observée** : gain pertinent sans perte calculable ;
+- **COMPROMIS** : gains et pertes ;
+- **COMPROMIS PARTIELLEMENT ÉVALUÉ** : une capacité ou métrique pertinente reste inconnue ;
+- **MEILLEUR SAC ADMISSIBLE** : résultat sous une restriction que la référence ne respecte pas ;
+- **MEILLEUR TROUVÉ** : recherche bornée ;
+- **MAXIMUM PROUVÉ** : espace pertinent réellement exhaustif.
 
-L'application demande :
+Power, Control, Spin et les métriques d'atterrissage sont séparées. L'application ne calcule aucun score global caché. Consultez l'Explain pour connaître chaque contribution.
 
-1. le sac enregistré à analyser ;
-2. le club possédé à tester ;
-3. le mode **Réel** ou **Scénario** ;
-4. le niveau hypothétique si le mode Scénario est choisi.
+## 9. Données et sauvegardes
 
-Elle évalue automatiquement les cinq placements possibles, puis revient au menu principal.
+- état utilisateur : `data/pga_shootout.sqlite` ;
+- sauvegardes : `data/backups/` ;
+- catalogue : `data/normalized/clubs_official.json` ;
+- capture brute : `data/raw/` ;
+- exports : emplacement choisi lors de l'export ;
+- diagnostic de lancement : `logs/gui_preflight.txt`.
 
-### Exemple — tester Cyclotron
+Les JSON de `data/user/` sont un format historique d'import/export. SQLite est la source de vérité courante.
 
-```text
-Choisissez un sac :
-1 - Mon sac par 3
-> 1
+## 10. Problèmes courants
 
-Choisissez un club à tester :
-1 - Cyclotron
-> 1
-
-Choisissez le mode :
-1 - Réel
-2 - Scénario
-> 2
-
-Niveau de scénario :
-> 12
-
-Analyse...
-```
-
-Le choix **5 - Tester un club en mode Scénario** ouvre le même parcours, mais sélectionne directement le mode Scénario.
-
-## Mode Réel ou mode Scénario
-
-- **Réel** utilise les niveaux enregistrés dans votre inventaire. Les niveaux des cinq clubs du sac et du club testé doivent être connus.
-- **Scénario** applique un niveau hypothétique commun. Il permet d'explorer une idée, mais ne représente pas nécessairement votre inventaire actuel.
-
-Un niveau manquant en mode Réel exclut honnêtement le placement au lieu d'inventer une valeur.
-
-## Comprendre les résultats
-
-Chaque placement reçoit une description factuelle :
-
-- **amélioration sans contrepartie** : au moins une métrique prise en charge progresse et aucune ne régresse ;
-- **compromis** : certaines métriques progressent et d'autres régressent ;
-- **neutre** : aucune métrique prise en charge ne change ;
-- **exclu** : les informations disponibles ne permettent pas une comparaison correcte.
-
-Les gains et pertes sont séparés par métrique : Power, Control, Spin, Loft, Launch Angle, Wind Resistance et les autres valeurs prises en charge. Aucun score global caché n'est calculé.
-
-Prenez toujours en compte les avertissements :
-
-- **information manquante** : un niveau réel n'est pas renseigné ;
-- **capacité non encore prise en charge** : son influence n'est pas comptée comme zéro ;
-- **niveau hypothétique** : le résultat appartient au mode Scénario ;
-- **inventaire incomplet** : d'autres clubs peuvent exister sans être enregistrés ;
-- **effet différé** : il est identifié, mais aucune partie complète n'est simulée.
-
-Vous pouvez demander l'explication détaillée d'un placement. Elle montre les statistiques de départ, les capacités appliquées, les contributions et les valeurs finales.
-
-## Sauvegardes et données personnelles
-
-Les données personnelles normales sont dans `data/pga_shootout.sqlite`. Avant
-chaque enregistrement global, l'application crée une sauvegarde complète dans :
-
-```text
-data/backups/pga_shootout-AAAAJJMM-HHMMSS-microsecondes.sqlite
-```
-
-Le catalogue officiel se trouve dans `data/normalized/` et la capture brute dans `data/raw/`. Les assistants ne les modifient jamais.
-
-Toutes les lignes sont enregistrées dans une transaction unique : si une erreur
-survient, aucune modification de la session n'est conservée. Les anciens JSON de
-`data/user/` restent disponibles uniquement pour import, export ou dépannage.
-
-## Problèmes courants
-
-| Problème | Solution |
+| Symptôme | Action |
 |---|---|
-| Le message indique que Python manque | Installez Python 3.11+ depuis python.org, cochez **Add Python to PATH**, puis redémarrez le lanceur. |
-| L'installation ne trouve pas `setuptools` | Vérifiez la connexion Internet et le pare-feu, puis relancez le fichier `.bat`. |
-| L'ancien environnement Python est incompatible | Le lanceur le conserve dans `.venv_incompatible` et en crée normalement un nouveau. Fermez les programmes Python si le déplacement échoue. |
-| Tous les placements sont exclus en mode Réel | Complétez les niveaux des six clubs concernés ou utilisez explicitement le mode Scénario. |
-| Aucun club n'est proposé pour un sac | Ajoutez au moins cinq clubs et marquez-les comme possédés. |
-| Une ligne devient rouge | Corrigez le champ indiqué dans la colonne Erreur ; les autres modifications restent en attente. |
-| Une capacité est non prise en charge | Conservez l'avertissement : son effet n'est pas assimilé à zéro. |
-| La fenêtre affiche une erreur | Lisez le message conservé à l'écran. Les données sont sauvegardées avant chaque modification. |
-| Le message indique que Tcl/Tk manque | Réparez ou réinstallez Python depuis python.org avec **Tcl/Tk et IDLE**, puis relancez le `.bat`. Ne définissez pas manuellement `TCL_LIBRARY` ou `TK_LIBRARY`. |
-| Un ancien `TCL_LIBRARY`/`TK_LIBRARY` existe | Le lanceur le neutralise pour son propre processus et laisse Python retrouver les bibliothèques correspondant exactement à l'interpréteur retenu. |
-| Le Python affiché n'est pas celui attendu | Consultez `logs/gui_preflight.txt`. Le Python installé et celui qui a créé `.venv` peuvent différer ; le lanceur recrée seulement le venv si nécessaire. |
+| « Aucun Python 3.11+… » | Réinstallez Python depuis python.org avec Tcl/Tk. |
+| L'optimiseur ne s'ouvre pas | Consultez `logs/gui_preflight.txt`, puis relancez `OPTIMISER_MES_SACS.bat`. |
+| Tkinter indisponible | Modifiez l'installation Python et ajoutez Tcl/Tk et IDLE. |
+| Niveau réel manquant | Renseignez-le dans l'éditeur ou utilisez volontairement un niveau de scénario. |
+| Club absent des résultats | Vérifiez Possédé, niveau, rôle, position, type de remplacement et marques. |
+| Résultat partiel | Ouvrez les avertissements : la capacité inconnue n'a pas été comptée comme zéro. |
+| Calcul long | Attendez la fin ; la GUI reste asynchrone. Réduisez les contraintes seulement si cela correspond à votre besoin. |
+| Base verrouillée | Fermez l'autre fenêtre qui écrit dans SQLite, puis réessayez. |
 
-## Utilisation avancée — commandes techniques
+L'ancien incident Tcl provoqué par un environnement Python incompatible n'est pas une procédure normale : le lanceur courant neutralise les variables Tcl/Tk héritées et sélectionne un interpréteur validé.
 
-Cette section n'est pas nécessaire pour l'utilisation normale.
+## 11. Vérifier l'installation techniquement
 
-Installation manuelle depuis PowerShell :
+Facultatif :
 
 ```powershell
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-$env:PYTHONUTF8 = "1"
-python -m pip install -e .
+.venv\Scripts\python.exe -m pga_shootout.gui_preflight --json
+.venv\Scripts\python.exe -m pytest -q
 ```
 
-Ouvrir le menu principal sans le fichier `.bat` :
-
-```powershell
-pga-shootout assistant
-```
-
-L'ancien assistant textuel de gestion des clubs reste présent dans le code pour
-compatibilité et dépannage, mais il n'est plus proposé dans le parcours normal.
-
-Vérifier le projet et les données :
-
-```powershell
-pga-shootout user-validate
-pga-shootout validate-data data/raw/pga_club_stats_extract_v2_2026-07-21.json data/normalized/clubs_official.json
-python -m unittest discover -s tests
-```
-
-Diagnostic avancé de l'optimiseur Windows :
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\windows_gui_launcher.ps1 -Validate
-```
-
-Cette commande ouvre une vraie fenêtre, exécute le parcours Par 3 de validation,
-génère des exports temporaires, ferme la fenêtre puis vérifie une seconde
-ouverture. Elle est destinée au dépannage, pas au parcours quotidien.
-
-Les commandes historiques `optimize-strategy`, `recommend-interactive`, `recommend-placement`, `recommend-replacement`, `compare-bags` et `evaluate-bag` restent compatibles pour les usages avancés.
-
-La modification manuelle des fichiers JSON reste possible pour le dépannage ou l'import en masse, mais elle n'est plus requise. Toujours conserver des guillemets doubles, enregistrer en UTF-8 et lancer `pga-shootout user-validate` après une modification manuelle.
+Guide fonctionnel : [STRATEGY_OPTIMIZER.md](STRATEGY_OPTIMIZER.md). Limites : [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md).

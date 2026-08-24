@@ -770,7 +770,7 @@ def render_inventory_markdown(report: InventoryStatusReport) -> str:
     lines = [
         "# User Inventory Status",
         "",
-        "> Generated from official, normalized, engine-registry and user data by `pga-shootout inventory-status --write-reports`.",
+        "> Generated from official, normalized, engine-registry and user data by `pga-shootout inventory-status --write-reports`. This is a factual snapshot, not an active development roadmap.",
         "",
         "## Summary",
         "",
@@ -841,22 +841,15 @@ def render_inventory_markdown(report: InventoryStatusReport) -> str:
     missing = [club.name for club in report.clubs if club.current_level is None]
     lines.append(f"- Current levels: {', '.join(missing) if missing else 'none'}." )
     lines.append(f"- Inventory completeness: {'complete' if report.inventory_complete else 'the inventory is explicitly partial'}." )
-    lines.extend(["", "## Recommended next lots", ""])
-    for index, lot in enumerate(report.next_lots, start=1):
-        lines.extend(
-            [
-                f"### {index}. {lot.title}",
-                "",
-                f"- Abilities: {', '.join(lot.ability_names) or 'none'}.",
-                f"- Owned clubs: {', '.join(lot.club_names) or 'none'}.",
-                f"- Expected ability coverage gain: +{lot.expected_ability_gain}.",
-                f"- Clubs becoming fully simulated: {', '.join(lot.clubs_becoming_fully_simulated) or 'none'}.",
-                f"- Difficulty: {lot.difficulty}.",
-                f"- Required: {', '.join(lot.requirements)}.",
-                f"- Priority: {lot.priority_reason}",
-                "",
-            ]
-        )
+    lines.extend(
+        [
+            "",
+            "## Development status",
+            "",
+            "Functional development is temporarily frozen for real-world use. "
+            "The audit still computes candidate lots internally, but this report does not publish them as a roadmap.",
+        ]
+    )
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -865,20 +858,21 @@ def render_project_status_markdown(report: InventoryStatusReport) -> str:
     lines = [
         "# Project Status",
         "",
-        "> Generated from the same audit as `pga-shootout inventory-status`; no totals are maintained here manually.",
+        "> Generated from the same factual audit as `pga-shootout inventory-status`; no totals are maintained here manually.",
         "",
         "## What the tool does today",
         "",
         "- Loads official club statistics, user inventory and saved bags.",
         "- Evaluates supported deterministic bag abilities in strict or partial mode.",
         "- Compares bags metric by metric with attributed contributions and a factual completeness diagnostic.",
+        "- Searches ordered five-club bags from the live inventory with required clubs, roles, positions, references, metric constraints, allowed brands and targeted replacement policies.",
         f"- Supports {report.simulated_abilities}/{report.official_abilities} owned-club abilities ({report.inventory_coverage_percent:.2f}%).",
         "",
         "## What it does not do",
         "",
-        "- It does not rank bags or compute an aggregate user-value score.",
+        "- It does not compute an aggregate user-value score.",
         "- It does not simulate full trajectory physics, terrain history, random transformations or Meteor's abilities.",
-        "- It cannot reproduce Pierre's real club values until their current levels are recorded.",
+        "- It cannot prove real shot distance or a physically successful shot from Power alone.",
         "",
         "## Inventory",
         "",
@@ -891,27 +885,23 @@ def render_project_status_markdown(report: InventoryStatusReport) -> str:
         "",
         "## compare-bags",
         "",
-        "Operational for explicit level scenarios. It exposes Power, Control, Spin, qualified static modifiers, ability contributions, unresolved abilities and completeness facts. Saved reference bags are regression fixtures, not product priorities.",
+        "Operational for real inventory levels and explicit scenarios. It exposes Power, Control, Spin, qualified static modifiers, ability contributions, unresolved abilities and completeness facts without an opaque score.",
         "",
         "## Optimizer",
         "",
-        "The evaluator API exists, but candidate generation, inventory enforcement, normalization, validated weights, multi-club aggregation and ranking are incomplete or missing. No automatic best-bag recommendation is currently produced.",
+        "Operational through the Windows GUI and CLI. It generates admissible candidates, evaluates strategy steps, compares references, preserves meaningful tradeoffs and labels bounded searches as MEILLEUR TROUVÉ rather than MAXIMUM PROUVÉ.",
         "",
         "## Meteor",
         "",
-        "Meteor remains a future, experimentally blocked subject. Alien Relic and Alien World are not implemented and are not among the next three owned-inventory lots.",
+        "Meteor remains experimentally blocked. Alien Relic and Alien World are not implemented; no behavior is invented.",
         "",
-        "## Next three development lots",
+        "## Current phase",
+        "",
+        "Functional development is temporarily frozen for real-world use. Future changes must come from observed player problems, not a speculative roadmap.",
         "",
     ]
-    for index, lot in enumerate(report.next_lots, start=1):
-        lines.append(
-            f"{index}. **{lot.title}** — {', '.join(lot.club_names)}; +{lot.expected_ability_gain} owned abilities; "
-            f"difficulty {lot.difficulty}; requires {', '.join(lot.requirements)}."
-        )
     lines.extend(
         [
-            "",
             "## Secondary global coverage",
             "",
             f"- Groups: {report.global_simulated_groups}/{report.global_groups}.",

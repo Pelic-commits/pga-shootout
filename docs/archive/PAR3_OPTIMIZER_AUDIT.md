@@ -1,3 +1,5 @@
+> **HISTORIQUE — NE DÉCRIT PAS L'ÉTAT ACTUEL DU PROJET.** Consultez le [README principal](../../README.md) et l'[audit documentaire](../DOCUMENTATION_AUDIT.md).
+
 # Audit de pertinence de l’optimiseur Par 3
 
 ## Résultat reproduit avant correction
@@ -70,4 +72,3 @@ l’ordre n’en évalue qu’une et enregistre la preuve d’équivalence. Les 
 `legacy_reduced` et `full_120` servent uniquement au diagnostic. La limite de
 sécurité demeure visible : la recherche bornée ne garantit pas l’optimum global
 sur l’inventaire entier.
-

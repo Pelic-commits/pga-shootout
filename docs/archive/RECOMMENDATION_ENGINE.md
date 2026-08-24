@@ -1,3 +1,5 @@
+> **HISTORIQUE — NE DÉCRIT PAS L'ÉTAT ACTUEL DU PROJET.** Consultez le [README principal](../../README.md) et l'[audit documentaire](../DOCUMENTATION_AUDIT.md).
+
 # Architecture du Recommendation Engine
 
 > Spécification d'architecture uniquement. Cette couche consomme le moteur existant sans modifier le Rule Engine, le DSL ni les capacités de club.

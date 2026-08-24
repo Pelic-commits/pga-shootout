@@ -1,3 +1,5 @@
+> **HISTORIQUE — NE DÉCRIT PAS L'ÉTAT ACTUEL DU PROJET.** Consultez le [README principal](../../README.md) et l'[audit documentaire](../DOCUMENTATION_AUDIT.md).
+
 # DSL Architecture
 
 > Architecture déclarative proposée. Aucun élément de ce document n'est un handler, une mécanique validée ou une autorisation d'implémentation.

@@ -1,6 +1,6 @@
 # Audit des capacités restantes
 
-> Rapport généré depuis SQLite, le catalogue officiel versionné, la carte sémantique et le registre du moteur.
+> Source détaillée actuelle de la couverture des capacités. Rapport généré depuis SQLite, le catalogue officiel versionné, la carte sémantique et le registre du moteur. Les classes A/B vides et les blocages C–H sont des constats de qualification, pas une roadmap active. Le développement fonctionnel est temporairement gelé.
 
 ## État recalculé
 

@@ -1,3 +1,5 @@
+> **HISTORIQUE — NE DÉCRIT PAS L'ÉTAT ACTUEL DU PROJET.** Consultez le [README principal](../../README.md) et l'[audit documentaire](../DOCUMENTATION_AUDIT.md).
+
 # Audit fonctionnel du moteur
 
 > État audité après le commit `05e9ffa`, à partir du catalogue officiel normalisé, du registre DSL, d'`inventory-status`, de `compare-bags` et des contrats de l'optimiseur. Ce document décrit des capacités observables ; il ne définit aucun nouveau calcul.

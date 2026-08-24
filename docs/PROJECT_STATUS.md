@@ -1,19 +1,20 @@
 # Project Status
 
-> Generated from the same audit as `pga-shootout inventory-status`; no totals are maintained here manually.
+> Generated from the same factual audit as `pga-shootout inventory-status`; no totals are maintained here manually.
 
 ## What the tool does today
 
 - Loads official club statistics, user inventory and saved bags.
 - Evaluates supported deterministic bag abilities in strict or partial mode.
 - Compares bags metric by metric with attributed contributions and a factual completeness diagnostic.
+- Searches ordered five-club bags from the live inventory with required clubs, roles, positions, references, metric constraints, allowed brands and targeted replacement policies.
 - Supports 84/146 owned-club abilities (57.53%).
 
 ## What it does not do
 
-- It does not rank bags or compute an aggregate user-value score.
+- It does not compute an aggregate user-value score.
 - It does not simulate full trajectory physics, terrain history, random transformations or Meteor's abilities.
-- It cannot reproduce Pierre's real club values until their current levels are recorded.
+- It cannot prove real shot distance or a physically successful shot from Power alone.
 
 ## Inventory
 
@@ -26,21 +27,19 @@
 
 ## compare-bags
 
-Operational for explicit level scenarios. It exposes Power, Control, Spin, qualified static modifiers, ability contributions, unresolved abilities and completeness facts. Saved reference bags are regression fixtures, not product priorities.
+Operational for real inventory levels and explicit scenarios. It exposes Power, Control, Spin, qualified static modifiers, ability contributions, unresolved abilities and completeness facts without an opaque score.
 
 ## Optimizer
 
-The evaluator API exists, but candidate generation, inventory enforcement, normalization, validated weights, multi-club aggregation and ranking are incomplete or missing. No automatic best-bag recommendation is currently produced.
+Operational through the Windows GUI and CLI. It generates admissible candidates, evaluates strategy steps, compares references, preserves meaningful tradeoffs and labels bounded searches as MEILLEUR TROUVÉ rather than MAXIMUM PROUVÉ.
 
 ## Meteor
 
-Meteor remains a future, experimentally blocked subject. Alien Relic and Alien World are not implemented and are not among the next three owned-inventory lots.
+Meteor remains experimentally blocked. Alien Relic and Alien World are not implemented; no behavior is invented.
 
-## Next three development lots
+## Current phase
 
-1. **Resolve official text/table conflicts** — Dunecrawler, Homecoming, Hydroforce, Obelisk, Sparky, Stormbringer, Sandblast, Windstrike; +9 owned abilities; difficulty validation; requires in-game value capture, official source reconciliation.
-2. **Validate dependency and stacking semantics** — Color Theory, Jetstream, Oakheart, Overgrowth, Pantheon, Ranger, Catalyst, Crystallize, Fusion, Rising Flame, Boomstick; +13 owned abilities; difficulty validation; requires minimal in-game comparison, stacking or provenance decision.
-3. **Measure geometry and trajectory effects** — Neon Impulse, Skyfury, Green Demon, Outset, Eagle's Landing, Dunecrawler, Edgewalker, Ember, Huntsman, Hydroforce, Ironbark, Oakheart, Trailblazer, Flamethrower, Leviathan, Windstrike, Meanderer, Rolling Stone, Wave, The Seeker, Explorer; +25 owned abilities; difficulty experimental-high; requires validated physics contract, in-game measurements.
+Functional development is temporarily frozen for real-world use. Future changes must come from observed player problems, not a speculative roadmap.
 
 ## Secondary global coverage
 

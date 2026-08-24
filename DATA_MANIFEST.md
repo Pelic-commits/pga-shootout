@@ -1,84 +1,53 @@
-# Data Manifest — PGA Shootout Solver
+# Manifeste des données
 
-## Source brute prioritaire
+## Catalogue officiel versionné
 
-`pga_club_stats_extract_v2_2026-07-21.json`
+Source déclarée : [Concrete Software — PGA TOUR Golf Shootout Club Stats](https://concretesoftware.com/pga-tour-golf-shootout-club-stats/).
 
-- source officielle Concrete Software ;
-- 88 clubs ;
-- 9 marques ;
-- textes, tableaux, HTML et images ;
-- fichier immuable après dépôt dans `data/raw/`.
+| Couche | Fichier | Rôle |
+|---|---|---|
+| brute | `data/raw/pga_club_stats_extract_v2_2026-07-21.json` | Capture immuable, HTML/images et données de source. |
+| normalisée | `data/normalized/clubs_official.json` | Catalogue lu par le moteur. |
+| structurelle | `ability_occurrences.json` | 162 occurrences, une par capacité de club. |
+| structurelle | `ability_labels.json` | 125 identifiants d'intitulés. |
+| structurelle | `mechanics_catalog.json` | Groupes structurels, sans interprétation implicite. |
+| sémantique | `semantic_map.json` | Interprétations qualifiées séparées du catalogue. |
+| contrôle | `normalization_report.json` | Compteurs, intégrité et limitations de source. |
 
-## Couche normalisée déjà préparée
+Compteurs vérifiés dans les fichiers versionnés : **88 clubs**, **9 marques**, **162 occurrences**, **125 labels/groupes**, **1 333 valeurs de niveau converties**.
 
-- `clubs_official.json`
-- `ability_occurrences.json`
-- `ability_labels.json`
-- `mechanics_catalog.json`
-- `semantic_map.json`
-- `assets.json`
-- `normalization_report.json`
-- `ABILITY_AUDIT.md`
+Le rapport de normalisation signale une limitation importante : le catalogue normalisé conserve labels et valeurs, mais ne contient pas les textes officiels complets pour les 162 occurrences. Les documents ne doivent donc pas prétendre que chaque texte est disponible dans cette couche.
 
-Organisation recommandée :
+## Invariants
 
-```text
-data/
-├── raw/
-│   └── pga_club_stats_extract_v2_2026-07-21.json
-└── normalized/
-    ├── clubs_official.json
-    ├── ability_occurrences.json
-    ├── ability_labels.json
-    ├── mechanics_catalog.json
-    ├── semantic_map.json
-    ├── assets.json
-    └── normalization_report.json
+- ne jamais modifier la capture brute ;
+- conserver les identifiants et valeurs officielles ;
+- séparer donnée officielle, interprétation et observation utilisateur ;
+- ne pas effacer une contradiction ;
+- conserver schéma, provenance et hash ;
+- ne pas promouvoir un groupe structurel en règle de jeu sans qualification.
+
+Le hash source déclaré par le catalogue normalisé est `76d298789030964a32cd4b047cba2598cc5b647b61a90b13ca962767f3417a85`.
+
+## Données utilisateur
+
+`data/pga_shootout.sqlite` est la source de vérité courante pour profil, inventaire, niveaux, cartes, sacs, références, notes, observations et rôles. `data/user/` conserve les anciens JSON pour import/export et diagnostic.
+
+L'inventaire peut être incomplet : l'absence d'un club ne signifie pas qu'il est verrouillé. Les sauvegardes SQLite sont écrites dans `data/backups/` avant les modifications importantes.
+
+## Données de stratégie
+
+- `data/strategies/strategies.json` : quatre stratégies et variante de vent ;
+- `data/strategies/metric_semantics.json` : statut objectif/contextuel/descriptif des métriques ;
+- `data/strategies/optimization_policies.json` : politique produit versionnée.
+
+## Régénération et validation
+
+```powershell
+pga-shootout validate-data data/raw/pga_club_stats_extract_v2_2026-07-21.json data/normalized/clubs_official.json
+pga-shootout normalize
+pga-shootout inventory-status --write-reports
+python scripts/audit_remaining_capabilities.py
 ```
 
-Contrôles attendus :
-
-- 88 clubs ;
-- 9 marques ;
-- 162 occurrences ;
-- 125 intitulés uniques ;
-- 1333 valeurs converties ;
-- 0 valeur non reconnue ;
-- 0 capacité non classée.
-
-Règles :
-
-- ne jamais modifier le brut ;
-- conserver le texte officiel ;
-- distinguer valeur officielle et interprétation ;
-- conserver les incohérences ;
-- enregistrer version de schéma et hash SHA-256.
-
-## État au 22 juillet 2026
-
-Artefacts importés sans transformation :
-
-| Fichier | SHA-256 |
-|---|---|
-| `data/raw/pga_club_stats_extract_v2_2026-07-21.json` | `449831121cada54114ac8175af38b99ab8bd6ecf15310600a1df9192ca703a14` |
-| `data/normalized/clubs_official.json` | `76d298789030964a32cd4b047cba2598cc5b647b61a90b13ca962767f3417a85` |
-| `docs/ABILITY_AUDIT.md` | `0e20a88a63536be87837b9f2dfee67e3ade1f9a0bc38f68a8deef5c6f7cd338a` |
-
-Contrôles automatisés présents : lien SHA-256 entre le normalisé et le brut, compteurs de clubs et marques, unicité des identifiants, occurrences de capacités et valeurs converties.
-
-Artefacts structurels générés automatiquement depuis `clubs_official.json` :
-
-| Fichier | SHA-256 |
-|---|---|
-| `ability_occurrences.json` | `884daf05d7ec2c02f12d5adbf305894007f8bf95097b3574a7c30df83bf9a512` |
-| `ability_labels.json` | `065e69e564d34d8e2cdcf197219af5e8d1d143d362ffcfdc061b9517150adb5` |
-| `mechanics_catalog.json` | `e69f8b9853d0ca0b5212e378f3b8fa703d918401f921b93b0da92b270c4a0f76` |
-| `semantic_map.json` | `d57344fb7d62ff486800fa23ece6ef8b3bcd7fa9d061b03c1c0926ae13cd6ef7` |
-| `normalization_report.json` | `0700c37302cc7b579d2392bbdfadc6e503b50767b760f55ba1c1535f4b46c5b9` |
-
-Ces fichiers conservent 162 occurrences et 125 intitulés exacts. Les 125 groupes restent `uninterpreted`, avec `mechanic_id`, complexité et dépendances non renseignés. `assets.json` reste absent.
-
-## Couche utilisateur
-
-`data/user/` est indépendante des données officielles et contient `account.json`, `inventory.json`, `preferences.json`, `bags.json` et `observations.json`. Son inventaire est partiel (`inventory_complete: false`) et l'absence d'un identifiant ne signifie jamais que le club est verrouillé.
+Voir [docs/DATA_FOUNDATION.md](docs/DATA_FOUNDATION.md) et [docs/CAPABILITY_AUDIT.md](docs/CAPABILITY_AUDIT.md).

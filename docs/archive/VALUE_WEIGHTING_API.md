@@ -1,3 +1,5 @@
+> **HISTORIQUE — NE DÉCRIT PAS L'ÉTAT ACTUEL DU PROJET.** Consultez le [README principal](../../README.md) et l'[audit documentaire](../DOCUMENTATION_AUDIT.md).
+
 # Value Weighting API
 
 La couche de valeur utilisateur est strictement séparée du moteur. Le moteur et `compare-bags` produisent des mesures objectives ; aucun score global, sens de préférence ou classement n'est défini.

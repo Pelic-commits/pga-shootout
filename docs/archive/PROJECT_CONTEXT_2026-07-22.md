@@ -1,3 +1,5 @@
+> **HISTORIQUE — NE DÉCRIT PAS L'ÉTAT ACTUEL DU PROJET.** Consultez le [README principal](../../README.md) et l'[audit documentaire](../DOCUMENTATION_AUDIT.md).
+
 # PGA Shootout Solver — Contexte du projet
 
 > **Mémoire durable du projet.** Lire ce fichier avant toute modification importante et le maintenir après toute décision structurante.
@@ -58,7 +60,7 @@ Artefacts normalisés préparés en dehors du dépôt :
 
 Résultats annoncés de l'audit V2 : 88/88 clubs, 9 marques, 162 occurrences de capacités, 125 intitulés uniques, 156 variantes officielles uniques, 1333/1333 valeurs converties, aucune valeur non reconnue et aucune capacité non classée.
 
-La couche officielle conserve le site. La couche sémantique est une interprétation à valider en jeu. Voir [DATA_MANIFEST.md](DATA_MANIFEST.md).
+La couche officielle conserve le site. La couche sémantique est une interprétation à valider en jeu. Voir [DATA_MANIFEST.md](../../DATA_MANIFEST.md).
 
 ## 4. Architecture cible
 

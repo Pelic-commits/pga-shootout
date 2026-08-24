@@ -1,3 +1,5 @@
+> **HISTORIQUE — NE DÉCRIT PAS L'ÉTAT ACTUEL DU PROJET.** Consultez le [README principal](../../README.md) et l'[audit documentaire](../DOCUMENTATION_AUDIT.md).
+
 # Contrat générique des demandes d'optimisation
 
 Ce contrat décrit une demande ; il n'implémente ni recherche exhaustive, ni

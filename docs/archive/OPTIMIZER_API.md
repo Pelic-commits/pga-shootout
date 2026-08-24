@@ -1,3 +1,5 @@
+> **HISTORIQUE — NE DÉCRIT PAS L'ÉTAT ACTUEL DU PROJET.** Consultez le [README principal](../../README.md) et l'[audit documentaire](../DOCUMENTATION_AUDIT.md).
+
 # Optimizer API
 
 Le futur optimiseur dépend de `BagEvaluator`, jamais du CLI ni des sacs sauvegardés. `RuleEngineBagEvaluator` adapte ce contrat au Rule Engine sans effectuer de recherche, de classement ou de recommandation.

@@ -160,7 +160,7 @@ def render_coverage_markdown(report: CoverageReport) -> str:
     lines = [
         "# Mechanic Coverage",
         "",
-        "> Generated automatically by `pga-shootout coverage`. Do not edit manually.",
+        "> Generated automatically by `pga-shootout coverage`. Legacy structural diagnostic: it is not the current capability audit and not an active roadmap. Do not edit manually.",
         "",
         "## Summary",
         "",
@@ -181,7 +181,7 @@ def render_coverage_markdown(report: CoverageReport) -> str:
     if report.interpreted_groups == 0:
         lines.extend(
             [
-                "## Roadmap status",
+                "## Qualification status",
                 "",
                 "Implementation ranking is blocked: every semantic mapping is still `uninterpreted` and has no mechanic ID, complexity or dependencies.",
                 "The ranking below is therefore a **semantic qualification queue**, ordered only by maximum raw occurrence gain. It is not permission to implement a handler.",
@@ -207,11 +207,11 @@ def render_coverage_markdown(report: CoverageReport) -> str:
     lines.extend(
         [
             "",
-            "## Roadmap",
+            "## No active roadmap",
             "",
             "### Remaining semantic qualification",
             "",
-            f"Validate mechanic ID, complexity and dependencies for the {report.total_groups - report.interpreted_groups} remaining uninterpreted groups in ranking order.",
+            f"Historical qualification queue: {report.total_groups - report.interpreted_groups} structural groups remain uninterpreted in this legacy report. Functional development is currently frozen.",
             "",
             "### Qualified coverage",
             "",
