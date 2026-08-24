@@ -106,6 +106,15 @@ def test_local_search_modes_are_transmitted_without_new_business_rules():
     assert (around.search_mode, around.fixed_club_id) == ("around_club", "gearshift")
 
 
+def test_default_gui_workflow_is_independent_build_from_scratch():
+    request = OptimizationGuiOptions(
+        "par3", club_roles={"blacksmith": "auto"},
+    ).to_request()
+    assert request.search_mode == "build_from_scratch"
+    assert request.reference_bag_id is None
+    assert request.target_bag_id is None
+
+
 def test_targeted_replacement_type_policy_is_explicit_and_defaults_to_same_type():
     default = OptimizationGuiOptions("par5", search_mode="replace_club").to_request()
     broad = OptimizationGuiOptions(

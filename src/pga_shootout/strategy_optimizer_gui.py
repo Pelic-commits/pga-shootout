@@ -90,7 +90,7 @@ class OptimizationGuiOptions:
     limit: int = 5
     max_evaluations: int = 2000
     reference_bag_id: str | None = None
-    search_mode: str = "global"
+    search_mode: str = "build_from_scratch"
     target_bag_id: str | None = None
     fixed_club_id: str | None = None
     replace_club_id: str | None = None
@@ -289,6 +289,7 @@ class StrategyOptimizerPresenter:
                 "reference_neighborhood": "Amélioration locale",
                 "global_search": "Recherche globale",
                 "interactive_builder": "Constructeur interactif",
+                "build_from_scratch": "Construction depuis zéro",
                 "known_candidate": "Solution connue de la session",
             }.get(candidate.origin, candidate.origin),
         )
@@ -398,6 +399,27 @@ class StrategyOptimizerPresenter:
             for club in candidate.clubs if club.support_steps
         ]
         lines.extend(("", "SUPPORTS", *(support_lines or ("Aucun support différenciant observé",))))
+        lines.extend(("", "LES CINQ CLUBS", "=" * 15))
+        primary_step = next(iter(candidate.active_assignments), None)
+        for club in candidate.clubs:
+            display_step_id = club.active_steps[0] if club.active_steps else primary_step
+            display_step = next(
+                (step for step in club.steps if step.step_id == display_step_id),
+                club.steps[0],
+            )
+            stats = " / ".join(
+                f"{_metric_label(metric)} {display_step.final_stats[metric]:g}"
+                for metric in ("power", "control", "spin")
+                if display_step.final_stats.get(metric) is not None
+            )
+            lines.append(
+                f"{club.position}. {club.club_name} — {club.club_type.title()} — niveau {club.level} — "
+                f"{ROLE_LABELS[club.role]} — {stats}"
+            )
+            lines.append("   → " + (
+                " ; ".join(club.selection_reasons)
+                or "aucune contribution déterminante identifiée"
+            ))
         lines.extend(("", "ORDRE", " → ".join(club.club_name for club in candidate.clubs)))
         if candidate.unresolved_abilities:
             lines.extend(("", f"AVERTISSEMENTS : {len(candidate.unresolved_abilities)} capacité(s) non résolue(s)"))
@@ -689,9 +711,9 @@ class StrategyOptimizerGuiController:
                 result = self.optimizer.optimize(request)
                 elapsed = (datetime.now() - started).total_seconds()
             except Exception as error:  # converted to a safe French UI message
-                self.schedule(lambda: self._finish_error(error))
+                self.schedule(lambda captured=error: self._finish_error(captured))
                 return
-            self.schedule(lambda: self._finish_success(result, elapsed))
+            self.schedule(lambda captured=result, seconds=elapsed: self._finish_success(captured, seconds))
 
         self.thread_factory(target=work, daemon=True).start()
         return True
@@ -797,6 +819,7 @@ class StrategyOptimizerApp:
         self.reference_by_label = {"Aucun": None, **{bag.name: bag.identifier for bag in bundle.bags}}
         self.reference_name = tk.StringVar(value="Aucun")
         self.search_mode_by_label = {
+            "Construire mon sac": "build_from_scratch",
             "Optimiser autour de mes clubs": "interactive_builder",
             "Chercher de nouveaux sacs": "global",
             "Améliorer un de mes sacs": "improve_bag",
@@ -804,7 +827,7 @@ class StrategyOptimizerApp:
             "Optimiser autour d’un club": "around_club",
             "Tester un nouveau club dans mes sacs": "test_new_club",
         }
-        self.search_mode_name = tk.StringVar(value="Optimiser autour de mes clubs")
+        self.search_mode_name = tk.StringVar(value="Construire mon sac")
         self.target_bag_by_label = {"Aucun": None, **{_bag_label(bag): bag.identifier for bag in bundle.bags}}
         self.target_bag_name = tk.StringVar(value="Aucun")
         owned = tuple(item for item in bundle.inventory.entries if item.unlocked and item.current_level is not None)
@@ -859,14 +882,17 @@ class StrategyOptimizerApp:
         ttk.Label(parameters, text="Résultats :").grid(row=0, column=8, padx=(16, 3))
         ttk.Combobox(parameters, textvariable=self.limit, values=("5", "10", "20"), state="readonly", width=5).grid(row=0, column=9)
 
-        ttk.Label(parameters, text="Sac de référence pour la portée :").grid(row=2, column=0, pady=(8, 0), sticky="w")
-        ttk.Combobox(
+        self.reference_label = ttk.Label(parameters, text="Sac de référence pour la portée :")
+        self.reference_label.grid(row=2, column=0, pady=(8, 0), sticky="w")
+        self.reference_box = ttk.Combobox(
             parameters, textvariable=self.reference_name,
             values=tuple(self.reference_by_label), state="readonly", width=28,
-        ).grid(row=2, column=1, columnspan=2, pady=(8, 0), sticky="w")
-        ttk.Label(
+        )
+        self.reference_box.grid(row=2, column=1, columnspan=2, pady=(8, 0), sticky="w")
+        self.reference_hint = ttk.Label(
             parameters, text="Option empirique : aucun calcul de distance n'est effectué.",
-        ).grid(row=2, column=3, columnspan=5, pady=(8, 0), sticky="w")
+        )
+        self.reference_hint.grid(row=2, column=3, columnspan=5, pady=(8, 0), sticky="w")
 
         brands = ttk.LabelFrame(parameters, text="Marques autorisées", padding=4)
         brands.grid(row=2, column=8, columnspan=4, rowspan=1, padx=(8, 0), pady=(5, 0), sticky="ew")
@@ -884,28 +910,42 @@ class StrategyOptimizerApp:
         ttk.Button(brands, text="Tout désélectionner", command=self._clear_all_brands).grid(row=1, column=2, sticky="ew")
         self._toggle_all_brands()
 
-        ttk.Label(parameters, text="Mode de recherche :").grid(row=3, column=0, pady=(8, 0), sticky="w")
+        self.search_mode_label = ttk.Label(parameters, text="Mode de recherche :")
+        self.search_mode_label.grid(row=3, column=0, pady=(8, 0), sticky="w")
         self.search_mode_box = ttk.Combobox(
             parameters, textvariable=self.search_mode_name,
             values=tuple(self.search_mode_by_label), state="readonly", width=28,
         )
         self.search_mode_box.grid(row=3, column=1, columnspan=2, pady=(8, 0), sticky="w")
         self.search_mode_box.bind("<<ComboboxSelected>>", lambda _event: self._toggle_search_mode())
-        ttk.Label(parameters, text="Comparer à / sac de départ :").grid(row=3, column=3, pady=(8, 0), sticky="e")
+        self.target_bag_label = ttk.Label(parameters, text="Comparer à / sac de départ :")
+        self.target_bag_label.grid(row=3, column=3, pady=(8, 0), sticky="e")
         self.target_bag_box = ttk.Combobox(
             parameters, textvariable=self.target_bag_name,
             values=tuple(self.target_bag_by_label), state="disabled", width=28,
         )
         self.target_bag_box.grid(row=3, column=4, columnspan=2, pady=(8, 0), sticky="w")
-        ttk.Label(parameters, text="Club fixé :").grid(row=3, column=6, pady=(8, 0), sticky="e")
+        self.fixed_club_label = ttk.Label(parameters, text="Club fixé :")
+        self.fixed_club_label.grid(row=3, column=6, pady=(8, 0), sticky="e")
         self.fixed_club_box = ttk.Combobox(
             parameters, textvariable=self.fixed_club_name,
             values=tuple(self.fixed_club_by_label), state="disabled", width=22,
         )
         self.fixed_club_box.grid(row=3, column=7, columnspan=2, pady=(8, 0), sticky="w")
-        ttk.Button(parameters, text="Définir comme référence", command=self._mark_reference).grid(
+        self.mark_reference_button = ttk.Button(parameters, text="Définir comme référence", command=self._mark_reference)
+        self.mark_reference_button.grid(
             row=3, column=11, pady=(8, 0), padx=(6, 0), sticky="w",
         )
+
+        # Historical bag/reference workflows remain available in code but do
+        # not occupy the primary Build From Scratch screen.
+        for widget in (
+            self.reference_label, self.reference_box, self.reference_hint,
+            self.search_mode_label, self.search_mode_box, self.target_bag_label,
+            self.target_bag_box, self.fixed_club_label, self.fixed_club_box,
+            self.mark_reference_button,
+        ):
+            widget.grid_remove()
 
         self.builder_frame = ttk.LabelFrame(parameters, text="Clubs choisis et objectifs", padding=6)
         self.builder_frame.grid(row=4, column=0, columnspan=12, sticky="ew", pady=(8, 0))
@@ -916,10 +956,11 @@ class StrategyOptimizerApp:
         self.chosen_rows_frame = ttk.Frame(chosen)
         self.chosen_rows_frame.pack(fill="x")
         ttk.Button(chosen, text="+ Ajouter un club", command=self._add_chosen_club).pack(anchor="w", pady=(5, 0))
+        self._add_chosen_club()
         self.objectives_frame = ttk.LabelFrame(self.builder_frame, text="Objectifs — Power est maximisée par défaut", padding=5)
         self.objectives_frame.grid(row=0, column=1, sticky="nsew")
 
-        constraints = ttk.LabelFrame(parameters, text="Contraintes facultatives des anciens modes", padding=6)
+        constraints = ttk.LabelFrame(parameters, text="Outils de recherche locale", padding=6)
         constraints.grid(row=5, column=0, columnspan=12, sticky="ew", pady=(8, 0))
         self.legacy_constraints = constraints
         ttk.Label(constraints, text="Clubs à conserver / obligatoires").grid(row=0, column=0, sticky="w")
@@ -982,10 +1023,11 @@ class StrategyOptimizerApp:
         self.warning.pack(fill="x", pady=(0, 6))
         self.warning.configure(state="disabled")
         self.reference_summary = tk.StringVar(value="COMPARER À — Aucun sac réel sélectionné")
-        ttk.Label(
+        self.reference_summary_widget = ttk.Label(
             list_zone, textvariable=self.reference_summary, background="#eaf3ff",
             padding=6, justify="left", wraplength=760,
-        ).pack(fill="x", pady=(0, 6))
+        )
+        self.reference_summary_widget.pack(fill="x", pady=(0, 6))
         table = ttk.Frame(list_zone)
         table.pack(fill="both", expand=True)
         table.rowconfigure(0, weight=1)
@@ -1077,6 +1119,12 @@ class StrategyOptimizerApp:
         role_label = next((name for name, value in roles.items() if value == role), "Automatique")
         row_frame = self.ttk.Frame(self.chosen_rows_frame)
         row_frame.pack(fill="x", pady=2)
+        row_label = self.ttk.Label(
+            row_frame,
+            text="Club principal" if not self.chosen_club_rows else "Club obligatoire",
+            width=18,
+        )
+        row_label.pack(side="left")
         club_var = self.tk.StringVar(value=label)
         role_var = self.tk.StringVar(value=role_label)
         position_var = self.tk.StringVar(value="Libre")
@@ -1092,9 +1140,13 @@ class StrategyOptimizerApp:
         club_box.pack(side="left")
         role_box.pack(side="left", padx=4)
         position_box.pack(side="left")
+        if not self.show_advanced.get():
+            role_box.pack_forget()
+            position_box.pack_forget()
         row: dict[str, object] = {
             "frame": row_frame, "club_var": club_var, "role_var": role_var,
             "position_var": position_var, "club_box": club_box, "role_box": role_box,
+            "position_box": position_box, "row_label": row_label,
         }
         self.ttk.Button(row_frame, text="Supprimer", command=lambda: self._remove_chosen_club(row)).pack(side="left", padx=4)
         self.chosen_club_rows.append(row)
@@ -1151,14 +1203,14 @@ class StrategyOptimizerApp:
         self.fixed_step_box.configure(state="readonly" if mode == "around_club" else "disabled")
         self.depth_box.configure(state="readonly" if mode != "global" else "disabled")
         self.replacement_type_box.configure(state="readonly" if mode == "replace_club" else "disabled")
-        if mode == "interactive_builder":
+        if mode in {"interactive_builder", "build_from_scratch"}:
             self.builder_frame.grid()
             self.legacy_constraints.grid_remove()
         else:
             self.builder_frame.grid_remove()
             self.legacy_constraints.grid()
         self.analyze_button.configure(
-            text="OPTIMISER MON SAC" if mode == "interactive_builder"
+            text="OPTIMISER MON SAC" if mode in {"interactive_builder", "build_from_scratch"}
             else "Remplacer ce club" if mode == "replace_club"
             else "Chercher des améliorations" if mode == "improve_bag"
             else "Tester ce club" if mode == "test_new_club" else "Lancer l’analyse"
@@ -1210,8 +1262,14 @@ class StrategyOptimizerApp:
     def _toggle_advanced(self) -> None:
         if self.show_advanced.get():
             self.advanced_frame.grid(row=1, column=0, columnspan=2, pady=(10, 0), sticky="w")
+            for row in self.chosen_club_rows:
+                row["role_box"].pack(side="left", padx=4)
+                row["position_box"].pack(side="left")
         else:
             self.advanced_frame.grid_remove()
+            for row in self.chosen_club_rows:
+                row["role_box"].pack_forget()
+                row["position_box"].pack_forget()
 
     def _toggle_all_brands(self) -> None:
         if self.all_brands.get():
@@ -1271,7 +1329,7 @@ class StrategyOptimizerApp:
         club_roles: dict[str, str] = {}
         metric_minimums: dict[str, dict[str, float]] = {}
         primary_step_id = None
-        if search_mode == "interactive_builder":
+        if search_mode in {"interactive_builder", "build_from_scratch"}:
             role_choices = self._role_choices()
             for row in self.chosen_club_rows:
                 label = str(row["club_var"].get())
@@ -1310,7 +1368,10 @@ class StrategyOptimizerApp:
             reference_bag_id=self.reference_by_label[self.reference_name.get()],
             search_mode=search_mode,
             target_bag_id=target_bag_id,
-            fixed_club_id=self.fixed_club_by_label.get(self.fixed_club_name.get()),
+            fixed_club_id=(
+                self.fixed_club_by_label.get(self.fixed_club_name.get())
+                if search_mode in {"around_club", "test_new_club"} else None
+            ),
             replace_club_id=(
                 self.fixed_club_by_label.get(self.fixed_club_name.get())
                 if search_mode == "replace_club" else None
@@ -1350,6 +1411,10 @@ class StrategyOptimizerApp:
     def _on_success(self, result: StrategyOptimizationResult, _elapsed: float) -> None:
         self.result = result
         self.presentation = self.presenter.present(result)
+        if result.comparison_reference is None:
+            self.reference_summary_widget.pack_forget()
+        elif not self.reference_summary_widget.winfo_manager():
+            self.reference_summary_widget.pack(fill="x", pady=(0, 6))
         self._set_text(self.warning, self.presentation.warning_text)
         self.reference_summary.set(self.presentation.reference_text)
         self.candidate_tree.delete(*self.candidate_tree.get_children())
