@@ -21,5 +21,8 @@ pga-shootout = "pga_shootout.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+pga_shootout = ["assets/*.json", "assets/club_icons/*.png"]
+
 [tool.coverage.run]
 source = ["pga_shootout"]

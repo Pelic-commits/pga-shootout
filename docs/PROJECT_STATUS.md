@@ -1,6 +1,6 @@
 # Project Status
 
-> Generated from the same factual audit as `pga-shootout inventory-status`; no totals are maintained here manually.
+> Inventory totals below are the last versioned audit snapshot, not a live reading of the player's mutable SQLite file. Run `pga-shootout inventory-status` for current totals. The UI description is updated separately; this UX lot does not recalculate coverage.
 
 ## What the tool does today
 
@@ -39,7 +39,7 @@ Meteor remains experimentally blocked. Alien Relic and Alien World are not imple
 
 ## Current phase
 
-Current work focuses on real-world validation of the independent Build From Scratch workflow and its readable five-club result cards.
+The UI/UX lot focuses on independent Build From Scratch: a short form, five-club visual cards with packaged icons and brand accents, shot-labelled final statistics, factual deltas and concise contributions. Advanced settings are collapsed; historical tools and technical detail are secondary windows. This lot does not change the Rule Engine, DSL, search algorithm, catalogue or user data.
 
 ## Secondary global coverage
 

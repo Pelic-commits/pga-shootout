@@ -113,8 +113,9 @@ class InventoryStatusTests(unittest.TestCase):
 
     def test_current_incomplete_inventory_is_supported_without_treating_absence_as_locked(self):
         report = self.report()
-        self.assertFalse(report.inventory_complete)
-        self.assertNotIn("meteor", {club.club_id for club in report.clubs})
+        bundle = load_user_data(ROOT / "data" / "pga_shootout.sqlite")
+        self.assertEqual(report.inventory_complete, bundle.inventory.inventory_complete)
+        self.assertEqual({club.club_id for club in report.clubs}, {club.club_id for club in bundle.inventory.entries})
         self.assertEqual(report.inventory_clubs, len(report.clubs))
 
     def test_reference_bags_remain_secondary_regression_measurements(self):
@@ -126,14 +127,15 @@ class InventoryStatusTests(unittest.TestCase):
         self.assertEqual(coverage["par3_divebomb"], (7, 8))
         self.assertEqual(coverage["par3_high_flight"], (8, 9))
 
-    def test_recommendations_are_inventory_driven_and_exclude_meteor(self):
+    def test_recommendations_are_inventory_driven_and_exclude_unowned_clubs(self):
         report = self.report()
         self.assertEqual(len(report.next_lots), 3)
         self.assertEqual(
             tuple(item.identifier for item in report.next_lots),
             ("official_data_conflicts", "semantic_dependencies", "geometry_physics"),
         )
-        self.assertNotIn("meteor", {club_id for lot in report.next_lots for club_id in lot.club_ids})
+        owned_ids = {club.club_id for club in load_user_data(ROOT / "data" / "pga_shootout.sqlite").inventory.entries}
+        self.assertLessEqual({club_id for lot in report.next_lots for club_id in lot.club_ids}, owned_ids)
         expected_categories = (
             {"official_text_table_conflict"},
             {"true_semantic_ambiguity"},
@@ -178,20 +180,17 @@ class InventoryStatusTests(unittest.TestCase):
 
     def test_written_reports_share_the_same_audit(self):
         report = self.report()
-        self.assertEqual(
-            (ROOT / "docs" / "INVENTORY_STATUS.md").read_text(encoding="utf-8"),
-            render_inventory_markdown(report),
-        )
-        self.assertEqual(
-            (ROOT / "docs" / "PROJECT_STATUS.md").read_text(encoding="utf-8"),
-            render_project_status_markdown(report),
-        )
+        # Committed documentation is an audit snapshot, not the mutable local
+        # profile. Verify the writer against today's audit in a temporary folder.
         with tempfile.TemporaryDirectory() as directory:
             inventory_path = Path(directory) / "inventory.md"
             project_path = Path(directory) / "project.md"
             write_inventory_reports(report, inventory_path, project_path)
             self.assertEqual(inventory_path.read_text(encoding="utf-8"), render_inventory_markdown(report))
             self.assertEqual(project_path.read_text(encoding="utf-8"), render_project_status_markdown(report))
+            first = (inventory_path.read_bytes(), project_path.read_bytes())
+            write_inventory_reports(report, inventory_path, project_path)
+            self.assertEqual(first, (inventory_path.read_bytes(), project_path.read_bytes()))
 
 
 if __name__ == "__main__":

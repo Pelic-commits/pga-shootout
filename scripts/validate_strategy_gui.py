@@ -190,8 +190,8 @@ def _validate_values(app: StrategyOptimizerApp) -> dict[str, object]:
     assert tuple(club.club_id for club in maximum.clubs) in maximum.order_audit["best_orders"]
 
     # Presentation is inspected through the real widgets, not only the domain result.
-    assert len(app.candidate_tree.get_children()) == len(result.retained_results)
-    visible_families = " ".join(str(app.candidate_tree.item(iid, "values")[2]) for iid in app.candidate_tree.get_children())
+    assert len(app.cards) == len(result.retained_results)
+    visible_families = " ".join(item.families for item in app.presentation.candidates)
     for family in result.result_families:
         assert family.user_name in visible_families
     assert all(
@@ -219,6 +219,7 @@ def _validate_strategy(app: StrategyOptimizerApp, strategy_id: str) -> dict[str,
     assert len(first.steps) == expected_steps
     assert first.overview.count("Club :") == expected_steps
     assert "SUPPORTS" in first.overview and "ORDRE" in first.overview
+    app._show_detail(0)
     tabs = tuple(app.notebook.tab(tab, "text") for tab in app.notebook.tabs())
     assert tabs[0] == "Résumé"
     assert len(tabs) == expected_steps + 3
@@ -234,6 +235,7 @@ def main() -> int:
     export_dir = Path(tempfile.mkdtemp(prefix="pga-shootout-gui-validation-"))
     root = tk.Tk()
     app = StrategyOptimizerApp(root=root)
+    app.chosen_club_rows[0]["club_var"].set(next(iter(app.fixed_club_by_label)))
     app.root.update()
     app.strategy_name.set(next(label for label, identifier in app.strategy_by_label.items() if identifier == "par3"))
     app.real_mode.set(True)
@@ -350,9 +352,9 @@ def main() -> int:
     evidence["interactive_builder"]["divebomb"] = _run_builder(app, (("divebomb", "attack"),))
     assert app.result.comparison_reference is not None
     assert app.result.comparison_reference.bag_id == "par3_divebomb"
-    assert "RÉFÉRENCE" in app.reference_summary.get()
+    assert "RÉFÉRENCE" in app.presentation.reference_text
     assert not app.result.improvement_without_loss_found
-    assert "Aucune amélioration sans perte calculable" in app.reference_summary.get()
+    assert "Aucune amélioration sans perte calculable" in app.presentation.reference_text
     current = next(item for item in app.result.retained_results if "current_bag" in item.result_family_ids)
     assert current.result_status == "current_best_known"
     assert all(item.result_status != "strictly_inferior" for item in app.result.retained_results)

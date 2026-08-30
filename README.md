@@ -37,7 +37,9 @@ La politique de métriques est une configuration produit, pas une loi physique d
 
 Les sacs enregistrés restent disponibles pour les anciens outils de comparaison et de remplacement, mais ils sont volontairement absents du workflow principal. Ils ne participent jamais à Build From Scratch.
 
-Chaque fiche affiche les cinq clubs ensemble avec position, type, niveau, rôle, statistiques finales et raison concise de présence. Les capacités, cibles, contributions et traces complètes restent accessibles dans **Détails techniques**.
+Chaque proposition est une carte visuelle : cinq visuels de clubs, accents de marque, positions, types, niveaux, rôles et Power/Control/Spin finales alignées. La synthèse supérieure rappelle les clubs actifs à chaque coup. Les écarts sont affichés par rapport à la proposition « meilleure puissance trouvée », sans score global.
+
+Le bouton **Détail technique ↗** ouvre, uniquement à la demande, les onglets existants de capacités, contributions et traces. **Enregistrer ce sac** sauvegarde la proposition sélectionnée. **Outils** regroupe les anciens parcours et les exports JSON/texte. Les ressources graphiques sont embarquées : aucun téléchargement d'image au lancement.
 
 Terminologie des résultats :
 

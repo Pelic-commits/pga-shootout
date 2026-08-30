@@ -1,6 +1,6 @@
 # Architecture actuelle
 
-Ce document décrit l'état stable du logiciel au commit fonctionnel `1fd1ce9`. Les spécifications préparatoires et anciennes roadmaps sont conservées dans [`archive/`](archive/README.md).
+Ce document décrit les frontières actuelles du logiciel, y compris la présentation visuelle Build From Scratch. Les spécifications préparatoires et anciennes roadmaps sont conservées dans [`archive/`](archive/README.md).
 
 ## Couches
 
@@ -55,6 +55,10 @@ Une référence est un sac réel accompagné de métadonnées : usage, stratégi
 ### 8. Interfaces
 
 La GUI Tkinter est l'interface principale. Elle relit SQLite avant chaque analyse et exécute la recherche hors du thread d'affichage. La CLI expose les mêmes couches pour diagnostic, automatisation et tests. Voir [CLI.md](CLI.md).
+
+`strategy_optimizer_gui.py` orchestre le formulaire simplifié, le contrôleur existant et les fenêtres secondaires. `optimizer_cards.py` projette les résultats existants en cartes visuelles : sélection du coup à afficher, formats numériques, libellés et ressources locales. Cette projection n'évalue, ne classe et ne modifie aucune capacité. Le presenter existant reste la source des détails et exports.
+
+Les 88 vignettes et les neuf palettes du kit fourni sont livrées dans `src/pga_shootout/assets/`, incluses dans le paquet Python. Tk charge les PNG avec un cache ; les assets absents/illisibles utilisent une initiale et un accent neutre. `scripts/prepare_graphic_kit.py` prépare ces ressources avec Pillow, seulement pour le développement : aucune dépendance Pillow n'est requise par l'application.
 
 ### 9. Exports
 

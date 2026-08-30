@@ -18,6 +18,7 @@ from typing import Callable, Mapping
 
 from .inventory_editor import InventoryEditorApp, InventoryEditorService
 from .models import EvaluationMode
+from .optimizer_cards import METRICS as METRIC_LABELS
 from .strategy import StrategyError, StrategyRegistry
 from .strategy_optimizer import (
     ClubStepResult,
@@ -49,19 +50,6 @@ GROUP_LABELS = {
     "neutral": "Neutre",
     "best_admissible": "Meilleur sac admissible sous la restriction",
     "inferior": "Alternative inférieure",
-}
-METRIC_LABELS = {
-    "power": "Power",
-    "control": "Control",
-    "spin": "Spin",
-    "loft_angle_degrees": "Loft",
-    "wind_resistance_percent": "Wind Resistance",
-    "bounce_reduction_percent": "Bounce Reduction",
-    "groundspin": "Groundspin",
-    "groundspin_increase_percent": "Groundspin",
-    "swing_speed": "Swing Speed",
-    "gravity_reduction_percent": "Gravity Reduction",
-    "launch_angle_degrees": "Launch Angle",
 }
 
 
@@ -765,7 +753,7 @@ def suggested_export_name(strategy_id: str, extension: str, now: datetime | None
 
 
 class StrategyOptimizerApp:
-    """Single-window, three-zone Tkinter optimizer application."""
+    """Visual bag builder with secondary tools and on-demand technical detail."""
 
     def __init__(
         self,
@@ -861,215 +849,162 @@ class StrategyOptimizerApp:
         self._toggle_search_mode()
 
     def _build(self) -> None:
+        from .optimizer_cards import ACCENT, BG, INK, GraphicAssets, ScrollArea
         tk, ttk = self.tk, self.ttk
+        style = ttk.Style(self.root)
+        style.theme_use("clam")
+        style.configure(".", font=("Segoe UI", 10), background=BG, foreground=INK)
+        style.configure("TButton", padding=(12, 7))
+        style.configure("Primary.TButton", background=ACCENT, foreground="white", font=("Segoe UI", 11, "bold"), padding=(14, 13))
+        style.map("Primary.TButton", background=[("active", "#0B5744"), ("disabled", "#9CAFA7")])
+        style.configure("TCombobox", padding=5, fieldbackground="white", background="white", bordercolor="#CBD8D1")
+        style.map("TCombobox", fieldbackground=[("readonly", "white")], selectbackground=[("readonly", "white")], selectforeground=[("readonly", INK)])
+        self.root.configure(bg=BG)
+        self.root.title("PGA Shootout — Construire mon sac")
+        self.root.minsize(1180, 760)
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(1, weight=1)
-
-        parameters = ttk.LabelFrame(self.root, text="1 — Paramètres", padding=10)
-        parameters.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
-        ttk.Label(parameters, text="Stratégie :").grid(row=0, column=0, sticky="w")
-        strategy_box = ttk.Combobox(parameters, textvariable=self.strategy_name, values=tuple(self.strategy_by_label), state="readonly", width=28)
-        strategy_box.grid(row=0, column=1, padx=(5, 18))
-        strategy_box.bind("<<ComboboxSelected>>", lambda _event: self._strategy_changed())
-        ttk.Label(parameters, text="Variante :").grid(row=0, column=2, sticky="w")
-        self.variant_box = ttk.Combobox(parameters, textvariable=self.variant_name, state="readonly", width=28)
-        self.variant_box.grid(row=0, column=3, padx=(5, 18))
-        ttk.Radiobutton(parameters, text="Réel", variable=self.real_mode, value=True, command=self._toggle_mode).grid(row=0, column=4)
-        ttk.Radiobutton(parameters, text="Scénario", variable=self.real_mode, value=False, command=self._toggle_mode).grid(row=0, column=5)
-        ttk.Label(parameters, text="Niveau :").grid(row=0, column=6, padx=(12, 3))
-        self.scenario_entry = ttk.Spinbox(parameters, from_=1, to=12, textvariable=self.scenario_level, width=5)
-        self.scenario_entry.grid(row=0, column=7)
-        ttk.Label(parameters, text="Résultats :").grid(row=0, column=8, padx=(16, 3))
-        ttk.Combobox(parameters, textvariable=self.limit, values=("5", "10", "20"), state="readonly", width=5).grid(row=0, column=9)
-
-        self.reference_label = ttk.Label(parameters, text="Sac de référence pour la portée :")
-        self.reference_label.grid(row=2, column=0, pady=(8, 0), sticky="w")
-        self.reference_box = ttk.Combobox(
-            parameters, textvariable=self.reference_name,
-            values=tuple(self.reference_by_label), state="readonly", width=28,
-        )
-        self.reference_box.grid(row=2, column=1, columnspan=2, pady=(8, 0), sticky="w")
-        self.reference_hint = ttk.Label(
-            parameters, text="Option empirique : aucun calcul de distance n'est effectué.",
-        )
-        self.reference_hint.grid(row=2, column=3, columnspan=5, pady=(8, 0), sticky="w")
-
-        brands = ttk.LabelFrame(parameters, text="Marques autorisées", padding=4)
-        brands.grid(row=2, column=8, columnspan=4, rowspan=1, padx=(8, 0), pady=(5, 0), sticky="ew")
-        ttk.Checkbutton(
-            brands, text="Toutes les marques", variable=self.all_brands, command=self._toggle_all_brands,
-        ).grid(row=0, column=0, sticky="nw")
-        self.brand_list = tk.Listbox(
-            brands, selectmode="multiple", exportselection=False, height=3, width=19,
-        )
-        self.brand_list.grid(row=0, column=1, rowspan=2, padx=5, sticky="ew")
-        for label in self.brand_id_by_label:
-            self.brand_list.insert("end", label)
-        self.brand_list.bind("<<ListboxSelect>>", self._brand_selection_changed)
-        ttk.Button(brands, text="Tout sélectionner", command=self._select_all_brands).grid(row=0, column=2, sticky="ew")
-        ttk.Button(brands, text="Tout désélectionner", command=self._clear_all_brands).grid(row=1, column=2, sticky="ew")
-        self._toggle_all_brands()
-
-        self.search_mode_label = ttk.Label(parameters, text="Mode de recherche :")
-        self.search_mode_label.grid(row=3, column=0, pady=(8, 0), sticky="w")
-        self.search_mode_box = ttk.Combobox(
-            parameters, textvariable=self.search_mode_name,
-            values=tuple(self.search_mode_by_label), state="readonly", width=28,
-        )
-        self.search_mode_box.grid(row=3, column=1, columnspan=2, pady=(8, 0), sticky="w")
-        self.search_mode_box.bind("<<ComboboxSelected>>", lambda _event: self._toggle_search_mode())
-        self.target_bag_label = ttk.Label(parameters, text="Comparer à / sac de départ :")
-        self.target_bag_label.grid(row=3, column=3, pady=(8, 0), sticky="e")
-        self.target_bag_box = ttk.Combobox(
-            parameters, textvariable=self.target_bag_name,
-            values=tuple(self.target_bag_by_label), state="disabled", width=28,
-        )
-        self.target_bag_box.grid(row=3, column=4, columnspan=2, pady=(8, 0), sticky="w")
-        self.fixed_club_label = ttk.Label(parameters, text="Club fixé :")
-        self.fixed_club_label.grid(row=3, column=6, pady=(8, 0), sticky="e")
-        self.fixed_club_box = ttk.Combobox(
-            parameters, textvariable=self.fixed_club_name,
-            values=tuple(self.fixed_club_by_label), state="disabled", width=22,
-        )
-        self.fixed_club_box.grid(row=3, column=7, columnspan=2, pady=(8, 0), sticky="w")
-        self.mark_reference_button = ttk.Button(parameters, text="Définir comme référence", command=self._mark_reference)
-        self.mark_reference_button.grid(
-            row=3, column=11, pady=(8, 0), padx=(6, 0), sticky="w",
-        )
-
-        # Historical bag/reference workflows remain available in code but do
-        # not occupy the primary Build From Scratch screen.
-        for widget in (
-            self.reference_label, self.reference_box, self.reference_hint,
-            self.search_mode_label, self.search_mode_box, self.target_bag_label,
-            self.target_bag_box, self.fixed_club_label, self.fixed_club_box,
-            self.mark_reference_button,
-        ):
-            widget.grid_remove()
-
-        self.builder_frame = ttk.LabelFrame(parameters, text="Clubs choisis et objectifs", padding=6)
-        self.builder_frame.grid(row=4, column=0, columnspan=12, sticky="ew", pady=(8, 0))
-        self.builder_frame.columnconfigure(0, weight=2)
-        self.builder_frame.columnconfigure(1, weight=3)
-        chosen = ttk.LabelFrame(self.builder_frame, text="Clubs à utiliser", padding=5)
-        chosen.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
-        self.chosen_rows_frame = ttk.Frame(chosen)
+        header = tk.Frame(self.root, bg=INK)
+        header.grid(row=0, column=0, sticky="ew")
+        tk.Label(header, text="PGA  /  SHOOTOUT", bg=INK, fg="#9BD6BD", font=("Segoe UI", 10, "bold")).pack(side="left", padx=(24, 18), pady=20)
+        tk.Label(header, text="Construire mon sac", bg=INK, fg="white", font=("Segoe UI", 20, "bold")).pack(side="left")
+        ttk.Button(header, text="Mon inventaire", command=self._open_inventory).pack(side="right", padx=(8, 24))
+        ttk.Button(header, text="Outils", command=lambda: self.tools_window.deiconify()).pack(side="right")
+        content = ttk.Frame(self.root)
+        content.grid(row=1, column=0, sticky="nsew")
+        content.columnconfigure(1, weight=1)
+        content.rowconfigure(0, weight=1)
+        sidebar = ttk.Frame(content, width=330)
+        sidebar.grid(row=0, column=0, sticky="ns", padx=(16, 0), pady=16)
+        sidebar.grid_propagate(False)
+        sidebar.rowconfigure(0, weight=1)
+        sidebar.columnconfigure(0, weight=1)
+        self.form_scroll = ScrollArea(sidebar)
+        self.form_scroll.frame.grid(row=0, column=0, sticky="nsew")
+        form = self.form_scroll.body
+        form.columnconfigure(0, weight=1)
+        ttk.Label(form, text="01  VOTRE STRATÉGIE", font=("Segoe UI", 10, "bold")).grid(row=0, column=0, sticky="w", pady=(4, 8))
+        self.strategy_box = ttk.Combobox(form, textvariable=self.strategy_name, values=tuple(self.strategy_by_label), state="readonly")
+        self.strategy_box.grid(row=1, column=0, sticky="ew", padx=(0, 10))
+        self.strategy_box.bind("<<ComboboxSelected>>", lambda _event: self._strategy_changed())
+        self.builder_frame = ttk.Frame(form)
+        self.builder_frame.grid(row=2, column=0, sticky="ew", pady=(24, 0), padx=(0, 10))
+        ttk.Label(self.builder_frame, text="02  VOS CLUBS", font=("Segoe UI", 10, "bold")).pack(anchor="w", pady=(0, 8))
+        self.chosen_rows_frame = ttk.Frame(self.builder_frame)
         self.chosen_rows_frame.pack(fill="x")
-        ttk.Button(chosen, text="+ Ajouter un club", command=self._add_chosen_club).pack(anchor="w", pady=(5, 0))
+        self.add_club_button = ttk.Button(self.builder_frame, text="+ Ajouter un club", command=self._add_chosen_club)
+        self.add_club_button.pack(anchor="w", pady=(6, 0))
+        self.objectives_frame = ttk.Frame(form)
+        self.objectives_frame.grid(row=3, column=0, sticky="ew", pady=(24, 0), padx=(0, 10))
+        brands = ttk.Frame(form)
+        brands.grid(row=4, column=0, sticky="ew", pady=(20, 0), padx=(0, 10))
+        ttk.Label(brands, text="Marques autorisées", font=("Segoe UI", 10, "bold")).pack(anchor="w")
+        ttk.Checkbutton(brands, text="Toutes les marques", variable=self.all_brands, command=self._toggle_all_brands).pack(anchor="w", pady=5)
+        self.brand_list = tk.Listbox(brands, selectmode="multiple", exportselection=False, height=5, relief="flat", font=("Segoe UI", 10), selectbackground=ACCENT)
+        for brand in self.brand_id_by_label:
+            self.brand_list.insert("end", brand)
+        self.brand_list.bind("<<ListboxSelect>>", self._brand_selection_changed)
+        self.analyze_button = ttk.Button(form, text="OPTIMISER MON SAC", command=self._start, style="Primary.TButton")
+        self.analyze_button.grid(row=5, column=0, sticky="ew", pady=(24, 12), padx=(0, 10))
+        ttk.Checkbutton(form, text="Options avancées", variable=self.show_advanced, command=self._toggle_advanced).grid(row=6, column=0, sticky="w", pady=(0, 8))
+        self.advanced_frame = ttk.Frame(form)
+        self.advanced_frame.columnconfigure(0, weight=1)
+        self.advanced_roles = ttk.Frame(self.advanced_frame)
+        self.advanced_roles.grid(row=0, column=0, sticky="ew", pady=(0, 10))
+        self.advanced_objectives = ttk.Frame(self.advanced_frame)
+        self.advanced_objectives.grid(row=1, column=0, sticky="ew", pady=(0, 10))
+        ttk.Label(self.advanced_frame, text="Contexte explicite").grid(row=2, column=0, sticky="w")
+        self.variant_box = ttk.Combobox(self.advanced_frame, textvariable=self.variant_name, state="readonly")
+        self.variant_box.grid(row=3, column=0, sticky="ew", pady=4)
+        modes = ttk.Frame(self.advanced_frame)
+        modes.grid(row=4, column=0, sticky="ew")
+        ttk.Radiobutton(modes, text="Niveaux réels", variable=self.real_mode, value=True, command=self._toggle_mode).pack(side="left")
+        ttk.Radiobutton(modes, text="Scénario", variable=self.real_mode, value=False, command=self._toggle_mode).pack(side="left")
+        self.scenario_entry = ttk.Spinbox(self.advanced_frame, from_=1, to=12, textvariable=self.scenario_level, width=5)
+        self.scenario_entry.grid(row=5, column=0, sticky="w", pady=4)
+        ttk.Label(self.advanced_frame, text="Résultats / limite de recherche").grid(row=6, column=0, sticky="w")
+        limits = ttk.Frame(self.advanced_frame)
+        limits.grid(row=7, column=0, sticky="w", pady=4)
+        ttk.Combobox(limits, textvariable=self.limit, values=("5", "10", "20"), state="readonly", width=5).pack(side="left")
+        ttk.Entry(limits, textvariable=self.max_evaluations, width=10).pack(side="left", padx=8)
         self._add_chosen_club()
-        self.objectives_frame = ttk.LabelFrame(self.builder_frame, text="Objectifs — Power est maximisée par défaut", padding=5)
-        self.objectives_frame.grid(row=0, column=1, sticky="nsew")
+        self.progress = ttk.Progressbar(form, mode="indeterminate")
+        self.progress.grid(row=8, column=0, sticky="ew", pady=8, padx=(0, 10))
+        self.progress.grid_remove()
 
-        constraints = ttk.LabelFrame(parameters, text="Outils de recherche locale", padding=6)
-        constraints.grid(row=5, column=0, columnspan=12, sticky="ew", pady=(8, 0))
-        self.legacy_constraints = constraints
-        ttk.Label(constraints, text="Clubs à conserver / obligatoires").grid(row=0, column=0, sticky="w")
-        self.required_list = tk.Listbox(constraints, selectmode="multiple", exportselection=False, height=4, width=28)
-        self.required_list.grid(row=1, column=0, padx=(0, 12), sticky="ew")
-        ttk.Label(constraints, text="Clubs exclus").grid(row=0, column=1, sticky="w")
-        self.excluded_list = tk.Listbox(constraints, selectmode="multiple", exportselection=False, height=4, width=28)
-        self.excluded_list.grid(row=1, column=1, padx=(0, 12), sticky="ew")
-        ttk.Checkbutton(
-            constraints, text="Conserver mon putter actuel", variable=self.keep_current_putter,
-        ).grid(row=0, column=2, sticky="w")
-        ttk.Checkbutton(
-            constraints, text="Verrouiller à leur position actuelle les clubs conservés",
-            variable=self.lock_required_positions,
-        ).grid(row=1, column=2, sticky="nw")
-        ttk.Label(constraints, text="Rôle actif du club testé :").grid(row=0, column=3, padx=(14, 0), sticky="w")
-        self.fixed_step_box = ttk.Combobox(
-            constraints, textvariable=self.fixed_step_name, state="disabled", width=22,
-        )
-        self.fixed_step_box.grid(row=1, column=3, padx=(14, 0), sticky="nw")
-        ttk.Label(constraints, text="Type de remplaçant :").grid(row=0, column=4, padx=(14, 0), sticky="w")
-        self.replacement_type_box = ttk.Combobox(
-            constraints, textvariable=self.replacement_type_name,
-            values=tuple(self.replacement_type_by_label), state="disabled", width=29,
-        )
-        self.replacement_type_box.grid(row=1, column=4, padx=(14, 0), sticky="nw")
-        ttk.Label(constraints, text="Profondeur :").grid(row=0, column=5, padx=(14, 0), sticky="w")
-        self.depth_box = ttk.Combobox(
-            constraints, textvariable=self.replacement_depth,
-            values=("Jusqu’à 1 remplacement", "Jusqu’à 2 remplacements"), state="disabled", width=25,
-        )
-        self.depth_box.grid(row=1, column=5, padx=(14, 0), sticky="nw")
-        ttk.Button(
-            constraints, text="Utiliser les rôles de la référence", command=self._use_reference_roles,
-        ).grid(row=1, column=6, padx=(14, 0), sticky="nw")
-
-        self.analyze_button = ttk.Button(parameters, text="Lancer l’analyse", command=self._start)
-        self.analyze_button.grid(row=0, column=10, padx=(20, 6))
-        ttk.Button(parameters, text="Gérer mon inventaire", command=self._open_inventory).grid(row=0, column=11, padx=6)
-        self.test_new_button = ttk.Button(
-            parameters, text="Tester le nouveau club", command=self._test_detected_club, state="disabled",
-        )
-        self.test_new_button.grid(row=1, column=11, padx=6, pady=(10, 0))
-        ttk.Checkbutton(parameters, text="Options avancées", variable=self.show_advanced, command=self._toggle_advanced).grid(row=1, column=0, pady=(10, 0), sticky="w")
-        self.advanced_frame = ttk.Frame(parameters)
-        ttk.Label(self.advanced_frame, text="Limite de sécurité :").pack(side="left")
-        ttk.Entry(self.advanced_frame, textvariable=self.max_evaluations, width=8).pack(side="left", padx=5)
-        self.progress = ttk.Progressbar(parameters, mode="indeterminate", length=180)
-        self.progress.grid(row=1, column=9, columnspan=2, pady=(10, 0), sticky="e")
-        ttk.Label(parameters, textvariable=self.status).grid(row=1, column=2, columnspan=7, pady=(10, 0), sticky="w")
-
-        panes = ttk.Panedwindow(self.root, orient="horizontal")
-        panes.grid(row=1, column=0, sticky="nsew", padx=10, pady=(0, 10))
-        list_zone = ttk.LabelFrame(panes, text="2 — Propositions retenues", padding=8)
-        detail_zone = ttk.LabelFrame(panes, text="3 — Détail du sac sélectionné", padding=8)
-        panes.add(list_zone, weight=2)
-        panes.add(detail_zone, weight=3)
-
-        self.warning = tk.Text(list_zone, height=7, wrap="word", background="#fff4ce", relief="flat")
-        self.warning.pack(fill="x", pady=(0, 6))
-        self.warning.configure(state="disabled")
-        self.reference_summary = tk.StringVar(value="COMPARER À — Aucun sac réel sélectionné")
-        self.reference_summary_widget = ttk.Label(
-            list_zone, textvariable=self.reference_summary, background="#eaf3ff",
-            padding=6, justify="left", wraplength=760,
-        )
-        self.reference_summary_widget.pack(fill="x", pady=(0, 6))
-        table = ttk.Frame(list_zone)
-        table.pack(fill="both", expand=True)
-        table.rowconfigure(0, weight=1)
-        table.columnconfigure(0, weight=1)
-        columns = ("number", "origin", "family", "category", "composition", "active", "unresolved", "neutral", "strengths")
-        self.candidate_tree = ttk.Treeview(table, columns=columns, show="headings", selectmode="browse", height=15)
-        labels = {
-            "number": "N°", "origin": "Origine", "family": "Famille", "category": "Catégorie", "composition": "Composition ordonnée",
-            "active": "Clubs actifs", "unresolved": "Non résolues", "neutral": "Club neutre", "strengths": "Points forts calculables",
-        }
-        widths = {"number": 40, "origin": 130, "family": 220, "category": 170, "composition": 330, "active": 240, "unresolved": 80, "neutral": 80, "strengths": 290}
-        for column in columns:
-            self.candidate_tree.heading(column, text=labels[column])
-            self.candidate_tree.column(column, width=widths[column], anchor="w")
-        vertical = ttk.Scrollbar(table, orient="vertical", command=self.candidate_tree.yview)
-        horizontal = ttk.Scrollbar(table, orient="horizontal", command=self.candidate_tree.xview)
-        self.candidate_tree.configure(yscrollcommand=vertical.set, xscrollcommand=horizontal.set)
-        self.candidate_tree.grid(row=0, column=0, sticky="nsew")
-        vertical.grid(row=0, column=1, sticky="ns")
-        horizontal.grid(row=1, column=0, sticky="ew")
-        self.candidate_tree.bind("<<TreeviewSelect>>", self._select_candidate)
-
-        self.detail_title = tk.StringVar(value="Sélectionnez une proposition.")
-        ttk.Label(detail_zone, textvariable=self.detail_title, font=("Segoe UI", 11, "bold"), wraplength=720).pack(fill="x")
-        self.notebook = ttk.Notebook(detail_zone)
-        self.notebook.pack(fill="both", expand=True, pady=8)
-        export_bar = ttk.Frame(detail_zone)
-        export_bar.pack(fill="x")
-        self.export_json_button = ttk.Button(export_bar, text="Exporter en JSON", command=self._export_json, state="disabled")
-        self.export_text_button = ttk.Button(export_bar, text="Exporter en texte", command=self._export_text, state="disabled")
-        self.copy_button = ttk.Button(export_bar, text="Copier le résumé du sac", command=self._copy_summary, state="disabled")
-        self.save_bag_button = ttk.Button(export_bar, text="Enregistrer comme sac", command=self._save_selected_bag, state="disabled")
-        self.replace_reference_button = ttk.Button(
-            export_bar, text="Remplacer mon sac de référence", command=self._replace_reference, state="disabled",
-        )
-        self.export_json_button.pack(side="left")
-        self.export_text_button.pack(side="left", padx=6)
-        self.copy_button.pack(side="left")
-        self.save_bag_button.pack(side="left", padx=6)
-        self.replace_reference_button.pack(side="left")
-        self.search_info_button = ttk.Button(export_bar, text="Informations sur la recherche", command=self._show_search_info, state="disabled")
+        results = ttk.Frame(content)
+        results.grid(row=0, column=1, sticky="nsew", pady=16)
+        results.rowconfigure(2, weight=1)
+        results.columnconfigure(0, weight=1)
+        self.results_heading = tk.StringVar(value="Votre prochain sac commence ici")
+        ttk.Label(results, textvariable=self.results_heading, font=("Segoe UI", 18, "bold")).grid(row=0, column=0, sticky="w", padx=16, pady=(0, 8))
+        self.warning_summary = tk.StringVar(value="Choisissez une stratégie et un club, puis lancez la recherche.")
+        self.warning_button = ttk.Button(results, textvariable=self.warning_summary, command=self._show_warnings)
+        self.warning_button.grid(row=1, column=0, sticky="ew", padx=16, pady=(0, 14))
+        self.cards_scroll = ScrollArea(results)
+        self.cards_scroll.frame.grid(row=2, column=0, sticky="nsew")
+        self.cards = []
+        tk.Label(self.cards_scroll.body, text="Un club au cœur du jeu.\nCinq clubs qui travaillent ensemble.", font=("Segoe UI", 23, "bold"), fg=INK, bg=BG, justify="left", anchor="w").pack(fill="x", padx=35, pady=(95, 20))
+        tk.Label(self.cards_scroll.body, text="1  Choisissez votre club principal\n2  Ajoutez des clubs obligatoires si vous le souhaitez\n3  Comparez les rôles, les gains et les compromis", font=("Segoe UI", 12), fg="#596B65", bg=BG, justify="left", anchor="w").pack(fill="x", padx=35)
+        footer = ttk.Frame(self.root, padding=(16, 8))
+        footer.grid(row=2, column=0, sticky="ew")
+        ttk.Label(footer, textvariable=self.status, wraplength=1000).pack(side="left")
+        self.search_info_button = ttk.Button(footer, text="Recherche", command=self._show_search_info, state="disabled")
         self.search_info_button.pack(side="right")
+        self.assets = GraphicAssets(self.root, json.loads(self.catalog_path.read_text(encoding="utf-8")))
+
+        # Existing tools and presenter remain secondary, in separate windows.
+        self.tools_window = tk.Toplevel(self.root)
+        self.tools_window.title("Outils — parcours historiques et exports")
+        self.tools_window.geometry("570x720")
+        self.tools_window.withdraw()
+        self.tools_window.protocol("WM_DELETE_WINDOW", self.tools_window.withdraw)
+        self.tools_scroll = ScrollArea(self.tools_window)
+        self.tools_scroll.frame.pack(fill="both", expand=True, padx=18, pady=18)
+        tools = self.tools_scroll.body
+        def selector(label, variable, values):
+            ttk.Label(tools, text=label).pack(anchor="w", pady=(8, 2))
+            box = ttk.Combobox(tools, textvariable=variable, values=values, state="readonly", width=45)
+            box.pack(fill="x")
+            return box
+        self.search_mode_box = selector("Parcours (Construire mon sac par défaut)", self.search_mode_name, tuple(self.search_mode_by_label))
+        self.search_mode_box.bind("<<ComboboxSelected>>", lambda _: self._toggle_search_mode())
+        self.target_bag_box = selector("Sac enregistré", self.target_bag_name, tuple(self.target_bag_by_label))
+        self.fixed_club_box = selector("Club à tester", self.fixed_club_name, tuple(self.fixed_club_by_label))
+        self.fixed_step_box = selector("Rôle du club testé", self.fixed_step_name, ())
+        self.depth_box = selector("Profondeur", self.replacement_depth, ("Jusqu’à 1 remplacement", "Jusqu’à 2 remplacements"))
+        self.replacement_type_box = selector("Type de remplacement", self.replacement_type_name, tuple(self.replacement_type_by_label))
+        self.reference_box = selector("Référence empirique facultative", self.reference_name, tuple(self.reference_by_label))
+        ttk.Button(tools, text="Définir le sac comme référence", command=self._mark_reference).pack(fill="x", pady=4)
+        ttk.Button(tools, text="Utiliser les rôles de la référence", command=self._use_reference_roles).pack(fill="x")
+        self.legacy_constraints = ttk.Frame(tools)
+        self.required_list = tk.Listbox(self.legacy_constraints, selectmode="multiple", exportselection=False)
+        self.excluded_list = tk.Listbox(self.legacy_constraints, selectmode="multiple", exportselection=False)
+        self.test_new_button = ttk.Button(tools, text="Tester le nouveau club", command=self._test_detected_club, state="disabled")
+        self.test_new_button.pack(pady=8)
+        ttk.Button(tools, text="Lancer le parcours sélectionné", command=self._start).pack()
+        self.export_json_button = ttk.Button(tools, text="Exporter les résultats JSON", command=self._export_json, state="disabled")
+        self.export_text_button = ttk.Button(tools, text="Exporter les résultats texte", command=self._export_text, state="disabled")
+        self.export_json_button.pack(fill="x", pady=(12, 4))
+        self.export_text_button.pack(fill="x")
+        self.detail_window = tk.Toplevel(self.root)
+        self.detail_window.title("Détail technique — calculs et contributions")
+        self.detail_window.geometry("1050x720")
+        self.detail_window.withdraw()
+        self.detail_window.protocol("WM_DELETE_WINDOW", self.detail_window.withdraw)
+        self.detail_title = tk.StringVar()
+        ttk.Label(self.detail_window, textvariable=self.detail_title, font=("Segoe UI", 12, "bold"), wraplength=950).pack(fill="x", padx=15, pady=12)
+        self.notebook = ttk.Notebook(self.detail_window)
+        self.notebook.pack(fill="both", expand=True, padx=15)
+        bar = ttk.Frame(self.detail_window, padding=12)
+        bar.pack(fill="x")
+        self.copy_button = ttk.Button(bar, text="Copier le résumé", command=self._copy_summary, state="disabled")
+        self.save_bag_button = ttk.Button(bar, text="Enregistrer ce sac", command=self._save_selected_bag, state="disabled")
+        self.replace_reference_button = ttk.Button(bar, text="Remplacer la référence", command=self._replace_reference, state="disabled")
+        for button in (self.copy_button, self.save_bag_button, self.replace_reference_button):
+            button.pack(side="left", padx=5)
+        self._visual_selected_index = None
+        self._toggle_all_brands()
 
     def _poll_callbacks(self) -> None:
         """Execute worker completions exclusively from Tk's main thread."""
@@ -1110,50 +1045,37 @@ class StrategyOptimizerApp:
         if len(self.chosen_club_rows) >= 5:
             self.status.set("Un sac contient cinq clubs au maximum.")
             return
-        used = {self.fixed_club_by_label.get(str(row["club_var"].get())) for row in self.chosen_club_rows}
-        label = next(
-            (name for name, value in self.fixed_club_by_label.items() if value == club_id),
-            next((name for name, value in self.fixed_club_by_label.items() if value not in used), ""),
-        )
+        label = next((name for name, value in self.fixed_club_by_label.items() if value == club_id), "")
         roles = self._role_choices()
-        role_label = next((name for name, value in roles.items() if value == role), "Automatique")
         row_frame = self.ttk.Frame(self.chosen_rows_frame)
-        row_frame.pack(fill="x", pady=2)
-        row_label = self.ttk.Label(
-            row_frame,
-            text="Club principal" if not self.chosen_club_rows else "Club obligatoire",
-            width=18,
-        )
-        row_label.pack(side="left")
+        row_frame.pack(fill="x", pady=4)
+        row_label = self.ttk.Label(row_frame, text="Club principal" if not self.chosen_club_rows else "Club obligatoire")
+        row_label.pack(anchor="w", pady=(0, 3))
         club_var = self.tk.StringVar(value=label)
-        role_var = self.tk.StringVar(value=role_label)
+        role_var = self.tk.StringVar(value=next((name for name, value in roles.items() if value == role), "Automatique"))
         position_var = self.tk.StringVar(value="Libre")
-        club_box = self.ttk.Combobox(
-            row_frame, textvariable=club_var, values=tuple(self.fixed_club_by_label), state="readonly", width=24,
-        )
-        role_box = self.ttk.Combobox(
-            row_frame, textvariable=role_var, values=tuple(roles), state="readonly", width=25,
-        )
-        position_box = self.ttk.Combobox(
-            row_frame, textvariable=position_var, values=("Libre", "1", "2", "3", "4", "5"), state="readonly", width=7,
-        )
-        club_box.pack(side="left")
-        role_box.pack(side="left", padx=4)
-        position_box.pack(side="left")
-        if not self.show_advanced.get():
-            role_box.pack_forget()
-            position_box.pack_forget()
-        row: dict[str, object] = {
-            "frame": row_frame, "club_var": club_var, "role_var": role_var,
-            "position_var": position_var, "club_box": club_box, "role_box": role_box,
-            "position_box": position_box, "row_label": row_label,
-        }
-        self.ttk.Button(row_frame, text="Supprimer", command=lambda: self._remove_chosen_club(row)).pack(side="left", padx=4)
+        club_box = self.ttk.Combobox(row_frame, textvariable=club_var, values=tuple(self.fixed_club_by_label), state="readonly", width=21)
+        club_box.pack(side="left", fill="x", expand=True)
+        advanced_row = self.ttk.Frame(self.advanced_roles)
+        advanced_row.pack(fill="x", pady=5)
+        self.ttk.Label(advanced_row, textvariable=club_var).pack(anchor="w")
+        role_box = self.ttk.Combobox(advanced_row, textvariable=role_var, values=tuple(roles), state="readonly", width=20)
+        role_box.pack(side="left")
+        position_box = self.ttk.Combobox(advanced_row, textvariable=position_var, values=("Libre", "1", "2", "3", "4", "5"), state="readonly", width=5)
+        position_box.pack(side="left", padx=3)
+        row = {"frame": row_frame, "club_var": club_var, "role_var": role_var, "position_var": position_var,
+               "club_box": club_box, "role_box": role_box, "position_box": position_box,
+               "row_label": row_label, "advanced_row": advanced_row}
+        if self.chosen_club_rows:
+            self.ttk.Button(row_frame, text="×", width=2, command=lambda: self._remove_chosen_club(row)).pack(side="right", padx=(3, 0))
         self.chosen_club_rows.append(row)
+        self.add_club_button.configure(state="disabled" if len(self.chosen_club_rows) == 5 else "normal")
 
     def _remove_chosen_club(self, row: dict[str, object]) -> None:
         row["frame"].destroy()
+        row["advanced_row"].destroy()
         self.chosen_club_rows.remove(row)
+        self.add_club_button.configure(state="normal")
 
     def _refresh_chosen_roles(self) -> None:
         roles = self._role_choices()
@@ -1164,31 +1086,27 @@ class StrategyOptimizerApp:
                 row["role_var"].set("Automatique")
 
     def _rebuild_objectives(self) -> None:
-        for child in self.objectives_frame.winfo_children():
-            child.destroy()
+        for host in (self.objectives_frame, self.advanced_objectives):
+            for child in host.winfo_children():
+                child.destroy()
         self.step_minimum_vars = {}
-        strategy_id = self.strategy_by_label[self.strategy_name.get()]
-        strategy = self.presenter.registry.get(strategy_id)
-        for row_index, step in enumerate(strategy.sequence):
-            function_label = {
-                "advance_toward_target": "PROGRESSER",
-                "reach_target_zone": "ATTAQUER LE GREEN",
-                "finish": "PUTT",
-            }.get(step.function.identifier, step.function.identifier)
-            self.ttk.Label(self.objectives_frame, text=f"{step.name} — {function_label}").grid(
-                row=row_index, column=0, sticky="w", padx=(0, 8), pady=2,
-            )
+        strategy = self.presenter.registry.get(self.strategy_by_label[self.strategy_name.get()])
+        self.ttk.Label(self.objectives_frame, text="03  VOTRE OBJECTIF", font=("Segoe UI", 10, "bold")).pack(anchor="w")
+        self.ttk.Label(self.objectives_frame, text="Power maximale", font=("Segoe UI", 13, "bold")).pack(anchor="w", pady=(5, 10))
+        self.ttk.Label(self.objectives_frame, text="Minimums facultatifs pour le premier coup", wraplength=285).pack(anchor="w")
+        for index, step in enumerate(strategy.sequence):
+            host = self.objectives_frame if index == 0 else self.advanced_objectives
+            if index:
+                self.ttk.Label(host, text=step.name).pack(anchor="w", pady=(7, 3))
+            values = {}
             metrics = ("power", "control") if step.function.identifier == "finish" else ("control", "spin")
-            values: dict[str, object] = {}
-            for column, metric in enumerate(metrics, 1):
+            for metric in metrics:
+                line = self.ttk.Frame(host)
+                line.pack(fill="x", pady=3)
+                self.ttk.Label(line, text=f"{METRIC_LABELS[metric]} minimum").pack(side="left")
                 variable = self.tk.StringVar(value="Aucun")
-                box = self.ttk.Combobox(
-                    self.objectives_frame, textvariable=variable, values=("Aucun",), width=12,
-                )
-                box.grid(row=row_index, column=column, padx=3, pady=2)
-                self.ttk.Label(self.objectives_frame, text=f"{METRIC_LABELS[metric]} minimum").grid(
-                    row=row_index + len(strategy.sequence), column=column, padx=3, sticky="n",
-                ) if row_index == 0 else None
+                box = self.ttk.Combobox(line, textvariable=variable, values=("Aucun",), width=9)
+                box.pack(side="right")
                 values[metric] = (variable, box)
             self.step_minimum_vars[step.identifier] = values
 
@@ -1197,24 +1115,14 @@ class StrategyOptimizerApp:
 
     def _toggle_search_mode(self) -> None:
         mode = self.search_mode_by_label[self.search_mode_name.get()]
-        local_mode = mode in {"improve_bag", "replace_club", "around_club", "test_new_club", "interactive_builder"}
-        self.target_bag_box.configure(state="readonly" if local_mode else "disabled")
+        self.target_bag_box.configure(state="disabled" if mode == "build_from_scratch" else "readonly")
         self.fixed_club_box.configure(state="readonly" if mode in {"replace_club", "around_club", "test_new_club"} else "disabled")
         self.fixed_step_box.configure(state="readonly" if mode == "around_club" else "disabled")
-        self.depth_box.configure(state="readonly" if mode != "global" else "disabled")
-        self.replacement_type_box.configure(state="readonly" if mode == "replace_club" else "disabled")
-        if mode in {"interactive_builder", "build_from_scratch"}:
-            self.builder_frame.grid()
-            self.legacy_constraints.grid_remove()
+        self.analyze_button.configure(text="OPTIMISER MON SAC" if mode == "build_from_scratch" else "LANCER LE PARCOURS OUTILS")
+        if mode != "build_from_scratch":
+            self.status.set("Parcours secondaire actif : " + self.search_mode_name.get())
         else:
-            self.builder_frame.grid_remove()
-            self.legacy_constraints.grid()
-        self.analyze_button.configure(
-            text="OPTIMISER MON SAC" if mode in {"interactive_builder", "build_from_scratch"}
-            else "Remplacer ce club" if mode == "replace_club"
-            else "Chercher des améliorations" if mode == "improve_bag"
-            else "Tester ce club" if mode == "test_new_club" else "Lancer l’analyse"
-        )
+            self.status.set("Choisissez un club principal. Vos niveaux réels seront utilisés.")
 
     def _refresh_inventory_choices(self) -> None:
         bundle = load_user_data(self.user_data_path)
@@ -1261,22 +1169,18 @@ class StrategyOptimizerApp:
 
     def _toggle_advanced(self) -> None:
         if self.show_advanced.get():
-            self.advanced_frame.grid(row=1, column=0, columnspan=2, pady=(10, 0), sticky="w")
-            for row in self.chosen_club_rows:
-                row["role_box"].pack(side="left", padx=4)
-                row["position_box"].pack(side="left")
+            self.advanced_frame.grid(row=7, column=0, sticky="ew", padx=(0, 10), pady=8)
         else:
             self.advanced_frame.grid_remove()
-            for row in self.chosen_club_rows:
-                row["role_box"].pack_forget()
-                row["position_box"].pack_forget()
 
     def _toggle_all_brands(self) -> None:
         if self.all_brands.get():
             self.brand_list.selection_clear(0, "end")
             self.brand_list.configure(state="disabled")
+            self.brand_list.pack_forget()
         else:
             self.brand_list.configure(state="normal")
+            self.brand_list.pack(fill="x", pady=4)
 
     def _select_all_brands(self) -> None:
         self.all_brands.set(True)
@@ -1284,6 +1188,7 @@ class StrategyOptimizerApp:
 
     def _clear_all_brands(self) -> None:
         self.all_brands.set(False)
+        self._toggle_all_brands()
         self.brand_list.configure(state="normal")
         self.brand_list.selection_clear(0, "end")
 
@@ -1333,6 +1238,8 @@ class StrategyOptimizerApp:
             role_choices = self._role_choices()
             for row in self.chosen_club_rows:
                 label = str(row["club_var"].get())
+                if not label:
+                    raise ValueError("Choisissez un club dans chaque ligne, ou supprimez la ligne facultative vide.")
                 club_id = self.fixed_club_by_label[label]
                 if club_id in club_roles:
                     raise ValueError(f"Le club {label} a été ajouté plusieurs fois.")
@@ -1365,9 +1272,9 @@ class StrategyOptimizerApp:
             scenario_level=scenario,
             limit=limit,
             max_evaluations=max_evaluations,
-            reference_bag_id=self.reference_by_label[self.reference_name.get()],
+            reference_bag_id=None if search_mode == "build_from_scratch" else self.reference_by_label[self.reference_name.get()],
             search_mode=search_mode,
-            target_bag_id=target_bag_id,
+            target_bag_id=None if search_mode == "build_from_scratch" else target_bag_id,
             fixed_club_id=(
                 self.fixed_club_by_label.get(self.fixed_club_name.get())
                 if search_mode in {"around_club", "test_new_club"} else None
@@ -1403,42 +1310,53 @@ class StrategyOptimizerApp:
     def _on_state(self, running: bool, message: str) -> None:
         self.analyze_button.configure(state="disabled" if running else "normal")
         if running:
+            self.progress.grid()
             self.progress.start(10)
         else:
             self.progress.stop()
+            self.progress.grid_remove()
         self.status.set(message)
 
     def _on_success(self, result: StrategyOptimizationResult, _elapsed: float) -> None:
+        from .optimizer_cards import render_cards, step_labels_for
         self.result = result
         self.presentation = self.presenter.present(result)
-        if result.comparison_reference is None:
-            self.reference_summary_widget.pack_forget()
-        elif not self.reference_summary_widget.winfo_manager():
-            self.reference_summary_widget.pack(fill="x", pady=(0, 6))
-        self._set_text(self.warning, self.presentation.warning_text)
-        self.reference_summary.set(self.presentation.reference_text)
-        self.candidate_tree.delete(*self.candidate_tree.get_children())
+        self._visual_selected_index = None
+        self.detail_window.withdraw()
         for step_id, metrics in (result.attainable_ranges or {}).items():
             for metric, values in metrics.items():
                 entry = self.step_minimum_vars.get(step_id, {}).get(metric)
                 if entry:
                     entry[1].configure(values=("Aucun", *(f"{value:g}" for value in values)))
-        for index, item in enumerate(self.presentation.candidates):
-            self.candidate_tree.insert("", "end", iid=str(index), values=(
-                item.display_number, item.origin, item.families, item.category, item.composition, item.active_clubs,
-                item.unresolved_count, "Oui" if item.has_neutral_club else "Non", item.strengths,
-            ))
-        self.status.set(
-            f"Analyse terminée — {'maximum prouvé' if result.search.optimality_status == 'maximum_proven' else 'meilleur résultat trouvé'} — "
-            f"inventaire utilisé : {result.inventory_owned_count} clubs possédés "
-            f"(observation {result.inventory_observed_at or 'inconnue'})."
-        )
+        strategy = self.presenter.registry.get(result.strategy_id)
+        labels = step_labels_for(strategy)
+        self.cards = render_cards(self.cards_scroll.body, result, self.presentation, self.assets, labels, self._show_detail, self._save_card)
+        self.cards_scroll.canvas.yview_moveto(0)
+        self.results_heading.set(f"{len(result.retained_results)} propositions pour votre sac")
+        partial = sum(bool(item.unresolved_abilities) for item in result.retained_results)
+        limit = "Recherche limitée" if result.search.optimality_status != "maximum_proven" else "Maximum prouvé"
+        qualification = "Minimums non satisfaits · " if not result.criteria_satisfied else ""
+        self.warning_summary.set(f"{qualification}{limit} · {partial} sac(s) partiel(s) · Portée/réussite non simulées · Voir les limites")
+        self.status.set(f"Analyse terminée en {_elapsed:.1f} s · {result.inventory_owned_count} clubs possédés · " + ("niveaux réels" if result.scenario_level is None else f"scénario niveau {result.scenario_level}"))
         for button in (self.export_json_button, self.export_text_button, self.search_info_button):
             button.configure(state="normal")
-        if self.presentation.candidates:
-            self.candidate_tree.selection_set("0")
-            self.candidate_tree.focus("0")
-            self._show_detail(0)
+
+    def _show_warnings(self) -> None:
+        if self.presentation is None:
+            return
+        window = self.tk.Toplevel(self.root)
+        window.title("Limites et avertissements")
+        window.geometry("850x550")
+        text = self.tk.Text(window, wrap="word", padx=20, pady=20, font=("Segoe UI", 11))
+        scroll = self.ttk.Scrollbar(window, command=text.yview)
+        text.configure(yscrollcommand=scroll.set)
+        scroll.pack(side="right", fill="y")
+        text.pack(fill="both", expand=True)
+        self._set_text(text, self.presentation.warning_text)
+
+    def _save_card(self, index: int) -> None:
+        self._visual_selected_index = index
+        self._save_selected_bag()
 
     def _on_error(self, message: str, technical: str) -> None:
         from tkinter import messagebox
@@ -1446,18 +1364,16 @@ class StrategyOptimizerApp:
         self.last_technical_error = technical
         messagebox.showerror("Optimisation impossible", message)
 
-    def _select_candidate(self, _event=None) -> None:
-        selected = self.candidate_tree.selection()
-        if selected:
-            self._show_detail(int(selected[0]))
-
     def _show_detail(self, index: int) -> None:
         if self.presentation is None:
             return
+        self._visual_selected_index = index
+        self.detail_window.deiconify()
+        self.detail_window.lift()
         detail = self.presentation.details[index]
         self.detail_title.set(detail.title)
         for tab in self.notebook.tabs():
-            self.notebook.forget(tab)
+            self.notebook.nametowidget(tab).destroy()
         self._add_text_tab("Résumé", detail.overview)
         for step in detail.steps:
             self._add_text_tab(step.label, step.content)
@@ -1667,8 +1583,7 @@ class StrategyOptimizerApp:
         self.notebook.add(frame, text=label)
 
     def _selected_index(self) -> int | None:
-        selected = self.candidate_tree.selection()
-        return int(selected[0]) if selected else None
+        return self._visual_selected_index
 
     def _copy_summary(self) -> None:
         index = self._selected_index()

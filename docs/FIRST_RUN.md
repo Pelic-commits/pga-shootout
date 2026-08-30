@@ -52,6 +52,10 @@ Le diagnostic du préflight est écrit dans `logs/gui_preflight.txt`. La recréa
 5. Conservez **Toutes les marques**, ou sélectionnez les marques autorisées.
 6. Cliquez sur **OPTIMISER MON SAC**.
 
+Les champs sont dans la colonne de gauche ; les propositions apparaissent à droite. Le club principal est volontairement vide au démarrage : aucun club n'est choisi à votre place. Décochez **Toutes les marques** pour faire apparaître la liste multi-sélection.
+
+**Options avancées**, fermé par défaut, contient les rôles et positions manuels, les minimums des coups suivants, le contexte explicite, le niveau de scénario, le nombre de résultats et la limite de recherche. Rien de cela n'est nécessaire à votre première recherche.
+
 Le calcul part d'un sac vide. Aucun sac enregistré n'est demandé ou utilisé. Pour une première recherche Par 3 autour de Blacksmith, trois actions suffisent : choisir Par 3, choisir Blacksmith, optimiser.
 
 La fenêtre reste réactive pendant le calcul. L'inventaire est relu avant chaque lancement : après une modification enregistrée, il n'est pas nécessaire de redémarrer l'optimiseur.
@@ -66,7 +70,7 @@ Les rôles ne modifient pas les règles du jeu. Ils indiquent seulement comment 
 
 ## 7. Tester un remplacement
 
-Dans la GUI, choisissez **Remplacer un club de mon sac**, sélectionnez le sac puis le club sortant.
+Dans la GUI, ouvrez **Outils**, choisissez **Remplacer un club de mon sac**, sélectionnez le sac puis le club sortant. Pour revenir au parcours normal, sélectionnez **Construire mon sac** dans ce même menu.
 
 - **Même type que le club actuel** est le réglage par défaut.
 - **Tous les types admissibles** autorise explicitement un changement de type.
@@ -77,8 +81,13 @@ Les marques autorisées peuvent être combinées à ces contraintes.
 
 ## 8. Lire les résultats
 
-- chaque fiche commence par les étapes actives puis présente les cinq clubs, leurs niveaux, types, rôles et statistiques finales ;
-- la ligne `→` explique pourquoi chaque place est présente ;
+- chaque carte affiche sa catégorie, la synthèse des coups actifs, puis les cinq clubs illustrés dans l'ordre du sac ;
+- Power, Control et Spin sont toujours dans le même ordre. Ce sont les valeurs finales calculables, pas les valeurs de base ;
+- la légende **Finales · [coup]** indique le contexte affiché : premier coup actif du club, ou premier coup évalué pour un support. Les autres étapes restent dans le détail ;
+- `—` signifie indisponible ou non pertinent, jamais zéro ;
+- les lignes `→` résument des contributions observées, avec leurs cibles et étapes. Elles ne constituent pas une simulation de retrait du club ;
+- les écarts signés comparent les propositions au sac de puissance maximale trouvée, sans pondération ;
+- **Partiellement évalué** signale les capacités non résolues. Le bandeau au-dessus des cartes donne accès aux limites générales ;
 - **Amélioration sans contrepartie observée** : gain pertinent sans perte calculable ;
 - **COMPROMIS** : gains et pertes ;
 - **COMPROMIS PARTIELLEMENT ÉVALUÉ** : une capacité ou métrique pertinente reste inconnue ;
@@ -86,7 +95,9 @@ Les marques autorisées peuvent être combinées à ces contraintes.
 - **MEILLEUR TROUVÉ** : recherche bornée ;
 - **MAXIMUM PROUVÉ** : espace pertinent réellement exhaustif.
 
-Power, Control, Spin et les métriques d'atterrissage sont séparées. L'application ne calcule aucun score global caché. Consultez l'Explain pour connaître chaque contribution.
+Power, Control, Spin et les métriques d'atterrissage sont séparées. L'application ne calcule aucun score global caché. Cliquez sur **Détail technique ↗** pour les capacités, contributions, profils d'atterrissage et Explain. Fermez cette fenêtre pour revenir aux cartes. La molette ou la barre de défilement permet de parcourir les propositions ; Page suivante/précédente fonctionne quand la zone de résultats a le focus.
+
+Cliquez sur **Enregistrer ce sac** sous une carte pour la sauvegarder. Les exports complets restent dans **Outils**. Les statistiques ne prouvent ni la portée réelle ni la réussite du putt.
 
 ## 9. Données et sauvegardes
 

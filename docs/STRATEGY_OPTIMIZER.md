@@ -23,7 +23,7 @@ Le workflow central construit un sac depuis cinq places vides. Son contrat accep
 - laissez l'affectation aux étapes sur **Automatique** ;
 - définissez éventuellement Control et Spin minimums ;
 - choisissez éventuellement des marques autorisées ;
-- utilisez **Options avancées** seulement pour un rôle ou une position imposés.
+- utilisez **Options avancées**, fermé au démarrage, pour les rôles/positions, minimums des coups suivants, variante de contexte, scénario, nombre de résultats ou limite de recherche.
 
 **Automatique** laisse le moteur chercher une affectation. **Support** interdit au club d'occuper une étape active. **Variable** conserve plusieurs interprétations possibles. Une position verrouillée fixe l'ordre physique et peut modifier les synergies gauche/droite.
 
@@ -74,7 +74,11 @@ La recherche jusqu'à deux remplacements ne peut pas perdre le meilleur résulta
 
 ## Présentation des résultats
 
-La zone principale sépare :
+La zone principale affiche des cartes de sacs avec une catégorie issue du résultat existant (puissance, compromis Control/Spin, atterrissage) et un badge distinct si l'évaluation est partielle. La synthèse montre les coups actifs ; cinq colonnes homogènes montrent les clubs dans l'ordre physique. Les valeurs P/C/S proviennent de `final_stats`, sans recalcul ni substitution par les statistiques de base.
+
+Le coup affiché est le premier coup actif du club, ou le premier coup évalué pour un support ; cette convention est toujours légendée. Un club actif sur plusieurs coups conserve tous ses détails dans Explain. `—` reste une valeur indisponible, jamais zéro. Les écarts numériques sont fournis par le moteur par rapport au résultat de puissance maximale, sans jugement arbitraire sur leur valeur utilisateur.
+
+Dans les parcours secondaires accessibles par **Outils**, les catégories existantes restent :
 
 - sac actuel ;
 - améliorations sans perte calculable, affichées **Amélioration sans contrepartie observée** ;
@@ -84,7 +88,7 @@ La zone principale sépare :
 
 Les propositions strictement inférieures sans avantage pertinent sont masquées. Une capacité inconnue pertinente empêche ce masquage automatique et reste signalée.
 
-La fiche lisible affiche d'abord les étapes, puis les cinq clubs avec position, type, niveau, rôle, statistiques finales et contribution concise. Les onglets techniques détaillent capacités, cibles, contributions reçues/envoyées, effets différés et Explain.
+Le bouton **Détail technique ↗** ouvre une fenêtre séparée : résumé, étapes, raisons de sélection, capacités, contributions reçues/envoyées et effets différés. Elle reste fermée après chaque nouvelle recherche. Les exports JSON et texte complets sont disponibles dans **Outils**. Les courtes contributions des cartes sont des observations, pas un bilan contrefactuel du retrait du club.
 
 ## Clubs partiellement évalués
 

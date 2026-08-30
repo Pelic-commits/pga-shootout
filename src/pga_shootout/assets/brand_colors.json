@@ -1,0 +1,65 @@
+[
+  {
+    "brand": "Corvid",
+    "gradient_direction": "to right",
+    "color_start": "#285272",
+    "color_end": "#45BC86",
+    "css_gradient": "linear-gradient(to right, #285272, #45BC86)"
+  },
+  {
+    "brand": "Forester",
+    "gradient_direction": "to right",
+    "color_start": "#395B55",
+    "color_end": "#5F7E5F",
+    "css_gradient": "linear-gradient(to right, #395B55, #5F7E5F)"
+  },
+  {
+    "brand": "Nautilus",
+    "gradient_direction": "to right",
+    "color_start": "#123C73",
+    "color_end": "#4CC9F7",
+    "css_gradient": "linear-gradient(to right, #123C73, #4CC9F7)"
+  },
+  {
+    "brand": "PALO",
+    "gradient_direction": "to right",
+    "color_start": "#ED5D76",
+    "color_end": "#49C5BB",
+    "css_gradient": "linear-gradient(to right, #ED5D76, #49C5BB)"
+  },
+  {
+    "brand": "Phoenix",
+    "gradient_direction": "to right",
+    "color_start": "#C35829",
+    "color_end": "#F69C1C",
+    "css_gradient": "linear-gradient(to right, #C35829, #F69C1C)"
+  },
+  {
+    "brand": "Ryusei",
+    "gradient_direction": "to right",
+    "color_start": "#3A3054",
+    "color_end": "#D1F33D",
+    "css_gradient": "linear-gradient(to right, #3A3054, #D1F33D)"
+  },
+  {
+    "brand": "Stanchion",
+    "gradient_direction": "to right",
+    "color_start": "#506181",
+    "color_end": "#C68F61",
+    "css_gradient": "linear-gradient(to right, #506181, #C68F61)"
+  },
+  {
+    "brand": "Willoughsby",
+    "gradient_direction": "to right",
+    "color_start": "#A4243D",
+    "color_end": "#D4BA8F",
+    "css_gradient": "linear-gradient(to right, #A4243D, #D4BA8F)"
+  },
+  {
+    "brand": "Mythical",
+    "gradient_direction": "to right",
+    "color_start": "#414141",
+    "color_end": "#6A6968",
+    "css_gradient": "linear-gradient(to right, #414141, #6A6968)"
+  }
+]
