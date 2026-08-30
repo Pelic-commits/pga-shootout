@@ -1,6 +1,6 @@
 # Project Status
 
-> Inventory totals below are the last versioned audit snapshot, not a live reading of the player's mutable SQLite file. Run `pga-shootout inventory-status` for current totals. The UI description is updated separately; this UX lot does not recalculate coverage.
+> Inventory totals below are the last versioned audit snapshot, not a live reading of the player's mutable SQLite file. Run `pga-shootout inventory-status` for current totals. The targeted Landing/Wind lot adds no ability handler and makes no coverage claim.
 
 ## What the tool does today
 
@@ -35,11 +35,22 @@ Operational through the Windows GUI and CLI. Build From Scratch is the primary w
 
 ## Meteor
 
-Meteor remains experimentally blocked. Alien Relic and Alien World are not implemented; no behavior is invented.
+Meteor is owned at level 9 in the audited SQLite profile and is already eligible in Build From Scratch. Base stats and qualified incoming synergies are calculated. Alien Relic Left remains unresolved; Right and Alien World are inactive at that level. No copy or physics behavior is invented.
+
+Flashpoint is already present and owned at level 7. It is generically eligible as a non-putter active club or unresolved potential support. Rocket Boosters and Boundary Rush remain unresolved. No inventory/catalogue edits were needed. See the exact texts and level tables in [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md).
 
 ## Current phase
 
-The UI/UX lot focuses on independent Build From Scratch: a short form, five-club visual cards with packaged icons and brand accents, shot-labelled final statistics, factual deltas and concise contributions. Advanced settings are collapsed; historical tools and technical detail are secondary windows. This lot does not change the Rule Engine, DSL, search algorithm, catalogue or user data.
+The targeted lot preserves the visual Build From Scratch workflow and adds separate Landing/Wind result axes to the existing result projection. Driver/Wood/Hybrid green attacks use the existing landing-relevance policy during support qualification as well as presentation. Wind needs explicit context. Axes are reserved before secondary Power tiers; identical winners share a card and multiple badges. Cards expose relevant secondary metrics, support contributions, unknown deltas and additive-stacking cautions. The Rule Engine, DSL, catalogue, user data and inventory launcher remain unchanged.
+
+Bounded real-inventory benchmark (400 evaluation budget, five requested results, fresh service per run; seconds, before → after): Par 3 Blacksmith 19.708 → 17.103; Par 3 High Flight 27.158 → 27.509; Par 4 long High Flight with wind 13.564 → 17.010; Meteor 17.386 → 18.637; Flashpoint 16.691 → 18.987. These are single observations, not statistical performance guarantees. The wind case now retains two results instead of one. Scripts `validate_context_variants.py` and `validate_context_variants_gui.py` reproduce the audit and Windows acceptance checks without modifying the user's inventory.
+
+Validation for this lot: 574 tests and 168 subtests passed (473.40 s); 38 targeted
+tests passed again after the final card readability adjustments. Actual Windows/Tk
+runs covered High Flight with/without wind, Meteor and Flashpoint, five-club cards,
+partial warnings, relevant contributions, technical details, 1280×800 layout, and
+close/relaunch. No callback errors; the original SQLite SHA-256 remained unchanged.
+The UI stays asynchronous. No new primitives, ability handlers or physical rules.
 
 ## Secondary global coverage
 

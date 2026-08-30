@@ -17,6 +17,7 @@ METRICS = {"power": "Power", "control": "Control", "spin": "Spin",
            "gravity_reduction_percent": "Gravity Reduction",
            "launch_angle_degrees": "Launch Angle", "fade_draw_multiplier": "Fade/Draw"}
 ROLES = {"active": "Actif", "support": "Support", "hybrid": "Actif + support", "neutral": "Sans effet observé"}
+SECONDARY_AXES = ("bounce_reduction_percent", "wind_resistance_percent")
 
 
 def number(value):
@@ -59,6 +60,7 @@ def club_projection(club, candidate, step_labels):
     step = display_step(club)
     names = {item.club_id: item.club_name for item in candidate.clubs}
     reasons = []
+    axis_reasons = []
     for evaluated in club.steps:
         active_target = candidate.active_assignments.get(evaluated.step_id)
         for contribution in evaluated.contributions_sent:
@@ -66,12 +68,15 @@ def club_projection(club, candidate, step_labels):
                 continue
             for metric, value in contribution.modification.items():
                 if value:
-                    reasons.append(
+                    destination = axis_reasons if metric in SECONDARY_AXES and (
+                        evaluated.metric_relevance.get(metric) == "objective"
+                    ) else reasons
+                    destination.append(
                         f"{value:+g}{unit(metric)} {metric_label(metric)} → "
                         f"{names.get(contribution.target_club_id, contribution.target_club_id)}"
                         f" · {step_labels.get(evaluated.step_id, evaluated.step_id)}"
                     )
-    reasons = list(dict.fromkeys(reasons))
+    reasons = list(dict.fromkeys((*axis_reasons, *reasons)))
     unresolved = tuple(dict.fromkeys(item for evaluated in club.steps for item in evaluated.unresolved_abilities))
     return {
         "id": club.club_id, "name": club.club_name, "type": club.club_type,
@@ -88,11 +93,45 @@ def metric_changes(candidate, step_labels):
     """Keep positive/negative changes separate, without assigning desirability."""
     changes = []
     for key, delta in (candidate.metric_deltas_from_power_max or {}).items():
-        if delta is None or delta == 0:
+        if delta == 0:
             continue
         step, _, metric = key.partition(".")
-        changes.append(f"{delta:+g}{unit(metric)} {metric_label(metric)} · {step_labels.get(step, step)}")
+        if metric in SECONDARY_AXES:
+            active = getattr(candidate, "active_assignments", {}).get(step)
+            evaluated = next((shot for club in getattr(candidate, "clubs", ()) if club.club_id == active
+                              for shot in club.steps if shot.step_id == step), None)
+            if evaluated is None or evaluated.metric_relevance.get(metric) != "objective":
+                continue
+        if delta is None:
+            if metric in SECONDARY_AXES:
+                changes.append(f"{metric_label(metric)} : écart indéterminé · {step_labels.get(step, step)}")
+            continue
+        suffix = " points de %" if metric.endswith("_percent") else unit(metric)
+        changes.append(f"{delta:+g}{suffix} {metric_label(metric)} · {step_labels.get(step, step)}")
     return tuple(changes)
+
+
+def secondary_summary(step, *, complete):
+    """Only active comparison axes; missing values in partial bags stay unknown."""
+    if step is None:
+        return ()
+    return tuple(
+        f"{metric_label(metric)} {number(step.additional_metrics.get(metric, 0 if complete else None))} %"
+        for metric in SECONDARY_AXES if step.metric_relevance.get(metric) == "objective"
+    )
+
+
+def secondary_cautions(step):
+    """Surface additive-model limits without inventing a stacking rule."""
+    if step is None:
+        return ()
+    return tuple(
+        f"{metric_label(metric)} : plusieurs sources additionnées ; cumul en jeu à valider."
+        for metric in SECONDARY_AXES
+        if step.metric_relevance.get(metric) == "objective"
+        and len({(item.source_club_id, item.ability_id) for item in step.contributions_received
+                 if item.modification.get(metric)}) > 1
+    )
 
 
 class GraphicAssets:
@@ -186,8 +225,10 @@ def render_cards(parent, result, presentation, assets, step_labels, on_detail, o
         if unresolved:
             label(card, f"Partiellement évalué · {unresolved} capacité(s) non résolue(s)", fg="#805119", size=9).pack(fill="x", padx=18, pady=(0, 4))
         changes = metric_changes(candidate, step_labels)
-        label(card, " / ".join(changes) if changes else "Point de comparaison : puissance maximale trouvée" if "power_max" in candidate.result_family_ids else "Pas d’écart chiffré disponible",
-              fg=MUTED, wraplength=900).pack(fill="x", padx=18, pady=(0, 3))
+        delta_label = label(card, " / ".join(changes) if changes else "Point de comparaison : puissance maximale trouvée" if "power_max" in candidate.result_family_ids else "Pas d’écart chiffré disponible",
+                            fg=MUTED, wraplength=900)
+        delta_label.pack(fill="x", padx=18, pady=(0, 3))
+        delta_label.bind("<Configure>", lambda event: event.widget.configure(wraplength=max(120, event.width - 4)))
         if changes:
             label(card, "Écarts par rapport au sac « puissance maximale trouvée »", size=9, fg=MUTED).pack(fill="x", padx=18)
         summary = tk.Frame(card, bg="#EAF2EE")
@@ -198,7 +239,13 @@ def render_cards(parent, result, presentation, assets, step_labels, on_detail, o
             summary.columnconfigure(column, weight=1, uniform="steps")
             text = f"{step_labels.get(step_id, step_id)}\n{club.club_name}"
             stats = "  ·  ".join(f"{METRICS[metric]} {number(step.final_stats.get(metric)) if step else '—'}" for metric in ("power", "control", "spin"))
+            secondary = secondary_summary(step, complete=not candidate.unresolved_abilities)
+            if secondary:
+                stats += "\n" + "\n".join(secondary)
             label(summary, text + "\n" + stats, bold=True, size=10, bg="#EAF2EE", wraplength=280).grid(row=0, column=column, sticky="nw", padx=12, pady=10)
+            cautions = secondary_cautions(step)
+            if cautions:
+                label(summary, "\n".join(cautions), size=9, fg="#805119", bg="#EAF2EE", wraplength=280).grid(row=1, column=column, sticky="nw", padx=12, pady=(0, 8))
         tiles = tk.Frame(card, bg="white", name="clubs")
         tiles.pack(fill="x", padx=12)
         for column, club in enumerate(candidate.clubs):

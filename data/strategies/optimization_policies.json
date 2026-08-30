@@ -1,6 +1,18 @@
 {
   "schema_version": "1.0.0",
   "default_primary_metric": "power",
+  "result_axes": [
+    {
+      "family_id": "landing_profile",
+      "user_name": "MEILLEUR ATTERRISSAGE",
+      "metric": "bounce_reduction_percent"
+    },
+    {
+      "family_id": "wind_profile",
+      "user_name": "STABILITÉ AU VENT",
+      "metric": "wind_resistance_percent"
+    }
+  ],
   "shot_functions": {
     "advance_toward_target": {
       "user_function": "progression",

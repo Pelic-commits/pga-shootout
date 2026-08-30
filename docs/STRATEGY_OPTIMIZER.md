@@ -38,6 +38,49 @@ La configuration versionnée emploie actuellement :
 
 Cette politique traduit les besoins du joueur ; elle ne prouve aucune relation physique non validée.
 
+### Axes séparés Atterrissage et Vent
+
+Build From Scratch réserve les propositions dans cet ordre : puissance maximale trouvée,
+**MEILLEUR ATTERRISSAGE**, **STABILITÉ AU VENT**, puis les paliers Control/Spin.
+Un axe n'est proposé que si sa métrique est pertinente et calculable dans les candidats
+explorés. Le nombre de résultats demandé reste une limite : avec un seul résultat,
+seule la proposition Power est conservée.
+
+- Atterrissage : meilleure Bounce Reduction calculable, puis Power, Control, Spin et
+  putt pour départager. L'axe est activé par la politique fonction/type pour une attaque
+  du green avec Driver/Wood/Hybrid. Il est également possible avec un contexte
+  d'atterrissage explicite reconnu par le registre des métriques. Un Iron n'est pas
+  automatiquement promu pour son rebond ; la progression conserve sa politique actuelle.
+- Vent : même sélection sur Wind Resistance, **uniquement** si le contexte déclaré
+  rend cette métrique objective. Dans la GUI : Par 4 long ou Par 5 → Options avancées
+  → Vent contraire / latéral. Sans contexte, la résistance reste descriptive dans le
+  détail et ne justifie pas, à elle seule, une place support.
+- Il n'existe ni somme pondérée ni conversion en yards. La proposition de stabilité
+  peut sacrifier beaucoup de Power : les écarts restent visibles, c'est au joueur de décider.
+- Un même candidat gagnant plusieurs axes n'est affiché qu'une fois, avec plusieurs badges.
+
+Les métriques secondaires pertinentes apparaissent dans la synthèse du coup actif,
+pas dans toutes les tuiles. Les contributions correspondantes des supports sont
+placées en tête de leur justification courte ; les autres restent dans le détail.
+Les différences de pourcentage sont exprimées en **points de pourcentage**.
+Une absence de modificateur vaut zéro seulement dans une évaluation complète ;
+dans un sac partiel elle reste indéterminée. Les valeurs effectivement calculées restent
+consultables, sans prétendre inclure les effets inconnus. Plusieurs sources additives
+sont accompagnées d'un avertissement : leur cumul réel dans le jeu reste à valider.
+
+Exemple contrôlé avec les niveaux réels audités (ce n'est pas une preuve d'optimum) :
+High Flight / Jumpstart / Steadfast / Gearshift / Commonlaw donne une attaque à
+**19/14/9**, sans bonus Bounce calculé. Remplacer Jumpstart par Cyclotron à la même
+place donne **16/14/14** et **16 % Bounce Reduction** : **−3 Power, +5 Spin,
++16 points de Bounce Reduction**, sans changement du putt. Les deux évaluations sont
+complètes pour les capacités prises en compte à ces niveaux.
+
+Exemple de recherche bornée avec vent : High Flight / Cyclotron / Divebomb / Rook /
+Commonlaw produit un départ à **13/11/11** et une somme de Wind Resistance de **132 %**,
+contre **17/14/14 et 75 %** pour la proposition Power de cette recherche : **−4 Power,
+−3 Control, −3 Spin, +57 points** de résistance calculée. Le cumul de plusieurs sources
+est explicitement à valider en jeu ; il ne signifie pas une réduction physique de 132 %.
+
 ## Sacs de référence — outils secondaires
 
 Une référence peut toujours servir aux anciens workflows d'amélioration ou de remplacement. Elle n'est ni lue par la génération Build From Scratch, ni injectée dans ses pools, son pruning ou son classement.
@@ -74,7 +117,7 @@ La recherche jusqu'à deux remplacements ne peut pas perdre le meilleur résulta
 
 ## Présentation des résultats
 
-La zone principale affiche des cartes de sacs avec une catégorie issue du résultat existant (puissance, compromis Control/Spin, atterrissage) et un badge distinct si l'évaluation est partielle. La synthèse montre les coups actifs ; cinq colonnes homogènes montrent les clubs dans l'ordre physique. Les valeurs P/C/S proviennent de `final_stats`, sans recalcul ni substitution par les statistiques de base.
+La zone principale affiche des cartes de sacs avec une catégorie issue du résultat existant (puissance, compromis Control/Spin, atterrissage, vent lorsque demandé) et un badge distinct si l'évaluation est partielle. La synthèse montre les coups actifs ; cinq colonnes homogènes montrent les clubs dans l'ordre physique. Les valeurs P/C/S proviennent de `final_stats`, sans recalcul ni substitution par les statistiques de base.
 
 Le coup affiché est le premier coup actif du club, ou le premier coup évalué pour un support ; cette convention est toujours légendée. Un club actif sur plusieurs coups conserve tous ses détails dans Explain. `—` reste une valeur indisponible, jamais zéro. Les écarts numériques sont fournis par le moteur par rapport au résultat de puissance maximale, sans jugement arbitraire sur leur valeur utilisateur.
 
@@ -93,6 +136,12 @@ Le bouton **Détail technique ↗** ouvre une fenêtre séparée : résumé, ét
 ## Clubs partiellement évalués
 
 Un club comme Skyfury peut être imposé même si Boundary Rush reste non résolue. Le moteur optimise les contributions connues autour de lui, marque le résultat partiel et ne suppose jamais que l'inconnue vaut zéro. La même règle s'applique notamment à Windstrike ou Wave lorsque leurs capacités non résolues sont pertinentes.
+
+Meteor et Flashpoint suivent exactement ce chemin générique : présence dans le catalogue,
+possession et niveau connu dans SQLite suffisent à les rendre admissibles aux rôles
+compatibles. Ils ne sont ni exclus à cause d'une capacité inconnue, ni favorisés par un
+bonus supposé. Leur sélection automatique dépend des calculs connus et de la recherche
+bornée ; les imposer permet d'explorer explicitement un sac autour d'eux.
 
 ## Inventaire dynamique et performances
 

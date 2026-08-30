@@ -9,6 +9,7 @@ import pytest
 
 from pga_shootout.optimizer_cards import (
     ASSETS, GraphicAssets, club_projection, display_step, metric_changes, number, step_labels_for,
+    secondary_summary, secondary_cautions,
 )
 from pga_shootout.strategy_optimizer import ClubStepResult, ContributionRecord, OptimizedClubResult
 from pga_shootout.strategy_optimizer_gui import StrategyOptimizerApp
@@ -240,3 +241,32 @@ def test_projection_golden_contains_only_existing_facts():
         "role": "Actif", "step": "Putt", "stats": {"power": "14", "control": "5", "spin": "—"},
         "reasons": (), "unresolved": (),
     }
+
+
+def test_secondary_axes_remain_hidden_without_relevance_and_cumul_is_warned():
+    contributions = tuple(ContributionRecord(source, "sample", source + "__wind", "dsl_pipeline",
+                                             {"wind_resistance_percent": 20}) for source in ("a", "b"))
+    step = replace(shot("attack"), additional_metrics={"wind_resistance_percent": 40},
+                   metric_relevance={"wind_resistance_percent": "descriptive"}, contributions_received=contributions)
+    assert secondary_summary(step, complete=True) == ()
+    assert secondary_cautions(step) == ()
+    active = replace(step, metric_relevance={"wind_resistance_percent": "objective"})
+    assert secondary_summary(active, complete=True) == ("Wind Resistance 40 %",)
+    assert secondary_cautions(active) == ("Wind Resistance : plusieurs sources additionnées ; cumul en jeu à valider.",)
+
+
+def test_cards_show_secondary_axes_without_opening_technical_details(app, result):
+    first = result.retained_results[0]
+    active_id = first.active_assignments["attack"]
+    clubs = tuple(replace(club, steps=tuple(replace(step,
+        additional_metrics={"bounce_reduction_percent": 30, "wind_resistance_percent": 25},
+        metric_relevance={"bounce_reduction_percent": "objective", "wind_resistance_percent": "objective"},
+    ) if step.step_id == "attack" else step for step in club.steps)) if club.club_id == active_id else club for club in first.clubs)
+    first = replace(first, clubs=clubs, result_family_ids=("power_max", "landing_profile", "wind_profile"),
+                    optimization_badges=("MEILLEURE PUISSANCE TROUVÉE", "MEILLEUR ATTERRISSAGE", "STABILITÉ AU VENT"))
+    app._on_success(replace(result, retained_results=(first,)), 1)
+    assert len(app.cards) == 1
+    texts = "\n".join(widget_texts(app.cards[0]))
+    assert "Bounce Reduction 30 %" in texts and "Wind Resistance 25 %" in texts
+    assert "atterrissage" in texts and "vent" in texts
+    assert app.detail_window.state() == "withdrawn"

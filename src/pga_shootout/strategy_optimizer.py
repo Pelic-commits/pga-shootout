@@ -24,7 +24,7 @@ from .engine import EvaluationError, RuleEngine
 from .models import Bag, BagEntry, Club, DelayedEffect, EvaluationMode, GameState
 from .metric_semantics import MetricSemantic, MetricSemanticsRegistry
 from .strategy import (
-    OutcomeRequirement, ResolvedStrategy, ResultFamilyConstraint, ResultFamilyDefinition,
+    LocalObjective, OutcomeRequirement, ResolvedStrategy, ResultFamilyConstraint, ResultFamilyDefinition,
     ResultFamilyObjective, ShotStep, StrategyRegistry,
 )
 from .user_data import InventoryEntry, SavedBag, load_user_data
@@ -3064,6 +3064,32 @@ class StrategyOptimizer:
             f"Meilleure Power observée dans la recherche bornée pour {step.name}, puis Control, Spin et qualité finale du putt.",
             (maximum.spec.identifier,), "lexicographic_power_first",
         )]
+        # Reserve the explicit axes before filling the remaining Power tiers.
+        # Memberships share a candidate: several badges never duplicate a card.
+        for axis in self.optimization_policy.get("result_axes", ()):
+            metric = axis["metric"]
+            qualified = tuple(
+                item for item in candidates
+                if any(evaluated.step.identifier == step.identifier
+                       and _metric_relevance(evaluated.step, metric, self.metric_semantics) == "objective"
+                       for evaluated in item.steps)
+                and math.isfinite(_quick_metric(item, step.identifier, metric))
+            )
+            if not qualified:
+                continue
+            best = max(qualified, key=lambda item: (
+                _quick_metric(item, step.identifier, metric), *key(item, "control"),
+            ))
+            if best.spec.identifier not in selected and len(selected) >= limit:
+                continue
+            selected.setdefault(best.spec.identifier, best)
+            memberships.setdefault(best.spec.identifier, []).append(axis["family_id"])
+            families.append(ResultFamilyResult(
+                axis["family_id"], axis["user_name"],
+                f"Meilleur {metric} calculable pour {step.name}, puis Power, Control, Spin et putt. "
+                "Axe distinct sans score pondéré ni conversion physique.",
+                (best.spec.identifier,), "lexicographic_separate_axis",
+            ))
         levels = sorted(
             {_quick_metric(item, step.identifier, "power") for item in candidates if _quick_metric(item, step.identifier, "power") < maximum_power},
             reverse=True,
@@ -3075,6 +3101,8 @@ class StrategyOptimizer:
                 best = max(tier, key=lambda item: key(item, metric))
                 gain = _quick_metric(best, step.identifier, metric) - baseline
                 if gain <= 0:
+                    continue
+                if best.spec.identifier not in selected and len(selected) >= limit:
                     continue
                 identifier = f"{metric}_plus_{gain:g}_for_minus_{loss:g}_power".replace(".", "_")
                 label = f"{metric.upper()} +{gain:g} POUR -{loss:g} POWER"
@@ -3088,30 +3116,6 @@ class StrategyOptimizer:
             if len(selected) >= limit:
                 break
 
-        function_policy = self.optimization_policy.get("shot_functions", {}).get(
-            step.function.identifier, {}
-        )
-        landing_by_type = function_policy.get("important_landing_metrics_by_club_type", {})
-        landing_candidates: list[tuple[float, _QuickCandidate, str]] = []
-        for item in candidates:
-            club_id = item.spec.active_assignments[step.identifier]
-            club_type = runtime.clubs[club_id].club_type
-            for metric in landing_by_type.get(club_type, ()):
-                value = _quick_metric(item, step.identifier, metric)
-                if value != -math.inf:
-                    landing_candidates.append((value, item, metric))
-        if landing_candidates:
-            value, landing, metric = max(
-                landing_candidates,
-                key=lambda entry: (entry[0], _quick_metric(entry[1], step.identifier, "power")),
-            )
-            families.append(ResultFamilyResult(
-                "landing_profile", "MEILLEUR ATTERRISSAGE",
-                f"Meilleure valeur calculable de {metric} ({value:g}) selon la politique fonction/type.",
-                (landing.spec.identifier,), "best_declared_landing_metric",
-            ))
-            selected.setdefault(landing.spec.identifier, landing)
-            memberships.setdefault(landing.spec.identifier, []).append("landing_profile")
         return (
             tuple(families),
             tuple(selected.values())[:limit],
@@ -3246,6 +3250,26 @@ class StrategyOptimizer:
             ))
         return tuple(families)
 
+    def _builder_step(self, step: ShotStep, club_type: str) -> ShotStep:
+        """Activate only the type/function axes declared by the product policy.
+
+        This is comparison relevance, not a fabricated physical scenario. Wind
+        still requires its explicit context through the existing semantics.
+        """
+        policy = self.optimization_policy.get("shot_functions", {}).get(step.function.identifier, {})
+        promoted = set(policy.get("important_landing_metrics_by_club_type", {}).get(club_type, ()))
+        promoted &= {item.metric for item in step.metric_uses if self.metric_semantics.get(item.metric).objective_allowed}
+        if not promoted:
+            return step
+        uses = tuple(replace(item, usage="objective", direction="maximize", qualifies_support=True)
+                     if item.metric in promoted else item for item in step.metric_uses)
+        objectives = step.local_objectives
+        declared = {item.metric for item in objectives}
+        if "all_comparable_metrics" not in declared:
+            objectives += tuple(LocalObjective(1, "maximize", metric, "Axe séparé de la politique fonction/type.")
+                                for metric in sorted(promoted - declared))
+        return replace(step, metric_uses=uses, local_objectives=objectives)
+
     def _evaluate_quick(
         self,
         spec: CandidateSpec,
@@ -3260,6 +3284,8 @@ class StrategyOptimizer:
         strict_failed = False
         for step in strategy.definition.sequence:
             current = spec.active_assignments[step.identifier]
+            if spec.provenance in {"build_from_scratch", "interactive_builder"}:
+                step = self._builder_step(step, runtime.clubs[current].club_type)
             incoming = pending
             summary = runtime.evaluate(
                 spec,
@@ -3765,6 +3791,11 @@ def _candidate_active_metrics(candidate: StrategyCandidateResult) -> dict[str, f
         step = next(item for item in clubs[club_id].steps if item.step_id == step_id)
         values.update({f"{step_id}.{metric}": value for metric, value in step.final_stats.items()})
         values.update({f"{step_id}.{metric}": value for metric, value in step.additional_metrics.items()})
+        # An absent additive modifier is a known zero only for a complete bag.
+        # In a partial bag, an unqualified ability could still modify this axis.
+        if not candidate.unresolved_abilities:
+            for metric in ("bounce_reduction_percent", "wind_resistance_percent"):
+                values.setdefault(f"{step_id}.{metric}", 0.0)
     return values
 
 
@@ -3773,6 +3804,8 @@ def _builder_badge(family_id: str) -> str:
         return "MEILLEURE PUISSANCE TROUVÉE"
     if family_id == "landing_profile":
         return "MEILLEUR ATTERRISSAGE"
+    if family_id == "wind_profile":
+        return "STABILITÉ AU VENT"
     for metric in ("control", "spin"):
         prefix = f"{metric}_plus_"
         if family_id.startswith(prefix):
