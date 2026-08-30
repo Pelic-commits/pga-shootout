@@ -1,20 +1,20 @@
 # Audit des capacités restantes
 
-> Source détaillée actuelle de la couverture des capacités. Rapport généré depuis SQLite, le catalogue officiel versionné, la carte sémantique et le registre du moteur. Les classes A/B vides et les blocages C–H sont des constats de qualification, pas une roadmap active. Le développement fonctionnel est temporairement gelé.
+> Rapport généré depuis SQLite, le catalogue officiel versionné, la carte sémantique et le registre du moteur.
 
 ## État recalculé
 
 | Mesure | Valeur |
 |---|---:|
 | Clubs du catalogue | 88 |
-| Clubs possédés | 80 |
+| Clubs possédés | 82 |
 | Occurrences catalogue | 162 |
-| Occurrences possédées | 146 |
+| Occurrences possédées | 151 |
 | Possédées complètement simulées | 84 |
-| Possédées partielles | 2 |
-| Possédées non résolues hors partielles | 60 |
+| Possédées partielles | 4 |
+| Possédées non résolues hors partielles | 63 |
 | Clubs possédés entièrement simulés | 36 |
-| Clubs possédés avec au moins une capacité restante | 44 |
+| Clubs possédés avec au moins une capacité restante | 46 |
 
 ## Classification exhaustive
 
@@ -22,26 +22,24 @@
 |---|---|---:|---:|
 | A | Déterministe / implémentation directe | 0 | 0 |
 | B | Déterministe / petite extension générique | 0 | 0 |
-| C | Texte ou sémantique ambiguë | 18 | 13 |
+| C | Texte ou sémantique ambiguë | 16 | 14 |
 | D | Conflit entre sources ou données | 10 | 9 |
-| E | Physique ou géométrie non modélisée | 30 | 25 |
+| E | Physique ou géométrie non modélisée | 30 | 27 |
 | F | Historique de coups ou état temporel complexe | 10 | 10 |
 | G | Aléatoire ou transformation | 6 | 3 |
-| H | Partiellement simulée | 2 | 2 |
+| H | Partiellement simulée | 4 | 4 |
 
-Les classes A et B sont vides : aucune capacité restante ne peut être implémentée sans contredire une qualification existante ou introduire une hypothèse. Aucun handler n'est donc ajouté par ce lot.
+Les classes décrivent les limites de qualification actuelles. Une capacité partielle peut déjà produire des effets qualifiés ; ses cas non validés ne sont pas comptés comme complètement simulés.
 
 ## Groupes restants
 
 | Classe | Groupe | Occurrences | Clubs | Clubs possédés | Difficulté | Primitive manquante |
 |---|---|---:|---|---|---|---|
-| C | `label:alien_relic_left` | 1 | meteor | aucun | special | semantic_qualification |
-| C | `label:alien_relic_right` | 1 | meteor | aucun | special | semantic_qualification |
 | C | `label:aura_of_death` | 1 | the_reaper | aucun | special | semantic_qualification |
 | C | `label:bag_wind_power` | 1 | jetstream | jetstream | special | READ_CONTEXT |
 | C | `label:gem_ball_bonus` | 1 | crystallize | crystallize | special | semantic_qualification |
 | C | `label:home_turf_southwind` | 1 | ranger | ranger | special | semantic_qualification |
-| C | `label:rocket_boosters` | 2 | flashpoint, the_rocket | aucun | special | semantic_qualification |
+| C | `label:rocket_boosters` | 2 | flashpoint, the_rocket | flashpoint | special | semantic_qualification |
 | C | `label:rough_boosters` | 1 | overgrowth | overgrowth | special | READ_CONTEXT |
 | C | `label:scottsdale_boosters` | 1 | rising_flame | rising_flame | special | semantic_qualification |
 | C | `label:shared_growth` | 1 | oakheart | oakheart | special | semantic_qualification |
@@ -57,13 +55,13 @@ Les classes A et B sont vides : aucune capacité restante ne peut être impléme
 | D | `label:magnetism_0_15ft` | 1 | magnesis | aucun | special | semantic_qualification |
 | D | `label:terrain_resist_50` | 6 | homecoming, dunecrawler, obelisk, hydroforce, sandblast, windstrike | homecoming, dunecrawler, obelisk, hydroforce, sandblast, windstrike | special | semantic_qualification, READ_CONTEXT |
 | D | `label:wind_resistance_100` | 1 | stormbringer | stormbringer | special | READ_CONTEXT |
-| E | `label:alien_world` | 1 | meteor | aucun | special | READ_CONTEXT |
+| E | `label:alien_world` | 1 | meteor | meteor | special | READ_CONTEXT |
 | E | `label:bag_tree_bonus` | 1 | the_seeker | the_seeker | special | READ_CONTEXT |
 | E | `label:bag_tree_passing` | 1 | the_seeker | the_seeker | special | READ_CONTEXT |
 | E | `label:bag_water_bonus` | 1 | atlantis | aucun | special | READ_CONTEXT |
 | E | `label:bag_water_bounce` | 1 | atlantis | aucun | special | READ_CONTEXT |
 | E | `label:boundary_bonus` | 3 | edgewalker, leviathan, windstrike | edgewalker, leviathan, windstrike | special | semantic_qualification |
-| E | `label:boundary_rush` | 1 | flashpoint | aucun | special | READ_CONTEXT |
+| E | `label:boundary_rush` | 1 | flashpoint | flashpoint | special | READ_CONTEXT |
 | E | `label:boundary_rush_75` | 1 | skyfury | skyfury | special | validated_physics_effect |
 | E | `label:emerald_rush_75` | 1 | green_demon | green_demon | special | validated_physics_effect |
 | E | `label:flight_training` | 1 | eagle_s_landing | eagle_s_landing | special | semantic_qualification |
@@ -95,6 +93,8 @@ Les classes A et B sont vides : aucune capacité restante ne peut être impléme
 | G | `label:shuffle_up` | 1 | outlaw | outlaw | special | semantic_qualification |
 | G | `label:three_heads` | 1 | chimera | aucun | special | semantic_qualification |
 | G | `label:trumpet_blast` | 1 | fanfare | fanfare | special | semantic_qualification |
+| H | `label:alien_relic_left` | 1 | meteor | meteor | special | aucune primitive suffisante sans donnée externe |
+| H | `label:alien_relic_right` | 1 | meteor | meteor | special | aucune primitive suffisante sans donnée externe |
 | H | `label:brand_fairway_rush` | 1 | crusader | crusader | special | aucune primitive suffisante sans donnée externe |
 | H | `label:forester_power_elite` | 1 | ranger | ranger | special | aucune primitive suffisante sans donnée externe |
 
@@ -224,9 +224,9 @@ Les classes A et B sont vides : aucune capacité restante ne peut être impléme
 
 - Identifiant : `flashpoint__rocket_boosters`
 - Classe : **C — Texte ou sémantique ambiguë**
-- Possédé : non
-- Niveau utilisateur : inconnu/non possédé
-- Valeur au niveau utilisateur : inactive/inconnue
+- Possédé : oui
+- Niveau utilisateur : 7
+- Valeur au niveau utilisateur : +25%
 - Texte officiel : Gain 25% of the power of clubs to its left and right.
 - Valeurs par niveau : 1: inactive; 2: inactive; 3: inactive; 4: inactive; 5: inactive; 6: inactive; 7: +25%; 8: +26%; 9: +27%; 10: +28%; 11: +29%; 12: +30%; Elite: +40%
 - Statut : `ambiguous`
@@ -275,46 +275,6 @@ Les classes A et B sont vides : aucune capacité restante ne peut être impléme
 - Famille technique : `wind_resistance`
 - Primitives disponibles : SELECT_SELF, READ_LEVEL_VALUE, ADD_MODIFIER
 - Primitive/donnée manquante : `READ_CONTEXT`
-- Difficulté : special
-- Confiance : low
-- Provenance : `official_versioned_catalog_and_qualified_semantic_map`
-- Validation proposée : Compare the competing interpretations in a minimal bag and record the exact displayed stat change.
-
-### Meteor — Alien Relic (Left)
-
-- Identifiant : `meteor__alien_relic_left`
-- Classe : **C — Texte ou sémantique ambiguë**
-- Possédé : non
-- Niveau utilisateur : inconnu/non possédé
-- Valeur au niveau utilisateur : inactive/inconnue
-- Texte officiel : The club to the left of Meteor gains an extra instance of each of its abilities.  - Elite Level: Ability can wrap to the other side of the bag.
-- Valeurs par niveau : 1: inactive; 2: inactive; 3: inactive; 4: inactive; 5: inactive; 6: inactive; 7: inactive; 8: inactive; 9: x2; 10: x2; 11: x2; 12: x2; Elite: x2
-- Statut : `ambiguous`
-- Raison : Ability duplication, level provenance, wrapping, ordering, and recursion are not validated.
-- Qualification : `true_semantic_ambiguity`
-- Famille technique : `unqualified:alien_relic_left`
-- Primitives disponibles : aucune
-- Primitive/donnée manquante : `semantic_qualification`
-- Difficulté : special
-- Confiance : low
-- Provenance : `official_versioned_catalog_and_qualified_semantic_map`
-- Validation proposée : Compare the competing interpretations in a minimal bag and record the exact displayed stat change.
-
-### Meteor — Alien Relic (Right)
-
-- Identifiant : `meteor__alien_relic_right`
-- Classe : **C — Texte ou sémantique ambiguë**
-- Possédé : non
-- Niveau utilisateur : inconnu/non possédé
-- Valeur au niveau utilisateur : inactive/inconnue
-- Texte officiel : The club to the right of Meteor gains an extra instance of each of its abilities.  - Elite Level: Ability can wrap to the other side of the bag.
-- Valeurs par niveau : 1: inactive; 2: inactive; 3: inactive; 4: inactive; 5: inactive; 6: inactive; 7: inactive; 8: inactive; 9: inactive; 10: x2; 11: x2; 12: x2; Elite: x2
-- Statut : `ambiguous`
-- Raison : Ability duplication, level provenance, wrapping, ordering, and recursion are not validated.
-- Qualification : `true_semantic_ambiguity`
-- Famille technique : `unqualified:alien_relic_right`
-- Primitives disponibles : aucune
-- Primitive/donnée manquante : `semantic_qualification`
 - Difficulté : special
 - Confiance : low
 - Provenance : `official_versioned_catalog_and_qualified_semantic_map`
@@ -645,7 +605,7 @@ Les classes A et B sont vides : aucune capacité restante ne peut être impléme
 - Identifiant : `windstrike__terrain_resist_50`
 - Classe : **D — Conflit entre sources ou données**
 - Possédé : oui
-- Niveau utilisateur : 8
+- Niveau utilisateur : 9
 - Valeur au niveau utilisateur : 50%
 - Texte officiel : Windstrike ignores 50% of penalties when hitting from unfavorable ground types.
 - Valeurs par niveau : 1: inactive; 2: inactive; 3: 50%; 4: 50%; 5: 50%; 6: 50%; 7: 50%; 8: 50%; 9: 50%; 10: 50%; 11: 50%; 12: 50%
@@ -844,9 +804,9 @@ Les classes A et B sont vides : aucune capacité restante ne peut être impléme
 
 - Identifiant : `flashpoint__boundary_rush`
 - Classe : **E — Physique ou géométrie non modélisée**
-- Possédé : non
-- Niveau utilisateur : inconnu/non possédé
-- Valeur au niveau utilisateur : inactive/inconnue
+- Possédé : oui
+- Niveau utilisateur : 7
+- Valeur au niveau utilisateur : +50%
 - Texte officiel : Shots from this club travel X% further and faster over water or out of bounds.
 - Valeurs par niveau : 1: inactive; 2: inactive; 3: inactive; 4: inactive; 5: inactive; 6: inactive; 7: +50%; 8: +50%; 9: +50%; 10: +50%; 11: +50%; 12: +50%; Elite: +50%
 - Statut : `physics_required`
@@ -865,7 +825,7 @@ Les classes A et B sont vides : aucune capacité restante ne peut être impléme
 - Identifiant : `green_demon__emerald_rush_75`
 - Classe : **E — Physique ou géométrie non modélisée**
 - Possédé : oui
-- Niveau utilisateur : 8
+- Niveau utilisateur : 9
 - Valeur au niveau utilisateur : 75%/25%
 - Texte officiel : When you hit with Green Demon, as long as the ball is over fairway it travels 75% faster and farther. When over green it travels 25% slower.
 - Valeurs par niveau : 1: inactive; 2: inactive; 3: inactive; 4: inactive; 5: inactive; 6: inactive; 7: 75%/25%; 8: 75%/25%; 9: 75%/25%; 10: 75%/25%; 11: 75%/25%; 12: 75%/25%
@@ -1044,8 +1004,8 @@ Les classes A et B sont vides : aucune capacité restante ne peut être impléme
 
 - Identifiant : `meteor__alien_world`
 - Classe : **E — Physique ou géométrie non modélisée**
-- Possédé : non
-- Niveau utilisateur : inconnu/non possédé
+- Possédé : oui
+- Niveau utilisateur : 9
 - Valeur au niveau utilisateur : inactive/inconnue
 - Texte officiel : When you hit with Meteor, the ball bounces off of fairway. (Forever.)
 - Valeurs par niveau : 1: inactive; 2: inactive; 3: inactive; 4: inactive; 5: inactive; 6: inactive; 7: inactive; 8: inactive; 9: inactive; 10: inactive; 11: inactive; 12: ✔; Elite: ✔
@@ -1245,7 +1205,7 @@ Les classes A et B sont vides : aucune capacité restante ne peut être impléme
 - Identifiant : `windstrike__boundary_bonus`
 - Classe : **E — Physique ou géométrie non modélisée**
 - Possédé : oui
-- Niveau utilisateur : 8
+- Niveau utilisateur : 9
 - Valeur au niveau utilisateur : +10
 - Texte officiel : Gains up to +X to Power and Control stats depending on how close you are to the boundary, and Spin gains half as much.
 - Valeurs par niveau : 1: inactive; 2: inactive; 3: +7; 4: +8; 5: +8; 6: +9; 7: +9; 8: +10; 9: +10; 10: +11; 11: +11; 12: +12
@@ -1599,6 +1559,46 @@ Les classes A et B sont vides : aucune capacité restante ne peut être impléme
 - Confiance : high_for_resolved_component_only
 - Provenance : `official_versioned_catalog_and_qualified_semantic_map`
 - Validation proposée : Measure the speed/distance or tree-collision component independently in game.
+
+### Meteor — Alien Relic (Left)
+
+- Identifiant : `meteor__alien_relic_left`
+- Classe : **H — Partiellement simulée**
+- Possédé : oui
+- Niveau utilisateur : 9
+- Valeur au niveau utilisateur : x2
+- Texte officiel : The club to the left of Meteor gains an extra instance of each of its abilities.  - Elite Level: Ability can wrap to the other side of the bag.
+- Valeurs par niveau : 1: inactive; 2: inactive; 3: inactive; 4: inactive; 5: inactive; 6: inactive; 7: inactive; 8: inactive; 9: x2; 10: x2; 11: x2; 12: x2; Elite: x2
+- Statut : `partial`
+- Raison : Additive stat magnitudes and supported additive delayed payloads are amplified. Modifier stacking, nonnumeric effects, recursive and overlapping amplification remain unresolved.
+- Qualification : `true_semantic_ambiguity`
+- Famille technique : `adjacent_ability_amplifier`
+- Primitives disponibles : SELECT_SELF, READ_LEVEL_VALUE, SELECT_ADJACENT, ABILITY_EFFECT_MULTIPLIER
+- Primitive/donnée manquante : `validation_or_external_model`
+- Difficulté : special
+- Confiance : high_for_resolved_component_only
+- Provenance : `official_versioned_catalog_and_qualified_semantic_map`
+- Validation proposée : Compare the competing interpretations in a minimal bag and record the exact displayed stat change.
+
+### Meteor — Alien Relic (Right)
+
+- Identifiant : `meteor__alien_relic_right`
+- Classe : **H — Partiellement simulée**
+- Possédé : oui
+- Niveau utilisateur : 9
+- Valeur au niveau utilisateur : inactive/inconnue
+- Texte officiel : The club to the right of Meteor gains an extra instance of each of its abilities.  - Elite Level: Ability can wrap to the other side of the bag.
+- Valeurs par niveau : 1: inactive; 2: inactive; 3: inactive; 4: inactive; 5: inactive; 6: inactive; 7: inactive; 8: inactive; 9: inactive; 10: x2; 11: x2; 12: x2; Elite: x2
+- Statut : `partial`
+- Raison : Additive stat magnitudes and supported additive delayed payloads are amplified. Modifier stacking, nonnumeric effects, recursive and overlapping amplification remain unresolved.
+- Qualification : `true_semantic_ambiguity`
+- Famille technique : `adjacent_ability_amplifier`
+- Primitives disponibles : SELECT_SELF, READ_LEVEL_VALUE, SELECT_ADJACENT, ABILITY_EFFECT_MULTIPLIER
+- Primitive/donnée manquante : `validation_or_external_model`
+- Difficulté : special
+- Confiance : high_for_resolved_component_only
+- Provenance : `official_versioned_catalog_and_qualified_semantic_map`
+- Validation proposée : Compare the competing interpretations in a minimal bag and record the exact displayed stat change.
 
 ### Ranger — Forester Power (Elite)
 

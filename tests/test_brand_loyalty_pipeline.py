@@ -66,6 +66,7 @@ class BrandLoyaltyPipelineTests(unittest.TestCase):
                 "ADD_STAT",
                 "ADD_MODIFIER",
                 "SCHEDULE_EFFECT",
+                "ABILITY_EFFECT_MULTIPLIER",
             ),
         )
 

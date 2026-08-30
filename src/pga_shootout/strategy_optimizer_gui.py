@@ -585,6 +585,12 @@ class StrategyOptimizerPresenter:
                     for effect_id in item.scheduled_effect_ids
                 )
                 lines.append("    Effets différés planifiés : " + (", ".join(dict.fromkeys(scheduled)) or "aucun"))
+                for fact in step.amplifications:
+                    magnitude = (f"{fact['original']:g} → {fact['amplified']:g} {fact.get('metric', '')}"
+                                 if "original" in fact else "effet final non résolu")
+                    lines.append(f"    Amplification ×{fact.get('multiplier', 1):g} : {fact.get('target_ability_source')} ; "
+                                 f"{magnitude} ; cible finale : {fact.get('final_target') or 'prochain club compatible / indéterminée'} ; "
+                                 f"statut : {fact.get('status')}")
         return "\n".join(lines)
 
     @staticmethod

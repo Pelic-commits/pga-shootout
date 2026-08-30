@@ -47,6 +47,16 @@ class Effect:
 
 
 @dataclass(frozen=True)
+class AbilityAmplification:
+    """A declarative transformation request, never a modification of final stats."""
+
+    source_club_id: str
+    target_club_id: str
+    multiplier: float
+    source: str
+
+
+@dataclass(frozen=True)
 class DelayedEffect:
     """One planned effect waiting for a compatible future evaluation."""
 

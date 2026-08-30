@@ -165,8 +165,14 @@ def test_real_owned_club_is_candidate_with_known_level_and_explicit_unknowns(ide
         assert identifier in candidate.composition
         club = next(item for item in candidate.clubs if item.club_id == identifier)
         assert club.level == entry.current_level
-        assert any(item.startswith(identifier + "__") for step in club.steps for item in step.unresolved_abilities)
-        assert candidate.unresolved_abilities
+        if identifier == "flashpoint":
+            assert any(item.startswith(identifier + "__") for step in club.steps for item in step.unresolved_abilities)
+            assert candidate.unresolved_abilities
+        else:
+            # A qualified amplifier with no left neighbor is now complete, not
+            # permanently unknown merely because of the owning club identity.
+            assert all("alien_world" not in item and "alien_relic_right" not in item
+                       for step in club.steps for item in step.unresolved_abilities)
 
 
 def test_no_real_club_name_added_to_generic_code():

@@ -139,20 +139,25 @@
         "in_game_validation"
       ],
       "group_id": "label:alien_relic_left",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
+      "interpretation_status": "implemented_additive_subset",
+      "mechanic_id": "dsl_pipeline",
+      "partial_support": true,
+      "phase": "ability_transform",
+      "pattern_id": "adjacent_ability_amplifier",
+      "pattern_parameters": {"directions": ["left"], "wrap": false},
+      "pattern_parameters_by_level": {"Elite": {"wrap": true}},
+      "notes": ["Official extra instance of each ability: two additive stat instances equal twice the original magnitude. The original owner, level, targets and conditions remain unchanged. Modifier stacking and recursive/multiple amplification remain unresolved."],
       "priority": null,
       "qualification": {
         "category": "true_semantic_ambiguity",
         "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
-        "reason": "Ability duplication, level provenance, wrapping, ordering, and recursion are not validated.",
+        "reason": "Additive stat magnitudes and supported additive delayed payloads are amplified. Modifier stacking, nonnumeric effects, recursive and overlapping amplification remain unresolved.",
         "required_data": [
           "in_game_validation"
         ],
-        "status": "ambiguous"
+        "status": "partial"
       },
-      "validation_status": "not_started"
+      "validation_status": "qualified_additive_subset_from_official_text"
     },
     "label:alien_relic_right": {
       "complexity": "special",
@@ -160,20 +165,25 @@
         "in_game_validation"
       ],
       "group_id": "label:alien_relic_right",
-      "interpretation_status": "uninterpreted",
-      "mechanic_id": null,
-      "notes": [],
+      "interpretation_status": "implemented_additive_subset",
+      "mechanic_id": "dsl_pipeline",
+      "partial_support": true,
+      "phase": "ability_transform",
+      "pattern_id": "adjacent_ability_amplifier",
+      "pattern_parameters": {"directions": ["right"], "wrap": false},
+      "pattern_parameters_by_level": {"Elite": {"wrap": true}},
+      "notes": ["Same generic transformation as the left variant; activation comes only from official per-level values. Extra additive stat instance is supported; other stacking remains unresolved."],
       "priority": null,
       "qualification": {
         "category": "true_semantic_ambiguity",
         "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
-        "reason": "Ability duplication, level provenance, wrapping, ordering, and recursion are not validated.",
+        "reason": "Additive stat magnitudes and supported additive delayed payloads are amplified. Modifier stacking, nonnumeric effects, recursive and overlapping amplification remain unresolved.",
         "required_data": [
           "in_game_validation"
         ],
-        "status": "ambiguous"
+        "status": "partial"
       },
-      "validation_status": "not_started"
+      "validation_status": "qualified_additive_subset_from_official_text"
     },
     "label:alien_world": {
       "complexity": "special",
@@ -6116,6 +6126,19 @@
   },
   "layer": "semantic_interpretation_placeholders",
   "patterns": {
+    "adjacent_ability_amplifier": {
+      "description": "Transform every native ability of the selected adjacent owner, preserving its normal targets and conditions.",
+      "parameters": ["directions", "wrap"],
+      "program": {
+        "version": "1.0",
+        "nodes": [
+          {"id": "source", "operation": "SELECT_SELF", "inputs": {"source_club_id": {"from": "effect.source_club_id"}}},
+          {"id": "factor", "operation": "READ_LEVEL_VALUE", "inputs": {"level": {"from": "effect.ability_level"}, "level_value": {"from": "effect.level_value"}}},
+          {"id": "neighbors", "operation": "SELECT_ADJACENT", "inputs": {"origin": {"from": "source.club"}}, "parameters": {"directions": {"pattern_parameter": "directions"}, "wrap": {"pattern_parameter": "wrap"}}},
+          {"id": "amplify", "operation": "ABILITY_EFFECT_MULTIPLIER", "inputs": {"source": {"from": "source.club"}, "targets": {"from": "neighbors.clubs"}, "multiplier": {"from": "factor.value"}, "ability_source": {"from": "effect.ability_source"}}}
+        ]
+      }
+    },
     "absent_types_stat_bonus": {
       "description": "Apply a level-scaled stat bonus to configured targets only when the ordered bag contains none of the configured club types.",
       "parameters": [

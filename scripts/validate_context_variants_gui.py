@@ -34,8 +34,9 @@ def close(root):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--capture-python")
+    parser.add_argument("--amplification", action="store_true", help="Validate useful and non-selected amplifier proposals")
     args = parser.parse_args()
-    output = Path("logs/context-variants/windows")
+    output = Path("logs/amplification/windows" if args.amplification else "logs/context-variants/windows")
     output.mkdir(parents=True, exist_ok=True)
     original = Path("data/pga_shootout.sqlite")
     before = hashlib.sha256(original.read_bytes()).hexdigest()
@@ -62,10 +63,11 @@ def main():
                     "from PIL import ImageGrab; import sys; ImageGrab.grab(window=int(sys.argv[1])).save(sys.argv[2])",
                     str(window.winfo_id()), str(output / (name + ".png"))], check=True)
 
-        for strategy_id, name, wind in (
+        cases = (("par3", "Blacksmith", False), ("par3", "High Flight", False)) if args.amplification else (
             ("par3", "High Flight", False), ("par4_long", "High Flight", True),
             ("par3", "Meteor", False), ("par3", "Flashpoint", False),
-        ):
+        )
+        for strategy_id, name, wind in cases:
             app.strategy_name.set(next(label for label, value in app.strategy_by_label.items() if value == strategy_id))
             app.strategy_box.event_generate("<<ComboboxSelected>>")
             app.chosen_club_rows[0]["club_var"].set(name)
@@ -95,15 +97,25 @@ def main():
             assert ("wind_profile" in families) == wind
             if name in {"High Flight", "Flashpoint"} and not wind:
                 assert "landing_profile" in families
-            if name in {"Meteor", "Flashpoint"}:
+            if name == "Flashpoint":
                 assert all(candidate.unresolved_abilities for candidate in candidates)
             assert len({candidate.composition for candidate in candidates}) == len(candidates)
             prefix = strategy_id + "-" + name.replace(" ", "-").lower()
             capture(prefix + "-power")
             preferred = "wind_profile" if wind else "landing_profile"
             index = next((index for index, item in enumerate(candidates) if preferred in item.result_family_ids), 0)
+            if args.amplification:
+                if name == "Blacksmith":
+                    index = next(index for index, item in enumerate(candidates) if "meteor" in item.composition)
+                    amp = next(club for club in candidates[index].clubs if club.club_id == "meteor")
+                    assert amp.role == "support"
+                    assert any(fact.get("status") == "resolved" for step in amp.steps for fact in step.amplifications)
+                else:
+                    assert "meteor" not in candidates[index].composition, "Do not favor an amplifier with no observed landing gain"
             card = app.cards[index]
             visible = "\n".join(texts(card))
+            if args.amplification and name == "Blacksmith":
+                assert "Alien Relic Left" in visible and "5 → 10 Power → Blacksmith" in visible
             if preferred in families:
                 assert ("Wind Resistance" if wind else "Bounce Reduction") in visible
                 assert "→" in visible
@@ -121,6 +133,8 @@ def main():
             root.update()
             assert app.detail_window.state() == "normal"
             app.notebook.select(app.notebook.tabs()[-1])
+            if args.amplification and name == "Blacksmith":
+                assert "Amplification ×2" in app.presentation.details[index].technical_details
             capture(prefix + "-detail", app.detail_window)
             app.detail_window.withdraw()
             checks.append({"strategy": strategy_id, "club": name, "wind": wind,

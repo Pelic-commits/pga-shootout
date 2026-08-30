@@ -309,7 +309,7 @@ def render_capability_audit_markdown(report: CapabilityAuditReport) -> str:
         lines.append(f"| {key} | {label} | {report.class_counts[key]} | {report.owned_class_counts[key]} |")
     lines.extend((
         "",
-        "Les classes A et B sont vides : aucune capacité restante ne peut être implémentée sans contredire une qualification existante ou introduire une hypothèse. Aucun handler n'est donc ajouté par ce lot.",
+        "Les classes décrivent les limites de qualification actuelles. Une capacité partielle peut déjà produire des effets qualifiés ; ses cas non validés ne sont pas comptés comme complètement simulés.",
         "",
         "## Groupes restants",
         "",

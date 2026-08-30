@@ -50,7 +50,10 @@ def test_current_qualification_contains_no_unvalidated_direct_implementation():
     report = audit()
     assert report.class_counts["A"] == 0
     assert report.class_counts["B"] == 0
-    assert report.owned_class_counts["H"] == 2
+    assert report.owned_class_counts["H"] == 4
+    assert {"meteor__alien_relic_left", "meteor__alien_relic_right"} <= {
+        item.occurrence_id for item in report.occurrences if item.audit_class == "H"
+    }
     assert all(item.provenance == "official_versioned_catalog_and_qualified_semantic_map" for item in report.occurrences)
 
 

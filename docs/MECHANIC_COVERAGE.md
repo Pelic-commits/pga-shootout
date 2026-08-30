@@ -12,7 +12,7 @@
 | Groups mapped to a registered handler | 63 |
 | Occurrence coverage | 53.09% |
 | Club coverage | 63.64% |
-| Interpreted groups | 63 |
+| Interpreted groups | 65 |
 | Unclassified groups | 0 |
 
 Registered handlers: `add_stat, add_all_stats, dsl_pipeline`.
@@ -29,8 +29,8 @@ Registered handlers: `add_stat, add_all_stats, dsl_pipeline`.
 | 6 | `tree_bonus` | uninterpreted | 2 | 2 | special | validated_geometry_or_physics | no |
 | 7 | `ability_mirror` | uninterpreted | 1 | 1 | stateful | validated_trigger_lifetime | no |
 | 8 | `adventure` | uninterpreted | 1 | 1 | stateful | validated_trigger_lifetime | no |
-| 9 | `alien_relic_left` | uninterpreted | 1 | 1 | special | in_game_validation | no |
-| 10 | `alien_relic_right` | uninterpreted | 1 | 1 | special | in_game_validation | no |
+| 9 | `alien_relic_left` | `dsl_pipeline` | 1 | 1 | special | in_game_validation | no |
+| 10 | `alien_relic_right` | `dsl_pipeline` | 1 | 1 | special | in_game_validation | no |
 | 11 | `alien_world` | uninterpreted | 1 | 1 | special | validated_geometry_or_physics | no |
 | 12 | `aura_of_death` | uninterpreted | 1 | 1 | special | in_game_validation | no |
 | 13 | `bag_tree_bonus` | uninterpreted | 1 | 1 | special | validated_geometry_or_physics | no |
@@ -46,7 +46,7 @@ Registered handlers: `add_stat, add_all_stats, dsl_pipeline`.
 
 ### Remaining semantic qualification
 
-Historical qualification queue: 62 structural groups remain uninterpreted in this legacy report. Functional development is currently frozen.
+Historical qualification queue: 60 structural groups remain uninterpreted in this legacy report. Functional development is currently frozen.
 
 ### Qualified coverage
 
@@ -64,8 +64,8 @@ Historical qualification queue: 62 structural groups remain uninterpreted in thi
 | 6 | `tree_bonus` | uninterpreted | 2 | 2 | Edgewalker (`edgewalker`), Outset (`outset`) | 0% | special | validated_geometry_or_physics |
 | 7 | `ability_mirror` | uninterpreted | 1 | 1 | Mimic (`mimic`) | 0% | stateful | validated_trigger_lifetime |
 | 8 | `adventure` | uninterpreted | 1 | 1 | Homecoming (`homecoming`) | 0% | stateful | validated_trigger_lifetime |
-| 9 | `alien_relic_left` | uninterpreted | 1 | 1 | Meteor (`meteor`) | 0% | special | in_game_validation |
-| 10 | `alien_relic_right` | uninterpreted | 1 | 1 | Meteor (`meteor`) | 0% | special | in_game_validation |
+| 9 | `alien_relic_left` | `dsl_pipeline` | 1 | 1 | Meteor (`meteor`) | 0% | special | in_game_validation |
+| 10 | `alien_relic_right` | `dsl_pipeline` | 1 | 1 | Meteor (`meteor`) | 0% | special | in_game_validation |
 | 11 | `alien_world` | uninterpreted | 1 | 1 | Meteor (`meteor`) | 0% | special | validated_geometry_or_physics |
 | 12 | `aura_of_death` | uninterpreted | 1 | 1 | The Reaper (`the_reaper`) | 0% | special | in_game_validation |
 | 13 | `bag_tree_bonus` | uninterpreted | 1 | 1 | The Seeker (`the_seeker`) | 0% | special | validated_geometry_or_physics |

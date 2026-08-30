@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from .models import Condition, DelayedEffect, Effect, ExplainEntry, GameState
+from .models import AbilityAmplification, Condition, DelayedEffect, Effect, ExplainEntry, GameState
 from .registry import MechanismExecution, MechanismExecutionError
 
 
@@ -24,6 +24,7 @@ class PrimitiveResult:
     explain_outputs: Mapping[str, Any] | None = None
     continuations: tuple["PrimitiveContinuation", ...] = ()
     scheduled_effects: tuple[DelayedEffect, ...] = ()
+    amplifications: tuple[AbilityAmplification, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -140,6 +141,8 @@ def _select_adjacent(inputs: Mapping[str, Any], parameters: Mapping[str, Any], s
         if direction not in offsets:
             raise DslExecutionError(f"Unknown adjacent direction: {direction}")
         candidate = index + offsets[direction]
+        if parameters.get("wrap", False) and len(ordered) > 1:
+            candidate %= len(ordered)
         if 0 <= candidate < len(ordered):
             selected.append(ordered[candidate])
             selected_by_direction[direction] = ordered[candidate]
@@ -559,7 +562,8 @@ def _schedule_effect(
         trigger=trigger,
         effect=Effect(
             mechanism=str(parameters.get("effect_mechanism", "add_all_stats")),
-            parameters={"amount": amount},
+            parameters={"amount": amount, **({"_amplification": inputs["_amplification"],
+                        "_original_amount": inputs["_original_amount"]} if "_amplification" in inputs else {})},
             condition=Condition("always", description="delayed trigger matched"),
             source=ability_source,
         ),
@@ -598,7 +602,22 @@ def default_dsl_registry() -> DslPrimitiveRegistry:
     registry.register("ADD_STAT", _add_stat)
     registry.register("ADD_MODIFIER", _add_modifier)
     registry.register("SCHEDULE_EFFECT", _schedule_effect)
+    registry.register("ABILITY_EFFECT_MULTIPLIER", _ability_effect_multiplier)
     return registry
+
+
+def _ability_effect_multiplier(inputs, parameters, stats, state):
+    import math
+    source = _club_id(inputs["source"])
+    multiplier = float(inputs["multiplier"])
+    if not math.isfinite(multiplier) or multiplier < 1:
+        raise DslExecutionError("Ability multiplier must be finite and at least one")
+    targets = tuple(dict.fromkeys(inputs["targets"]))
+    requests = tuple(AbilityAmplification(source, _club_id(target), multiplier, str(inputs["ability_source"]))
+                     for target in targets)
+    return PrimitiveResult({"targets": [_club_name(state, target) for target in targets], "multiplier": multiplier},
+                           stats, "planned native ability amplification" if targets else "no adjacent target",
+                           applied=bool(targets), amplifications=requests)
 
 
 def _resolve(
@@ -653,11 +672,12 @@ def _execute_nodes(
     outputs: Mapping[str, Mapping[str, Any]] | None = None,
     bindings: Mapping[str, Any] | None = None,
     scope: str = "",
-) -> tuple[dict[str, float], list[ExplainEntry], dict[str, Mapping[str, Any]], list[DelayedEffect]]:
+) -> tuple[dict[str, float], list[ExplainEntry], dict[str, Mapping[str, Any]], list[DelayedEffect], list[AbilityAmplification]]:
     resolved_outputs = dict(outputs or {})
     journal: list[ExplainEntry] = []
     current = stats
     scheduled_effects: list[DelayedEffect] = []
+    amplifications: list[AbilityAmplification] = []
     for node in nodes:
         if not isinstance(node, Mapping):
             raise DslExecutionError("Every DSL node must be an object")
@@ -667,10 +687,17 @@ def _execute_nodes(
             raise DslExecutionError(f"Duplicate DSL node id: {node_id}")
         inputs = _resolve(node.get("inputs", {}), resolved_outputs, effect, bindings)
         parameters = _resolve(node.get("parameters", {}), resolved_outputs, effect, bindings)
+        # Transform the effect magnitude, not the level, condition, count or final stat.
+        original_inputs = inputs
+        amplified = "_amplification" in effect.parameters
+        if amplified:
+            from .ability_amplification import amplify_inputs, amplification_trace
+            inputs = amplify_inputs(operation, inputs, effect)
         before = dict(current)
         result = registry.execute(operation, inputs, parameters, current, state)
         current = result.stats
         scheduled_effects.extend(result.scheduled_effects)
+        amplifications.extend(result.amplifications)
         resolved_outputs[node_id] = dict(result.outputs)
         scoped_node_id = f"{scope}.{node_id}" if scope else node_id
         journal.append(
@@ -690,10 +717,12 @@ def _execute_nodes(
                 outputs=dict(result.explain_outputs if result.explain_outputs is not None else result.outputs),
             )
         )
+        if result.applied and amplified:
+            journal.extend(amplification_trace(effect, operation, original_inputs, inputs, parameters, current))
         for continuation in result.continuations:
             nested_bindings = dict(bindings or {})
             nested_bindings.update(continuation.bindings)
-            current, nested_journal, _, nested_scheduled = _execute_nodes(
+            current, nested_journal, _, nested_scheduled, nested_amplifications = _execute_nodes(
                 continuation.nodes,
                 current,
                 effect,
@@ -705,7 +734,8 @@ def _execute_nodes(
             )
             journal.extend(nested_journal)
             scheduled_effects.extend(nested_scheduled)
-    return current, journal, resolved_outputs, scheduled_effects
+            amplifications.extend(nested_amplifications)
+    return current, journal, resolved_outputs, scheduled_effects, amplifications
 
 
 def execute_dsl_pipeline(stats: dict[str, float], effect: Effect, state: GameState) -> MechanismExecution:
@@ -714,5 +744,5 @@ def execute_dsl_pipeline(stats: dict[str, float], effect: Effect, state: GameSta
     if not isinstance(nodes, list):
         raise DslExecutionError("dsl_pipeline requires a program containing a nodes list")
 
-    current, journal, _, scheduled = _execute_nodes(nodes, dict(stats), effect, state, default_dsl_registry())
-    return MechanismExecution(current, tuple(journal), tuple(scheduled))
+    current, journal, _, scheduled, amplifications = _execute_nodes(nodes, dict(stats), effect, state, default_dsl_registry())
+    return MechanismExecution(current, tuple(journal), tuple(scheduled), tuple(amplifications))

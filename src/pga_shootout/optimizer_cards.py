@@ -63,6 +63,17 @@ def club_projection(club, candidate, step_labels):
     axis_reasons = []
     for evaluated in club.steps:
         active_target = candidate.active_assignments.get(evaluated.step_id)
+        for fact in evaluated.amplifications:
+            target = names.get(fact.get("target_club_id"), fact.get("target_club_id", "?"))
+            ability = str(fact.get("target_ability_id", "capacité")).split("__")[-1].replace("_", " ")
+            if fact.get("status") == "unresolved":
+                axis_reasons.append(f"×{number(fact.get('multiplier'))} {ability} de {target} · effet final non résolu")
+            elif fact.get("final_target") == active_target or fact.get("status") == "scheduled":
+                final_target = names.get(fact.get("final_target"), "prochain club compatible")
+                amplifier = str(fact.get("source", "Amplification")).split("__")[-1].replace("_", " ").title()
+                axis_reasons.append(f"{amplifier} : {ability} de {target}\n{number(fact.get('original'))} → {number(fact.get('amplified'))} {metric_label(fact.get('metric', ''))} → {final_target}")
+    for evaluated in club.steps:
+        active_target = candidate.active_assignments.get(evaluated.step_id)
         for contribution in evaluated.contributions_sent:
             if contribution.target_club_id != active_target:
                 continue

@@ -143,6 +143,30 @@ compatibles. Ils ne sont ni exclus à cause d'une capacité inconnue, ni favoris
 bonus supposé. Leur sélection automatique dépend des calculs connus et de la recherche
 bornée ; les imposer permet d'explorer explicitement un sac autour d'eux.
 
+### Supports amplificateurs
+
+Le pool reconnaît maintenant les programmes `ABILITY_EFFECT_MULTIPLIER` et leur
+relation d'adjacence. La recherche explore le voisin amplifié et son orientation,
+sans sac sauvegardé ni préférence pour un nom de club. Le wrap explicite exige une
+énumération positionnelle ; le niveau actuel sans wrap conserve les réductions
+d'ordre sûres. La valeur du support est celle du contrefactuel existant : que perd
+le sac lorsque cet amplificateur est retiré ?
+
+La carte peut afficher, par exemple, **Alien Relic Left : texas tee de Blacksmith —
+5 → 10 Power → Blacksmith**. Le détail technique et les exports conservent toutes
+les transformations et contributions. Pour une capacité non qualifiée : **×2 [capacité]
+de [voisin] · effet final non résolu**. Il ne s'agit jamais de doubler les stats finales.
+
+Au niveau réel 9, Meteor amplifie seulement son voisin gauche. Son faible profil
+propre ne l'élimine plus lorsqu'il apporte un bonus utile, mais ne garantit jamais
+sa sélection. Exemple observé sans imposer Meteor : Blacksmith / Meteor / Commonlaw /
+Sunstorm / Gearshift, attaque **23/11/7**, dont Texas Tee passe de +5 à +10. Le retrait
+du support fait perdre 5 Power dans ce sac. Une proposition Atterrissage High Flight /
+supports Bounce peut rester meilleure sur cet axe sans Meteor.
+
+Les capacités de copie en cascade, pourcentages et modificateurs non qualifiés restent
+partiels. Stormbringer/XLR8R et Alien World ne sont pas traités par ce lot.
+
 ## Inventaire dynamique et performances
 
 SQLite est relu avant chaque analyse. La GUI exécute le calcul en arrière-plan. Le filtre même type réduit naturellement l'espace. Les recherches tous types ou à deux changements peuvent être plus longues ; la priorité est la cohérence des résultats.

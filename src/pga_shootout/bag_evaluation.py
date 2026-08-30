@@ -102,6 +102,7 @@ def _materialize_pattern(value: Any, parameters: Mapping[str, Any]) -> Any:
 def _semantic_program(
     semantic: Mapping[str, Any],
     semantic_patterns: Mapping[str, Any],
+    level: int | str | None = None,
 ) -> Mapping[str, Any] | None:
     inline = semantic.get("program")
     if isinstance(inline, Mapping):
@@ -118,6 +119,7 @@ def _semantic_program(
     parameters = semantic.get("pattern_parameters", {})
     if not isinstance(parameters, Mapping):
         raise BagEvaluationError(f"Semantic pattern parameters for {pattern_id!r} must be an object")
+    parameters = {**parameters, **semantic.get("pattern_parameters_by_level", {}).get(str(level), {})}
     materialized = _materialize_pattern(pattern["program"], parameters)
     if not isinstance(materialized, Mapping):
         raise BagEvaluationError(f"Semantic pattern {pattern_id!r} did not produce a program")
@@ -151,7 +153,7 @@ def semantic_support(
         and program is not None
         for spec, program in zip(specs, programs, strict=True)
     )
-    return all(supported_parts), any(supported_parts), programs
+    return all(supported_parts) and not semantic.get("partial_support", False), any(supported_parts), programs
 
 
 def _semantic_condition(spec: Mapping[str, Any], level: int | str, source_club_id: str) -> Condition:
@@ -217,7 +219,7 @@ def _abilities_at_level(
         for spec in specs:
             direct_mechanism = item.get("mechanism")
             mechanism = direct_mechanism or spec.get("mechanic_id")
-            program = _semantic_program(spec, semantic_patterns or {})
+            program = _semantic_program(spec, semantic_patterns or {}, level)
             level_value = _effect_level_value(spec, scalar, level_components)
             parameters = dict(item.get("effect_parameters", {}))
             if direct_mechanism:
@@ -233,6 +235,8 @@ def _abilities_at_level(
                 }
                 if level_value is not None:
                     parameters["level_value"] = level_value
+                if spec.get("phase"):
+                    parameters["phase"] = spec["phase"]
             else:
                 mechanism = f"unsupported:{label_id}"
             effects.append(

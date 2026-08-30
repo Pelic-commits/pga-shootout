@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Mapping
+from typing import Any, Mapping
 
 from .bag_evaluation import BagEvaluation, evaluate_saved_bag, load_saved_bag
 from .comparison_diagnostic import ComparisonDiagnostic, build_comparison_diagnostic, render_comparison_diagnostic
@@ -34,6 +34,7 @@ class AbilityContribution:
     applied: bool
     unresolved: tuple[str, ...]
     scheduled_effect_ids: tuple[str, ...] = ()
+    amplifications: tuple[Mapping[str, Any], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -139,9 +140,10 @@ def ability_contributions(evaluation: BagEvaluation) -> tuple[AbilityContributio
                     applied=bool(scheduled) or any(
                         entry.applied and any(value != 0 for value in entry.modification.values())
                         for entry in leaves
-                    ),
+                    ) or any(entry.mechanism == "ABILITY_AMPLIFICATION" and entry.outputs.get("status") in {"resolved", "scheduled"} for entry in journal),
                     unresolved=unresolved,
                     scheduled_effect_ids=scheduled,
+                    amplifications=tuple(dict(entry.outputs) for entry in journal if entry.mechanism == "ABILITY_AMPLIFICATION"),
                 )
             )
     return tuple(contributions)

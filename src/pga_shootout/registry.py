@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from .models import DelayedEffect, Effect, ExplainEntry, GameState
+from .models import AbilityAmplification, DelayedEffect, Effect, ExplainEntry, GameState
 
 
 @dataclass(frozen=True)
@@ -14,6 +14,7 @@ class MechanismExecution:
     stats: dict[str, float]
     explain: tuple[ExplainEntry, ...] = ()
     scheduled_effects: tuple[DelayedEffect, ...] = ()
+    amplifications: tuple[AbilityAmplification, ...] = ()
 
 
 Mechanism = Callable[[dict[str, float], Effect, GameState], dict[str, float] | MechanismExecution]

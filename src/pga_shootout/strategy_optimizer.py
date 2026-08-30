@@ -199,6 +199,7 @@ class ClubStepResult:
     unresolved_abilities: tuple[str, ...]
     contributions_received: tuple[ContributionRecord, ...]
     contributions_sent: tuple[ContributionRecord, ...]
+    amplifications: tuple[Mapping[str, Any], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -520,7 +521,7 @@ class _RuntimeEvaluator:
                 # Keep potentially useful unresolved support abilities in the search.
                 return True
             for spec in _semantic_effect_specs(semantic):
-                program = _semantic_program(spec, self.semantic_patterns)
+                program = _semantic_program(spec, self.semantic_patterns, level)
                 serialized = json.dumps({"program": program, "effect": spec}, sort_keys=True) if program else ""
                 if any(operation in serialized for operation in outward):
                     return True
@@ -540,8 +541,10 @@ class _RuntimeEvaluator:
                 # real-game behavior remains warned about, but cannot change this run.
                 continue
             for spec in _semantic_effect_specs(semantic):
-                program = _semantic_program(spec, self.semantic_patterns)
+                program = _semantic_program(spec, self.semantic_patterns, level)
                 serialized = json.dumps({"program": program, "effect": spec}, sort_keys=True) if program else ""
+                if '"wrap": true' in serialized:
+                    return "positional"
                 if any(token in serialized for token in (
                     "SELECT_BY_POSITION", "bag_position_equals",
                     "leftmost", "rightmost",
@@ -578,6 +581,7 @@ class _RuntimeEvaluator:
             "MATCH_RARITY": "rarity",
             "SELECT_ALL": "whole_bag",
             "SCHEDULE_EFFECT": "chain",
+            "ABILITY_EFFECT_MULTIPLIER": "ability_amplifier",
         }
         for ability in data.get("abilities", ()):
             if str(level) not in ability.get("values_by_level", {}):
@@ -1162,6 +1166,7 @@ class StrategyCandidateGenerator:
             relation_order = {
                 "direct": 0, "whole_bag": 1, "adjacency": 2, "chain": 3,
                 "brand": 4, "type": 5, "rarity": 6,
+                "ability_amplifier": 2,
                 "unresolved_structural": 7,
             }
             structural = tuple(sorted(
@@ -3612,6 +3617,10 @@ def _build_step_rows(
             unresolved,
             tuple(received[club_id]),
             tuple(emitted.get(club_id, ())),
+            tuple(fact for target_summary in summaries.values()
+                  for contribution in target_summary.ability_contributions if contribution.source_club_id == club_id
+                  for fact in contribution.amplifications
+                  if fact.get("status") in {"resolved", "scheduled", "unresolved"}),
         )
     return rows, emitted
 

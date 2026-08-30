@@ -12,7 +12,7 @@ Ces limites sont volontaires ou correspondent à des connaissances insuffisantes
 
 ## Capacités
 
-L'audit versionné recense 162 occurrences. Dans l'inventaire audité : 84 capacités sont simulées, 2 partielles et 60 non résolues hors partielles, soit 57,53 % des 146 occurrences possédées. Globalement, 86/162 occurrences sont couvertes (53,09 %).
+L'audit versionné recense 162 occurrences : 86 complètement simulées (53,09 %), 4 partielles et 72 non résolues hors partielles après ce lot. Le rapport d'inventaire recalculé contient 151 occurrences : 84 complètes, 4 partielles et 63 non résolues. Ce compteur historique inclut toutes les entrées d'inventaire, y compris un club marqué non possédé ; voir la distinction dans [PROJECT_STATUS.md](PROJECT_STATUS.md). La prise en charge additive d'Alien Relic ne suffit pas à déclarer ses deux variantes entièrement simulées.
 
 La couverture restante est majoritairement bloquée par ambiguïté sémantique, conflit entre sources, physique/géométrie, historique complexe ou aléatoire/transformation. Une faible couverture n'est donc pas automatiquement une dette logicielle.
 
@@ -20,13 +20,13 @@ Exemples :
 
 - **Shoreline Rush** et **Boundary Rush** : effets physiques non validés ;
 - eau, sable et arbres : contexte et comportement physique incomplets ;
-- **Meteor** : copie/provenance/récursion insuffisamment spécifiées ;
+- **Meteor** : amplification additive prise en charge ; cumul de modificateurs, récursion et Alien World restent non qualifiés ;
 - **Perfect Shot** : déclenchement et historique nécessaires ;
 - transformations et aléatoire : résultat ou distribution non qualifiés.
 
 Un club concerné reste utilisable lorsque les calculs connus sont suffisants. Le résultat devient partiellement évalué et l'inconnue n'est jamais remplacée par zéro. Skyfury, Windstrike et Wave sont des exemples de cette politique.
 
-### Audit ciblé Meteor / Flashpoint — 30 août 2026
+### Audit ciblé Meteor / Flashpoint — 30 août 2026, qualification Alien Relic révisée le 31 août
 
 Source utilisée exclusivement : catalogue normalisé local, `semantic_map.json` et
 export officiel versionné capturé le 21 juillet 2026 (page datée du 14 juin 2026).
@@ -39,18 +39,30 @@ Ses statistiques P/C/S officielles sont : 9 = 2/2/5 ; 10 = 2/2/6 ; 11 = 2/3/6 ;
 
 | Capacité | Texte officiel exact | Valeurs / activation | Qualification actuelle |
 |---|---|---|---|
-| Alien Relic (Left) | The club to the left of Meteor gains an extra instance of each of its abilities.  - Elite Level: Ability can wrap to the other side of the bag. | x2 aux niveaux 9–12 et Elite | Non résolue : instance copiée, niveau, provenance, ordre, interactions de copies/récursion à valider. |
-| Alien Relic (Right) | The club to the right of Meteor gains an extra instance of each of its abilities.  - Elite Level: Ability can wrap to the other side of the bag. | x2 aux niveaux 10–12 et Elite | Même blocage ; inactive au niveau utilisateur 9. |
+| Alien Relic (Left) | The club to the left of Meteor gains an extra instance of each of its abilities.  - Elite Level: Ability can wrap to the other side of the bag. | x2 aux niveaux 9–12 et Elite | Amplification des magnitudes additives qualifiée ; autres formes et interactions non résolues. |
+| Alien Relic (Right) | The club to the right of Meteor gains an extra instance of each of its abilities.  - Elite Level: Ability can wrap to the other side of the bag. | x2 aux niveaux 10–12 et Elite | Même primitive, direction droite ; inactive au niveau utilisateur 9. |
 | Alien World | When you hit with Meteor, the ball bounces off of fairway. (Forever.) | ✔ aux niveaux 12 et Elite | Physique non qualifiée ; inactive au niveau utilisateur 9. |
 
-Au niveau 9, **une** capacité native active est non résolue, pas trois. Les statistiques
-de base et les effets entrants qualifiés sont calculables. L'audit avant modification
+Au niveau 9, **une** capacité native est active, pas trois. Sa complétude dépend du voisin :
+un bonus additif qualifié est amplifié, une capacité inconnue ou un modificateur non
+qualifié produit une amplification explicitement non résolue. L'audit avant modification
 produisait déjà cinq candidats autour de Meteor, dont une attaque à 8/6/7 calculables.
 L'absence perçue n'est donc pas un défaut de catalogue, de possession ou une exclusion
 logicielle systématique. La copie inconnue n'améliore pas artificiellement son faible
 profil calculable ; une recherche bornée sans club imposé ne garantit pas sa sélection.
-Aucune capacité Meteor n'a été implémentée : les primitives actuelles ne lèvent pas
-les ambiguïtés de copie ou de physique.
+Le blocage global initial était trop conservateur pour les effets additifs : le texte
+donne l'instance supplémentaire au voisin lui-même, pour chacune de ses capacités,
+donc son niveau et ses cibles restent les siens. Deux applications du même bonus
+additif valent deux fois ce bonus. Cette déduction ne valide pas les multiplicateurs,
+angles, pourcentages physiques ou copies en cascade. La qualification reste partielle
+au niveau catalogue. Le wrap Elite est explicite dans le texte et configuré uniquement
+à ce niveau. Aucune donnée utilisateur ni source officielle n'a été modifiée.
+
+Les versions du catalogue/archives et la qualification antérieure ont été relues.
+La recherche externe n'a fourni aucune règle de cumul supplémentaire suffisamment
+fiable : le contrat repose sur le texte officiel versionné, pas sur une note utilisateur.
+Les protections contre les cycles sont des limites explicites, pas une affirmation
+sur le comportement réel du jeu. Voir [RULE_ENGINE.md](RULE_ENGINE.md).
 
 **Flashpoint** (`flashpoint`, Phoenix / Legendary / Driver) est déjà possédé au niveau 7.
 Statistiques P/C/S : 7 = 5/8/5 ; 8 = 6/8/6 ; 9 = 7/9/6 ; 10 = 8/9/7 ;

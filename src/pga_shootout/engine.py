@@ -6,6 +6,7 @@ from .conditions import ConditionRegistry, UnknownConditionError, default_condit
 from .explain import explain_entry
 from .models import Effect, EvaluationMode, EvaluationResult, ExplainEntry, GameState, Stats
 from .registry import MechanismExecutionError, MechanismRegistry, UnknownMechanismError, default_mechanism_registry
+from .ability_amplification import prepare_abilities, amplification_trace
 
 
 class EvaluationError(RuntimeError):
@@ -70,6 +71,11 @@ class RuleEngine:
                 current = execution.stats
                 journal.extend(execution.explain)
                 scheduled_effects.extend(execution.scheduled_effects)
+                if "_original_amount" in delayed.effect.parameters and current != before:
+                    journal.extend(amplification_trace(delayed.effect, "ADD_STAT",
+                        {"delta": delayed.effect.parameters["_original_amount"]},
+                        {"delta": delayed.effect.parameters["amount"], "target": state.current_club_id},
+                        {"stat": delayed.effect.parameters.get("stat", "all_stats")}, current))
                 journal.append(
                     explain_entry(
                         delayed.effect,
@@ -130,6 +136,17 @@ class RuleEngine:
                     raise EvaluationError(message, result) from exc
 
         all_effects = [*effects, *state.active_bonuses]
+        all_effects, transformation_journal, transformation_unknowns = prepare_abilities(
+            all_effects, state, current, self.mechanisms, self.conditions,
+        )
+        journal.extend(transformation_journal)
+        unresolved.extend(transformation_unknowns)
+        if transformation_unknowns and mode is EvaluationMode.STRICT:
+            result = EvaluationResult(base, Stats.from_mapping(current), tuple(journal),
+                                      {name: value for name, value in current.items() if name not in base.as_dict()},
+                                      tuple(unresolved), False, tuple(scheduled_effects),
+                                      tuple([*remaining_effects, *scheduled_effects]), tuple(consumed_effect_ids))
+            raise EvaluationError(transformation_unknowns[0], result)
         for effect in all_effects:
             before = dict(current)
             try:
@@ -139,6 +156,11 @@ class RuleEngine:
                     current = execution.stats
                     journal.extend(execution.explain)
                     scheduled_effects.extend(execution.scheduled_effects)
+                    if "_original_amount" in effect.parameters and current != before:
+                        journal.extend(amplification_trace(effect, "ADD_STAT",
+                            {"delta": effect.parameters["_original_amount"]},
+                            {"delta": effect.parameters["amount"], "target": state.current_club_id},
+                            {"stat": effect.parameters.get("stat", "all_stats")}, current))
                 journal.append(
                     explain_entry(
                         effect,
