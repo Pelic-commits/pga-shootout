@@ -1,16 +1,22 @@
 """One-pass native ability transformations, independent of clubs and families.
 
-Only additive stat magnitudes are qualified. Numeric-looking modifiers are not
-automatically linear in the game: their extra instance stays unresolved.
+Qualified payloads are additive magnitudes of the model, not physical outcomes.
+Other numeric-looking modifiers retain their unresolved amplification status.
 """
 from dataclasses import asdict, replace
+import math
 from typing import Mapping
 
 from .models import Effect, ExplainEntry
 from .registry import MechanismExecutionError
 
 
-MAGNITUDE_INPUTS = {"ADD_STAT": "delta", "SCHEDULE_EFFECT": "amount"}
+MAGNITUDE_INPUTS = {"ADD_STAT": "delta", "ADD_MODIFIER": "delta", "SCHEDULE_EFFECT": "amount"}
+# These keys identify existing additive model metrics, never club identities.
+QUALIFIED_MODIFIERS = frozenset({
+    "bounce_reduction_percent", "wind_resistance_percent",
+    "groundspin_increase_percent", "groundspin_multiplier",
+})
 STRUCTURAL_OPERATIONS = frozenset({
     "SELECT_SELF", "READ_LEVEL_VALUE", "SELECT_ALL", "SELECT_ADJACENT", "SELECT_FARTHEST",
     "MATCH_BRAND", "MATCH_TYPE", "MATCH_RARITY", "COUNT", "EXISTS", "SCALE", "FOR_EACH", "UNLESS",
@@ -44,6 +50,10 @@ def amplification_policy(effect):
     if operations - STRUCTURAL_OPERATIONS - MAGNITUDE_INPUTS.keys():
         return "extra instance of this modifier or mixed effect is not qualified"
     for node in nodes:
+        if node.get("operation") == "ADD_MODIFIER":
+            metric = node.get("parameters", {}).get("modifier")
+            if not isinstance(metric, str) or metric not in QUALIFIED_MODIFIERS:
+                return "extra instance of this modifier is not qualified"
         if node.get("operation") == "SCHEDULE_EFFECT" and node.get("parameters", {}).get("effect_mechanism", "add_all_stats") not in {"add_stat", "add_all_stats"}:
             return "delayed effect magnitude is not qualified"
     return None
@@ -123,7 +133,14 @@ def amplify_inputs(operation, inputs, effect):
     field = MAGNITUDE_INPUTS.get(operation)
     if not amplification or field is None:
         return inputs
-    result = {**inputs, field: float(inputs[field]) * amplification["multiplier"]}
+    try:
+        original = float(inputs[field])
+        magnitude = original * amplification["multiplier"]
+    except (KeyError, TypeError, ValueError) as error:
+        raise MechanismExecutionError("Amplified magnitude must be a known finite number") from error
+    if not math.isfinite(original) or not math.isfinite(magnitude):
+        raise MechanismExecutionError("Amplified magnitude must be a known finite number")
+    result = {**inputs, field: magnitude}
     if operation == "SCHEDULE_EFFECT":
         result.update({"_amplification": amplification, "_original_amount": inputs[field]})
     return result
@@ -137,7 +154,10 @@ def amplification_trace(effect, operation, original, amplified, parameters, stat
     facts = {**amplification, "target_ability_source": effect.source,
              "status": "scheduled" if operation == "SCHEDULE_EFFECT" else "resolved",
              "original": original[field], "amplified": amplified[field],
-             "metric": parameters.get("stat", "all_stats"),
+             "metric": parameters.get("stat", parameters.get("modifier", "all_stats")),
              "final_target": amplified.get("target"), "operation": operation}
+    if operation == "ADD_MODIFIER":
+        facts.update({"additional": amplified[field] - float(original[field]),
+                      "value_kind": "model_magnitude", "physical_interpretation": "not_modeled"})
     return (_trace(amplification["source"], stats, facts,
                    message="amplified magnitude applied by its original ability; not an extra stat contribution", applied=True),)

@@ -20,7 +20,7 @@ Exemples :
 
 - **Shoreline Rush** et **Boundary Rush** : effets physiques non validés ;
 - eau, sable et arbres : contexte et comportement physique incomplets ;
-- **Meteor** : amplification additive prise en charge ; cumul de modificateurs, récursion et Alien World restent non qualifiés ;
+- **Meteor** : amplification des statistiques et des magnitudes Bounce/Wind/Groundspin prise en charge ; Loft, autres modificateurs non qualifiés, récursion et Alien World restent hors périmètre ;
 - **Perfect Shot** : déclenchement et historique nécessaires ;
 - transformations et aléatoire : résultat ou distribution non qualifiés.
 
@@ -63,6 +63,27 @@ La recherche externe n'a fourni aucune règle de cumul supplémentaire suffisamm
 fiable : le contrat repose sur le texte officiel versionné, pas sur une note utilisateur.
 Les protections contre les cycles sont des limites explicites, pas une affirmation
 sur le comportement réel du jeu. Voir [RULE_ENGINE.md](RULE_ENGINE.md).
+
+#### Extension des magnitudes Bounce / Wind / Groundspin
+
+La qualification initiale confondait deux questions : le cumul numérique du modèle
+et son interprétation physique. Le contrat produit approuvé permet maintenant
+X + X = 2X pour les contributions Bounce Reduction, Wind Resistance et Groundspin,
+en réutilisant exactement l'addition existante. Une somme Wind de 115 n'est ni
+plafonnée à 100 ni présentée comme 115 % d'effet réel du vent supprimé. Groundspin
+ne devient pas une distance, et Bounce n'est pas une prédiction du rebond de la balle.
+
+`groundspin_increase_percent` et `groundspin_multiplier` restent deux métriques
+distinctes du modèle. Une magnitude 3 dans la seconde devient 6 sous amplification,
+sans affirmer un multiplicateur physique. Loft, Gravity, Fade/Draw, les copies
+récursives et les amplificateurs multiples non qualifiés restent non résolus.
+Les valeurs absentes/non finies ne deviennent pas zéro. Les conditions restent
+obligatoires : au niveau 9, Meteor à droite de Gearshift empêche ce dernier d'être
+le club le plus à droite ; son Groundspin Top Gear reste donc inactif.
+
+Les Chains actuellement déclarées n'ont pas de payload de modificateur : aucun
+nouveau type d'effet différé n'est introduit. La qualification globale d'Alien Relic
+reste partielle, malgré l'amélioration de ses interactions calculables.
 
 **Flashpoint** (`flashpoint`, Phoenix / Legendary / Driver) est déjà possédé au niveau 7.
 Statistiques P/C/S : 7 = 5/8/5 ; 8 = 6/8/6 ; 9 = 7/9/6 ; 10 = 8/9/7 ;

@@ -35,8 +35,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--capture-python")
     parser.add_argument("--amplification", action="store_true", help="Validate useful and non-selected amplifier proposals")
+    parser.add_argument("--modifier-payloads", action="store_true", help="Validate Power, Bounce, Wind and Groundspin amplification")
     args = parser.parse_args()
     output = Path("logs/amplification/windows" if args.amplification else "logs/context-variants/windows")
+    if args.modifier_payloads:
+        output = Path("logs/amplification-modifiers/windows")
     output.mkdir(parents=True, exist_ok=True)
     original = Path("data/pga_shootout.sqlite")
     before = hashlib.sha256(original.read_bytes()).hexdigest()
@@ -67,11 +70,21 @@ def main():
             ("par3", "High Flight", False), ("par4_long", "High Flight", True),
             ("par3", "Meteor", False), ("par3", "Flashpoint", False),
         )
+        if args.modifier_payloads:
+            cases = (("par3", "Blacksmith", False), ("par3", "High Flight", False),
+                     ("par4_long", "High Flight", True), ("par3", "Sidewinder", False))
         for strategy_id, name, wind in cases:
+            for row in tuple(app.chosen_club_rows[1:]):
+                app._remove_chosen_club(row)
+            app.chosen_club_rows[0]["position_var"].set("Libre")
             app.strategy_name.set(next(label for label, value in app.strategy_by_label.items() if value == strategy_id))
             app.strategy_box.event_generate("<<ComboboxSelected>>")
             app.chosen_club_rows[0]["club_var"].set(name)
             app.max_evaluations.set("400")
+            if args.modifier_payloads and wind:
+                # Controlled UI smoke case, not evidence that unconstrained search retains this pair.
+                for club_id in ("rook", "meteor"):
+                    app._add_chosen_club(club_id)
             if wind:
                 app.show_advanced.set(True)
                 app._toggle_advanced()
@@ -110,13 +123,26 @@ def main():
                     amp = next(club for club in candidates[index].clubs if club.club_id == "meteor")
                     assert amp.role == "support"
                     assert any(fact.get("status") == "resolved" for step in amp.steps for fact in step.amplifications)
-                else:
-                    assert "meteor" not in candidates[index].composition, "Do not favor an amplifier with no observed landing gain"
+            checked_facts = []
+            if args.modifier_payloads:
+                metric = ("power" if name == "Blacksmith" else "groundspin_multiplier" if name == "Sidewinder"
+                          else "wind_resistance_percent" if wind else "bounce_reduction_percent")
+                def relevant_facts(candidate):
+                    return [fact for club in candidate.clubs for step in club.steps for fact in step.amplifications
+                            if fact.get("status") == "resolved" and fact.get("metric") == metric
+                            and fact.get("final_target") == candidate.active_assignments.get(step.step_id)]
+                index = next(index for index, item in enumerate(candidates) if relevant_facts(item))
+                checked_facts = relevant_facts(candidates[index])
+                assert all(fact["amplified"] == 2 * fact["original"] for fact in checked_facts)
+                positions = {club.club_id: club.position for club in candidates[index].clubs}
+                assert all(positions[fact["source_club_id"]] == positions[fact["target_club_id"]] + 1 for fact in checked_facts)
             card = app.cards[index]
             visible = "\n".join(texts(card))
             if args.amplification and name == "Blacksmith":
                 assert "Alien Relic Left" in visible and "5 → 10 Power → Blacksmith" in visible
-            if preferred in families:
+            if args.modifier_payloads:
+                assert "Alien Relic Left" in visible and "→" in visible
+            if preferred in candidates[index].result_family_ids:
                 assert ("Wind Resistance" if wind else "Bounce Reduction") in visible
                 assert "→" in visible
             app.cards_scroll.canvas.yview_moveto(card.winfo_y() / app.cards_scroll.body.winfo_height())
@@ -135,11 +161,19 @@ def main():
             app.notebook.select(app.notebook.tabs()[-1])
             if args.amplification and name == "Blacksmith":
                 assert "Amplification ×2" in app.presentation.details[index].technical_details
+            if args.modifier_payloads:
+                technical = app.presentation.details[index].technical_details
+                assert "Amplification ×2" in technical
+                if name != "Blacksmith":
+                    assert "valeur calculée du modèle" in technical and "sans conversion physique ni plafond 100" in technical
             capture(prefix + "-detail", app.detail_window)
             app.detail_window.withdraw()
             checks.append({"strategy": strategy_id, "club": name, "wind": wind,
+                           "controlled_required_clubs": ["rook", "meteor"] if args.modifier_payloads and wind else [],
+                           "actual_positions": {club.club_id: club.position for club in candidates[index].clubs},
                            "seconds": round(time.monotonic() - started, 2), "responsive_ticks": ticks,
-                           "families": sorted(families), "cards": len(candidates), "variant_text": visible})
+                           "families": sorted(families), "cards": len(candidates), "variant_text": visible,
+                           "checked_amplifications": checked_facts})
             print(f"Validated {strategy_id} / {name} / wind={wind}", flush=True)
             app.cards_scroll.canvas.yview_moveto(0)
         close(root)

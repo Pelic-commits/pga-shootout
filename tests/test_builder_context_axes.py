@@ -68,6 +68,38 @@ def project(optimizer, strategy, runtime, quick, limit=5):
     return families, _attach_power_tier_deltas(detail, strategy, "attack")
 
 
+@pytest.mark.parametrize("metric,context,expected_family", [
+    ("bounce_reduction_percent", None, "landing_profile"),
+    ("wind_resistance_percent", {"wind_relation": "head_or_crosswind"}, "wind_profile"),
+    ("wind_resistance_percent", None, None),
+    ("groundspin_increase_percent", None, None),
+])
+def test_amplification_reaches_existing_axes_without_changing_relevance(metric, context, expected_family):
+    from pga_shootout.bag_evaluation import _semantic_program
+    optimizer, strategy, runtime, _ = fixture(context=context, bonuses={metric: 30})
+    source = "amplifier / amplifier__effect"
+    program = _semantic_program({"pattern_id": "adjacent_ability_amplifier",
+        "pattern_parameters": {"directions": ["left"], "wrap": False}}, runtime.semantic_patterns)
+    effect = Effect("dsl_pipeline", {"phase": "ability_transform", "program": program,
+        "source_club_id": "amplifier", "ability_source": source, "ability_level": 1, "level_value": 2}, source=source)
+    runtime.clubs["amplifier"] = Club("amplifier", "amplifier", "fixture", "iron", {1: Stats(10, 5, 3)},
+                                      (Ability("amplifier__effect", "Amplifier", (effect,)),))
+    runtime.levels["amplifier"] = 1
+    quick = tuple(optimizer._evaluate_quick(CandidateSpec(last,
+        ("active", "putter", "filler_a", "axis_support", last), {"attack": "active", "putt": "putter"},
+        "build_from_scratch"), strategy, runtime, EvaluationMode.PARTIAL) for last in ("filler_b", "amplifier"))
+    detail = optimizer._detail(quick[1], strategy, runtime, EvaluationMode.PARTIAL, ("power_max",))
+    active = next(item for item in detail.clubs if item.club_id == "active")
+    assert active.steps[0].additional_metrics[metric] == 60
+    families, _ = project(optimizer, strategy, runtime, quick)
+    family_ids = {item.identifier for item in families}
+    if expected_family:
+        assert expected_family in family_ids
+    elif metric == "wind_resistance_percent":
+        assert "wind_profile" not in family_ids
+    assert not any("groundspin" in name for name in family_ids)
+
+
 def test_driver_power_vs_landing_uses_actual_dsl_and_exposes_tradeoff():
     optimizer, strategy, runtime, quick = fixture()
     families, candidates = project(optimizer, strategy, runtime, quick, limit=2)

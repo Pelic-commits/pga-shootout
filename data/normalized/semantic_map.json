@@ -146,12 +146,12 @@
       "pattern_id": "adjacent_ability_amplifier",
       "pattern_parameters": {"directions": ["left"], "wrap": false},
       "pattern_parameters_by_level": {"Elite": {"wrap": true}},
-      "notes": ["Official extra instance of each ability: two additive stat instances equal twice the original magnitude. The original owner, level, targets and conditions remain unchanged. Modifier stacking and recursive/multiple amplification remain unresolved."],
+      "notes": ["Official extra instance of each ability: duplicate qualified model magnitudes, retaining original owner, level, targets and conditions. The approved model contract includes additive Power/Control/Spin, Bounce Reduction, Wind Resistance and both existing Groundspin metrics; this is not physical validation. Loft, other modifiers and recursive/multiple amplification remain unresolved."],
       "priority": null,
       "qualification": {
         "category": "true_semantic_ambiguity",
         "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
-        "reason": "Additive stat magnitudes and supported additive delayed payloads are amplified. Modifier stacking, nonnumeric effects, recursive and overlapping amplification remain unresolved.",
+        "reason": "Additive stat magnitudes, Bounce/Wind/Groundspin model magnitudes and supported additive delayed payloads are amplified. Loft, other modifiers, nonnumeric effects, recursive and overlapping amplification remain unresolved; no physical conversion is inferred.",
         "required_data": [
           "in_game_validation"
         ],
@@ -172,12 +172,12 @@
       "pattern_id": "adjacent_ability_amplifier",
       "pattern_parameters": {"directions": ["right"], "wrap": false},
       "pattern_parameters_by_level": {"Elite": {"wrap": true}},
-      "notes": ["Same generic transformation as the left variant; activation comes only from official per-level values. Extra additive stat instance is supported; other stacking remains unresolved."],
+      "notes": ["Same generic transformation as the left variant; activation comes only from official per-level values. Qualified numeric model magnitudes include Bounce/Wind/Groundspin, without physical interpretation. Loft, other modifiers and recursive/overlapping amplification remain unresolved."],
       "priority": null,
       "qualification": {
         "category": "true_semantic_ambiguity",
         "experiment": "Compare the competing interpretations in a minimal bag and record the exact displayed stat change.",
-        "reason": "Additive stat magnitudes and supported additive delayed payloads are amplified. Modifier stacking, nonnumeric effects, recursive and overlapping amplification remain unresolved.",
+        "reason": "Additive stat magnitudes, Bounce/Wind/Groundspin model magnitudes and supported additive delayed payloads are amplified. Loft, other modifiers, nonnumeric effects, recursive and overlapping amplification remain unresolved; no physical conversion is inferred.",
         "required_data": [
           "in_game_validation"
         ],

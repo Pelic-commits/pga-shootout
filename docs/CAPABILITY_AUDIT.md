@@ -1570,7 +1570,7 @@ Les classes décrivent les limites de qualification actuelles. Une capacité par
 - Texte officiel : The club to the left of Meteor gains an extra instance of each of its abilities.  - Elite Level: Ability can wrap to the other side of the bag.
 - Valeurs par niveau : 1: inactive; 2: inactive; 3: inactive; 4: inactive; 5: inactive; 6: inactive; 7: inactive; 8: inactive; 9: x2; 10: x2; 11: x2; 12: x2; Elite: x2
 - Statut : `partial`
-- Raison : Additive stat magnitudes and supported additive delayed payloads are amplified. Modifier stacking, nonnumeric effects, recursive and overlapping amplification remain unresolved.
+- Raison : Additive stat magnitudes, Bounce/Wind/Groundspin model magnitudes and supported additive delayed payloads are amplified. Loft, other modifiers, nonnumeric effects, recursive and overlapping amplification remain unresolved; no physical conversion is inferred.
 - Qualification : `true_semantic_ambiguity`
 - Famille technique : `adjacent_ability_amplifier`
 - Primitives disponibles : SELECT_SELF, READ_LEVEL_VALUE, SELECT_ADJACENT, ABILITY_EFFECT_MULTIPLIER
@@ -1590,7 +1590,7 @@ Les classes décrivent les limites de qualification actuelles. Une capacité par
 - Texte officiel : The club to the right of Meteor gains an extra instance of each of its abilities.  - Elite Level: Ability can wrap to the other side of the bag.
 - Valeurs par niveau : 1: inactive; 2: inactive; 3: inactive; 4: inactive; 5: inactive; 6: inactive; 7: inactive; 8: inactive; 9: inactive; 10: x2; 11: x2; 12: x2; Elite: x2
 - Statut : `partial`
-- Raison : Additive stat magnitudes and supported additive delayed payloads are amplified. Modifier stacking, nonnumeric effects, recursive and overlapping amplification remain unresolved.
+- Raison : Additive stat magnitudes, Bounce/Wind/Groundspin model magnitudes and supported additive delayed payloads are amplified. Loft, other modifiers, nonnumeric effects, recursive and overlapping amplification remain unresolved; no physical conversion is inferred.
 - Qualification : `true_semantic_ambiguity`
 - Famille technique : `adjacent_ability_amplifier`
 - Primitives disponibles : SELECT_SELF, READ_LEVEL_VALUE, SELECT_ADJACENT, ABILITY_EFFECT_MULTIPLIER

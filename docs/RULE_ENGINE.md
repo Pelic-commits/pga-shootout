@@ -60,16 +60,32 @@ le terminal habituel de B applique +6 à A. La Power de base de A n'est pas doub
 | Classe | Mécanismes / primitives | Traitement |
 |---|---|---|
 | A : multiplication sûre dans le modèle qualifié | `add_stat`, `add_all_stats`, `ADD_STAT` Power/Control/Spin | Magnitude additive × facteur, y compris une pénalité négative ; mêmes cibles, conditions, propriétaire et niveau. |
+| A : magnitude du modèle, physique non déterminée | `ADD_MODIFIER` avec `bounce_reduction_percent`, `wind_resistance_percent`, `groundspin_increase_percent`, `groundspin_multiplier` | Même agrégation additive existante : X + X = 2X. Aucun plafond 100, aucune composition multiplicative ni conversion physique. |
 | B : règle déjà définie | `SELECT_SELF`, `SELECT_ALL`, `SELECT_ADJACENT`, `SELECT_FARTHEST`, `MATCH_BRAND`, `MATCH_TYPE`, `MATCH_RARITY` | Relations conservées ; aucune multiplication de position, distance ou filtre. |
 | B : règle déjà définie | `READ_LEVEL_VALUE`, `COUNT`, `EXISTS`, `SCALE`, `FOR_EACH`, `UNLESS` | Programme original conservé ; seule sa sortie additive terminale est amplifiée. |
 | B : règle déjà définie | `SCHEDULE_EFFECT` avec payload additif connu | Magnitude du payload amplifiée avant planification ; une seule réservation, consommation existante, provenance conservée au déclenchement. |
-| C : non résolue | `ADD_MODIFIER` : Bounce, Wind Resistance, Groundspin, Loft, Gravity, multiplicateurs, etc. | Une valeur numérique n'établit pas la règle de cumul de deux instances. Effet natif conservé, amplification signalée non résolue. |
+| C : non résolue | Autres `ADD_MODIFIER` : Loft, Gravity, Fade/Draw, angles et modificateurs non qualifiés | Effet natif conservé, amplification signalée non résolue. Aucune généralisation à tout nombre du DSL. |
 | C : non résolue | Primitive inconnue, programme mixte non qualifié, vent ajouté, physique, effet temporaire/non natif, transformation d'une transformation | Pas de magnitude inventée ; diagnostic explicite. |
 
 Ces classes sont une qualification de formes de calcul, pas une liste de noms de clubs.
 Une capacité composée de plusieurs effets est traitée effet par effet : un composant
 additif peut être amplifié tandis qu'un autre reste non résolu. Un programme indivisible
 mélangeant des terminaux non qualifiés reste conservativement non amplifié.
+
+La qualification des trois familles de modificateurs porte sur la **magnitude du
+modèle**, conformément au contrat produit approuvé, pas sur une expérience physique
+dans le jeu. `ADD_MODIFIER` additionne déjà ces contributions ; sa formule n'a pas
+changé. Exemples : Bounce 20 + 20 + 15 = 55 ; Wind 40 + 40 + 35 = 115 ; Groundspin
+12 + 12 = 24. Les deux champs Groundspin conservent leurs unités distinctes : une
+valeur `groundspin_multiplier` 3 devient une magnitude cumulée 6, pas une preuve
+de six fois la roule ni de neuf fois un effet physique. Les magnitudes absentes ou
+non finies restent non résolues, et une condition inactive ne crée aucun modificateur.
+
+Les faits Explain des modificateurs amplifiés exposent `original`, `additional`,
+`amplified`, `metric`, `final_target`, `value_kind=model_magnitude` et
+`physical_interpretation=not_modeled`. La contribution numérique agrégée appartient
+toujours à la capacité d'origine ; les faits de l'amplificateur ne sont pas ajoutés
+une seconde fois aux totaux. Le détail GUI explicite « valeur calculée du modèle ».
 
 ### Ordre, provenance et protections
 
@@ -102,6 +118,11 @@ est confirmé par le contrefactuel existant de retrait du club.
 `SCHEDULE_EFFECT` crée un effet planifié associé à une condition de club compatible. Lors des étapes suivantes, le moteur vérifie la condition, applique la contribution au premier déclenchement qualifié et consomme l'effet. Cette couche répond aux Chains supportées ; elle n'est pas un historique complet de partie.
 
 Lorsque consommation, expiration ou interaction ne sont pas suffisamment qualifiées, l'effet reste partiel/non résolu au lieu d'être inventé.
+
+Les programmes Chains du catalogue utilisent actuellement `add_all_stats`, pas un
+payload Bounce/Wind/Groundspin. Leur amplification, déclenchement et consommation
+restent inchangés. Aucun handler de modificateur différé n'est ajouté par cette
+extension : un tel payload non supporté reste non résolu et ne devient pas immédiat.
 
 ## Métriques
 

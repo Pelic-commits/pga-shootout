@@ -70,3 +70,36 @@ def test_rule_and_dsl_code_has_no_special_case_real_club_names():
     for name in ("engine.py", "dsl.py", "ability_amplification.py", "strategy_optimizer.py"):
         text = Path("src/pga_shootout", name).read_text(encoding="utf-8").casefold()
         assert "meteor" not in text and "jumpstart" not in text and "alien_relic" not in text
+
+
+@pytest.mark.parametrize("composition,current,owner,label,metric,normal", [
+    (("high_flight", "maelstrom", "meteor"), "high_flight", "maelstrom", "bag_bounce_reduction", "bounce_reduction_percent", 12),
+    (("high_flight", "cyclotron", "meteor"), "high_flight", "cyclotron", "bounce_reduction_boost", "bounce_reduction_percent", 16),
+    (("high_flight", "rook", "meteor"), "high_flight", "rook", "bag_wind_resist", "wind_resistance_percent", 17),
+    (("high_flight", "meteor", "blacksmith"), "high_flight", "high_flight", "wind_resist_75", "wind_resistance_percent", 75),
+    (("sidewinder", "meteor", "blacksmith"), "sidewinder", "sidewinder", "groundspin_x3", "groundspin_multiplier", 3),
+    (("meanderer", "meteor", "blacksmith"), "meanderer", "meanderer", "groundspin_x4", "groundspin_multiplier", 4),
+])
+def test_real_modifier_payloads_keep_their_own_level_and_target(composition, current, owner, label, metric, normal):
+    inventory = load_user_data("data/pga_shootout.sqlite").inventory.entries
+    assert all(next(item for item in inventory if item.club_id == club_id).unlocked for club_id in composition)
+    state = build_game_state(SavedBag("modifiers", "modifiers", "test", composition, ()), CATALOG, levels(), current, terrain="tee")
+    effects = tuple(effect for entry in state.bag.entries for ability in entry.club.abilities for effect in ability.effects)
+    before = RuleEngine().evaluate(state, tuple(effect for effect in effects if effect.parameters.get("phase") != "ability_transform"), mode=EvaluationMode.PARTIAL)
+    after = RuleEngine().evaluate(state, effects, mode=EvaluationMode.PARTIAL)
+    records = [entry.outputs for entry in after.explain if entry.mechanism == "ABILITY_AMPLIFICATION"
+               and entry.outputs.get("target_ability_id") == owner + "__" + label and entry.outputs.get("status") == "resolved"]
+    assert len(records) == 1
+    assert records[0]["original"] == normal and records[0]["amplified"] == normal * 2
+    assert records[0]["metric"] == metric and records[0]["final_target"] == current
+    assert records[0]["physical_interpretation"] == "not_modeled"
+    assert after.modifiers[metric] - before.modifiers[metric] == normal
+
+
+def test_current_left_amplifier_cannot_enable_rightmost_groundspin_condition():
+    bag = SavedBag("position", "position", "test", ("high_flight", "gearshift", "meteor"), ())
+    state = build_game_state(bag, CATALOG, levels(), "high_flight")
+    effects = tuple(effect for entry in state.bag.entries for ability in entry.club.abilities for effect in ability.effects)
+    result = RuleEngine().evaluate(state, effects, mode=EvaluationMode.PARTIAL)
+    assert "groundspin_increase_percent" not in result.modifiers
+    assert not any(entry.outputs.get("metric") == "groundspin_increase_percent" and entry.outputs.get("status") == "resolved" for entry in result.explain)

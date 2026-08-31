@@ -270,3 +270,15 @@ def test_cards_show_secondary_axes_without_opening_technical_details(app, result
     assert "Bounce Reduction 30 %" in texts and "Wind Resistance 25 %" in texts
     assert "atterrissage" in texts and "vent" in texts
     assert app.detail_window.state() == "withdrawn"
+
+
+@pytest.mark.parametrize("metric,label", [("bounce_reduction_percent", "Bounce Reduction"),
+    ("wind_resistance_percent", "Wind Resistance"), ("groundspin_multiplier", "Groundspin (magnitude)")])
+def test_amplified_modifier_card_retains_magnitudes_and_destination(metric, label):
+    fact = {"target_club_id": "sample", "target_ability_id": "sample__payload", "source": "amp / amp__amplify",
+            "status": "resolved", "original": 75, "amplified": 150, "additional": 75,
+            "metric": metric, "final_target": "sample", "multiplier": 2,
+            "value_kind": "model_magnitude", "physical_interpretation": "not_modeled"}
+    item = club(steps=(replace(shot("putt"), amplifications=(fact,)),))
+    data = club_projection(item, candidate(item), {"putt": "Putt"})
+    assert data["reasons"] == (f"Amplify : payload de Sample\n75 → 150 {label} → Sample",)

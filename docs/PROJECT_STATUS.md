@@ -39,7 +39,67 @@ Meteor is owned at level 9 in the audited SQLite profile. Alien Relic Left now a
 
 Flashpoint is already present and owned at level 7. It is generically eligible as a non-putter active club or unresolved potential support. Rocket Boosters and Boundary Rush remain unresolved. No inventory/catalogue edits were needed. See the exact texts and level tables in [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md).
 
-## Current phase: generic ability amplification
+## Current phase: Bounce / Wind / Groundspin model magnitudes
+
+The existing `ABILITY_EFFECT_MULTIPLIER` now accepts the existing additive
+`ADD_MODIFIER` payloads for Bounce Reduction, Wind Resistance and both Groundspin
+metrics. No new primitive, aggregation formula, search policy, relevance policy,
+GameState field, inventory change or physical model was introduced. Finite values
+are duplicated before normal resolution; Explain and JSON retain original,
+additional and total magnitudes with `physical_interpretation=not_modeled`.
+Loft and the remaining unqualified modifiers stay unresolved.
+
+The current real inventory provides Maelstrom level 6 (Bounce 12 → 24), Cyclotron
+level 9 (Bounce 16 → 32), Rook level 9 (Wind 17 → 34), High Flight level 10
+(Wind 75 → 150), Sidewinder level 7 (Groundspin magnitude 3 → 6) and Meanderer
+level 8 (Groundspin magnitude 4 → 8). These are model quantities, not ball physics.
+Meteor remains level 9, left only. Gearshift's rightmost Groundspin condition
+cannot be satisfied when this amplifier is immediately to its right.
+
+Unconstrained bounded benchmark against `8c4b002` (400 evaluations, five requested
+results; same inventory and fresh service per run):
+
+| Case | Before (s) | After (s) | Observed outcome |
+|---|---:|---:|---|
+| Par 3 Blacksmith | 18.144 | 16.336 | Power-max attack remains 23/11/7 |
+| Par 3 High Flight / Landing | 26.565 | 24.211 | Landing Bounce 39 → 44; attack 13/10/13 → 13/9/18 |
+| Par 3 Divebomb | 27.167 | 27.536 | Power-max attack remains 20/12/11 |
+| Par 3 Meteor primary | 18.490 | 18.594 | Power-max attack remains 8/6/7 |
+| Par 4 long High Flight / Wind | 12.794 | 13.391 | Best Wind remains 132; retained results 2 → 4 |
+
+These single observations do not establish a speedup, exhaustive optimality or a
+guaranteed recommendation gain. Landing and Wind are measured within their parent
+search, not as additional hidden searches. Reproduce with
+`scripts/validate_ability_amplification.py --modifier-payloads --output <report>`.
+The Wind UI smoke case explicitly requires Rook and Meteor, without position locks; it is distinct
+from the unconstrained benchmark. No Groundspin Max result family was added.
+
+Coverage remains **86/162 fully qualified catalogue occurrences**, **4 partial**,
+**72 unresolved**; inventory-entry audit **84/151 full**, **4 partial**, **63 unresolved**,
+**36 fully simulated clubs**. The extra payload support improves real calculations
+without claiming every possible Alien Relic interaction is solved.
+
+Actual Windows acceptance passed for Blacksmith Power (5 → 10), High Flight
+Landing through Cyclotron (16 → 32 Bounce), constrained Wind through High Flight
+(75 → 150, with Loft still unresolved) and Sidewinder Groundspin (3 → 6). The
+five-club cards, detailed model-magnitude wording, actual adjacency, 1280×800
+layout and close/relaunch were checked. The original SQLite SHA-256 stayed
+`0bc680873668a451712e3f4d79e1bbd57b5fd310a4548ac5678cb3f81bf2fcfb`.
+Reproduce with `scripts/validate_context_variants_gui.py --modifier-payloads`.
+The initial position-locked UI smoke revealed a pre-existing one-slot offset in
+the GUI's lock input; this unrelated issue was not changed. The final acceptance
+run used no position locks and asserted the actual amplifier/neighbor adjacency.
+
+Final validation: **641 tests and 168 subtests passed in 518.51 s**, including
+39 additional test cases. Targeted runs also passed: 89 amplification/real-data/card
+tests, 4 new builder-axis tests, and 29 registry/audit/coverage tests plus 4 subtests.
+An earlier full run passed 640 tests but its final Tk preflight reported an
+unreadable `icons.tcl`; the file was present and all five launcher tests passed
+immediately in isolation. The final full run, without concurrent GUI acceptance
+runs and with inherited `PYTHONUTF8=1`, passed completely. No Python installation,
+launcher or test expectation was changed to conceal that transient failure.
+
+## Previous phase: generic ability amplification
 
 The new `ABILITY_EFFECT_MULTIPLIER` primitive requests a one-pass native ability transformation. It does not multiply final club statistics. Existing additive effects and additive Chains payloads reuse their existing resolution mechanisms; the transformed payload is not doubled a second time on its later trigger. No club-name rule, GameState expansion, new physical rule, Stormbringer/XLR8R interaction or inventory edit was introduced.
 

@@ -13,6 +13,7 @@ ACCENT = "#116B55"
 METRICS = {"power": "Power", "control": "Control", "spin": "Spin",
            "bounce_reduction_percent": "Bounce Reduction", "wind_resistance_percent": "Wind Resistance",
            "groundspin_increase_percent": "Groundspin", "loft_angle_degrees": "Loft",
+           "groundspin_multiplier": "Groundspin (magnitude)",
            "groundspin": "Groundspin", "swing_speed": "Swing Speed",
            "gravity_reduction_percent": "Gravity Reduction",
            "launch_angle_degrees": "Launch Angle", "fade_draw_multiplier": "Fade/Draw"}

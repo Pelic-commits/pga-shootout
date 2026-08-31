@@ -13,6 +13,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", required=True)
     parser.add_argument("--budget", type=int, default=400)
+    parser.add_argument("--modifier-payloads", action="store_true", help="Include explicit wind context and modifier/provenance results")
     parser.add_argument("--audit-only", action="store_true", help="Regenerate the requested capability documentation without running searches")
     args = parser.parse_args()
     database = Path("data/pga_shootout.sqlite")
@@ -25,17 +26,22 @@ def main():
         Path(args.output).write_text(json.dumps(audit, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         return
     runs = []
-    for primary in ("blacksmith", "high_flight", "divebomb", "meteor"):
+    cases = [("par3", primary, ()) for primary in ("blacksmith", "high_flight", "divebomb", "meteor")]
+    if args.modifier_payloads:
+        cases.append(("par4_long", "high_flight", ("head_crosswind",)))
+    for strategy, primary, variants in cases:
         started = time.perf_counter()
         result = StrategyOptimizer().build_from_scratch(BuildFromScratchRequest(
-            "par3", primary, max_evaluations=args.budget, limit=5,
+            strategy, primary, variant_ids=variants, max_evaluations=args.budget, limit=5,
         ))
-        run = {"primary": primary, "seconds": round(time.perf_counter() - started, 3),
+        run = {"strategy": strategy, "primary": primary, "variants": variants, "seconds": round(time.perf_counter() - started, 3),
                "evaluated": result.search.candidates_evaluated,
                "amplifier_frequency": sum("meteor" in item.composition for item in result.retained_results),
                "results": [{"composition": item.composition, "families": item.result_family_ids,
                             "unknowns": item.unresolved_abilities,
-                            "actives": {step: {"club": club.club_id, "stats": row.final_stats}
+                            "deltas": item.metric_deltas_from_power_max,
+                            "amplifications": [fact for club in item.clubs for row in club.steps for fact in row.amplifications],
+                            "actives": {step: {"club": club.club_id, "stats": row.final_stats, "modifiers": row.additional_metrics}
                                         for step, club_id in item.active_assignments.items()
                                         for club in item.clubs if club.club_id == club_id
                                         for row in club.steps if row.step_id == step}}

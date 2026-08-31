@@ -591,6 +591,10 @@ class StrategyOptimizerPresenter:
                     lines.append(f"    Amplification ×{fact.get('multiplier', 1):g} : {fact.get('target_ability_source')} ; "
                                  f"{magnitude} ; cible finale : {fact.get('final_target') or 'prochain club compatible / indéterminée'} ; "
                                  f"statut : {fact.get('status')}")
+                    if fact.get("value_kind") == "model_magnitude":
+                        lines.append(f"      Magnitude native {fact['original']:g} + contribution supplémentaire "
+                                     f"{fact['additional']:g} = {fact['amplified']:g} ; valeur calculée du modèle, "
+                                     "sans conversion physique ni plafond 100.")
         return "\n".join(lines)
 
     @staticmethod

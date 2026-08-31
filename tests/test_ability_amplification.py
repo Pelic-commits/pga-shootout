@@ -109,7 +109,7 @@ def test_unimplemented_ability_stays_unknown_but_identifies_amplification():
         evaluate((club("a"), owner, amplifier()), mode=EvaluationMode.STRICT)
 
 
-@pytest.mark.parametrize("metric", ["bounce_reduction_percent", "wind_resistance_percent", "loft_angle_degrees", "fade_draw_multiplier"])
+@pytest.mark.parametrize("metric", ["loft_angle_degrees", "gravity_reduction_percent", "launch_angle_degrees", "fade_draw_multiplier"])
 def test_numeric_modifier_is_not_assumed_additive_under_extra_instance(metric):
     _, result = evaluate((club("a"), club("b", (bonus(metric=metric, amount=20),)), amplifier()))
     assert result.modifiers[metric] == 20
@@ -181,3 +181,104 @@ def test_temporary_effect_is_not_mistaken_for_a_native_ability():
     result = RuleEngine().evaluate(state, effects, mode=EvaluationMode.PARTIAL)
     assert result.final_stats == Stats(16, 6, 3)
     assert any("temporary or non-native" in value for value in result.unresolved)
+
+
+@pytest.mark.parametrize("metric,amount", [
+    ("bounce_reduction_percent", 20), ("wind_resistance_percent", 30),
+    ("groundspin_increase_percent", 12), ("groundspin_multiplier", 3),
+])
+@pytest.mark.parametrize("mode", [EvaluationMode.STRICT, EvaluationMode.PARTIAL])
+def test_qualified_modifier_magnitudes_and_explain(metric, amount, mode):
+    clubs = (club("a"), club("b", (bonus(metric=metric, amount=amount),)), amplifier())
+    _, result = evaluate(clubs, mode=mode)
+    assert result.complete and result.modifiers[metric] == 2 * amount
+    assert result.final_stats == result.base_stats  # No multiplication of final P/C/S.
+    resolved = next(item for item in facts(result) if item["status"] == "resolved")
+    assert resolved == {
+        "source_club_id": "c", "target_club_id": "b", "multiplier": 2.0, "source": "c / c__amplify",
+        "target_ability_id": "b__" + metric, "target_ability_source": "b / b__" + metric,
+        "status": "resolved", "original": amount, "additional": amount, "amplified": 2 * amount,
+        "metric": metric, "final_target": "a", "operation": "ADD_MODIFIER",
+        "value_kind": "model_magnitude", "physical_interpretation": "not_modeled",
+    }
+    leaves = [entry for entry in result.explain if entry.mechanism == "ADD_MODIFIER" and entry.applied]
+    assert len(leaves) == 1 and leaves[0].inputs["delta"] == 2 * amount
+    assert leaves[0].outputs == {"before": 0, "after": 2 * amount}
+
+
+@pytest.mark.parametrize("metric,amount,other,total", [
+    ("bounce_reduction_percent", 20, 15, 55),
+    ("wind_resistance_percent", 30, 25, 85),
+    ("wind_resistance_percent", 40, 35, 115),
+    ("groundspin_increase_percent", 12, 7, 31),
+    ("groundspin_multiplier", 3, 4, 10),
+])
+def test_modifier_uses_existing_addition_without_cap(metric, amount, other, total):
+    owner = club("b", (bonus(metric=metric, amount=amount, selection="SELECT_ALL"),))
+    additional = club("d", (bonus("d", metric, other, "SELECT_ALL"),))
+    _, normal = evaluate((club("a"), owner, additional))
+    _, amplified = evaluate((club("a"), owner, amplifier(), additional))
+    assert normal.modifiers[metric] == amount + other
+    assert amplified.modifiers[metric] == total
+
+
+@pytest.mark.parametrize("metric", ["bounce_reduction_percent", "wind_resistance_percent", "groundspin_increase_percent"])
+def test_modifier_conditions_and_positions_remain_effective(metric):
+    inactive = Condition("current_club_attribute_equals", {"field": "club_type", "value": "putter"})
+    owner = club("b", (bonus(metric=metric, amount=12, condition=inactive),))
+    _, result = evaluate((club("a"), owner, amplifier()), mode=EvaluationMode.STRICT)
+    assert metric not in result.modifiers
+    assert not any(item["status"] == "resolved" for item in facts(result))
+    owner = club("b", (bonus(metric=metric, amount=12, selection="SELECT_ALL"),))
+    assert evaluate((club("a"), amplifier(), owner))[1].modifiers[metric] == 12
+    assert evaluate((club("a"), amplifier(direction="right"), owner))[1].modifiers[metric] == 24
+
+
+def test_mixed_payloads_and_renaming_preserve_independent_targets_and_attribution():
+    def run(a, b, c):
+        abilities = tuple(bonus(b, metric, amount) for metric, amount in (
+            ("power", 3), ("control", 2), ("bounce_reduction_percent", 20),
+            ("wind_resistance_percent", 30), ("groundspin_increase_percent", 10)))
+        return evaluate((club(a), club(b, abilities), amplifier(c)), current=a, mode=EvaluationMode.STRICT)
+    state, result = run("a", "b", "c")
+    renamed = run("receiver", "owner", "duplicator")[1]
+    assert result.final_stats == renamed.final_stats == Stats(16, 9, 3)
+    assert result.modifiers == renamed.modifiers == {
+        "bounce_reduction_percent": 40, "wind_resistance_percent": 60, "groundspin_increase_percent": 20}
+    from pga_shootout.bag_comparison import summarize_bag_evaluation
+    from pga_shootout.bag_evaluation import BagEvaluation
+    from pga_shootout.user_data import SavedBag
+    summary = summarize_bag_evaluation(BagEvaluation(SavedBag("mix", "mix", "test", ("a", "b", "c"), ()),
+        state, result, EvaluationMode.STRICT, False, RuleEngine().mechanisms.names), 1)
+    assert summary.modifier_impact == result.modifiers
+    for metric, total in result.modifiers.items():
+        assert sum(item.modification.get(metric, 0) for item in summary.ability_contributions) == total
+
+
+@pytest.mark.parametrize("amount", [0, -5, 2.5])
+def test_modifier_zero_negative_fractional_magnitudes(amount):
+    _, result = evaluate((club("a"), club("b", (bonus(metric="bounce_reduction_percent", amount=amount),)), amplifier()))
+    assert result.modifiers["bounce_reduction_percent"] == 2 * amount
+
+
+@pytest.mark.parametrize("amount", [None, "unknown", float("nan"), float("inf")])
+def test_undefined_modifier_magnitude_stays_unresolved(amount):
+    clubs = (club("a"), club("b", (bonus(metric="bounce_reduction_percent", amount=amount),)), amplifier())
+    _, result = evaluate(clubs)
+    assert not result.complete and "bounce_reduction_percent" not in result.modifiers
+    with pytest.raises(EvaluationError):
+        evaluate(clubs, mode=EvaluationMode.STRICT)
+
+
+def test_modifier_chain_is_not_invented_when_payload_handler_is_absent():
+    source = "b / b__future_chain"
+    program = {"nodes": [{"id": "schedule", "operation": "SCHEDULE_EFFECT",
+        "inputs": {"source": "b", "amount": 20, "ability_id": "b__future_chain", "ability_source": source},
+        "parameters": {"filter_field": "club_type", "filter_value": "putter", "effect_mechanism": "unsupported_modifier_payload"}}]}
+    owner = club("b", (Ability("b__future_chain", "future chain", (Effect("dsl_pipeline", {"program": program}, source=source),)),))
+    clubs = (club("a", kind="putter"), owner, amplifier())
+    _, shot = evaluate(clubs, current="b")
+    assert not shot.complete and not shot.modifiers
+    assert shot.scheduled_effects[0].effect.parameters["amount"] == 20
+    _, following = evaluate(clubs, pending=shot.pending_effects)
+    assert not following.complete and not following.modifiers and not following.consumed_effect_ids

@@ -161,11 +161,31 @@ Au niveau réel 9, Meteor amplifie seulement son voisin gauche. Son faible profi
 propre ne l'élimine plus lorsqu'il apporte un bonus utile, mais ne garantit jamais
 sa sélection. Exemple observé sans imposer Meteor : Blacksmith / Meteor / Commonlaw /
 Sunstorm / Gearshift, attaque **23/11/7**, dont Texas Tee passe de +5 à +10. Le retrait
-du support fait perdre 5 Power dans ce sac. Une proposition Atterrissage High Flight /
-supports Bounce peut rester meilleure sur cet axe sans Meteor.
+du support fait perdre 5 Power dans ce sac.
 
-Les capacités de copie en cascade, pourcentages et modificateurs non qualifiés restent
-partiels. Stormbringer/XLR8R et Alien World ne sont pas traités par ce lot.
+Bounce Reduction, Wind Resistance et les deux métriques Groundspin sont désormais
+amplifiables comme magnitudes additives du modèle. Aucun changement de politique
+de pertinence, de classement ou de génération de candidats n'est nécessaire.
+Sans contexte explicite de vent, aucune famille Vent n'est créée ; aucune famille
+Groundspin Max n'est ajoutée. Les cartes exposent la capacité, X → 2X et sa cible ;
+le détail précise X natif + X supplémentaire et l'absence de conversion physique.
+
+Mesure bornée à 400 évaluations sur le même inventaire, avant/après cette extension :
+la variante Atterrissage High Flight passe de **39 à 44 Bounce**, avec attaque
+**13/10/13 → 13/9/18** et putt **6/11 → 6/10**. Sac retenu : Maelstrom / High Flight /
+Cyclotron / Meteor / Homestead. Cyclotron fournit **16 → 32 Bounce** et **5 → 10 Spin**.
+Ce gain n'est pas gratuit : le Control de l'attaque et du putt baisse d'un point.
+
+La variante Vent Par 4 long garde son meilleur cumul trouvé de **132**, sans Meteor,
+dans cette recherche bornée. Un calcul Wind amplifié valide ne garantit pas qu'un
+nouveau sac sera retenu. Les tests Windows utilisent donc aussi un cas explicitement
+contraint par les clubs obligatoires Rook et Meteor autour de High Flight pour contrôler
+la présentation Wind ; la proposition observée place Meteor après High Flight et
+affiche **75 → 150 Wind**, avec Loft toujours non résolu. Le smoke test numérique
+séparé Rook donne **17 → 34**. Aucun de ces montages n'est un optimum revendiqué.
+
+Loft, les copies en cascade et autres modificateurs non qualifiés restent partiels.
+Stormbringer/XLR8R et Alien World ne sont pas traités par ce lot.
 
 ## Inventaire dynamique et performances
 
